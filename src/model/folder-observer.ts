@@ -11,18 +11,22 @@ import { get, Unsubscriber } from "svelte/store";
 
 import {
   pluginSettings,
-  projectFolderContents,
   projectMetadata,
   currentProjectPath,
   currentDraftPath,
 } from "../view/stores";
 import { buildDraftsLookup } from "./index-file";
-import type { ProjectFolderContents } from "./types";
 
 enum DraftsMembership {
   Draft,
   Scene,
   None,
+}
+
+interface ProjectFolderContents {
+  [projectPath: string]: {
+    [draftName: string]: string[];
+  };
 }
 
 function membership(
@@ -96,7 +100,6 @@ export class FolderObserver {
         }
       });
     });
-    projectFolderContents.set(toStore);
     projectMetadata.update((metadata) => {
       // Sync files on disk with scenes in metadata;
       // Existing files are sorted by scene order,

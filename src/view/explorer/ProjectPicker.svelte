@@ -67,6 +67,9 @@
       right-clicking it and selecting "Mark as Longform project."
     </p>
   {/if}
+  {#if $currentProject && $currentProject.error}
+    <p class="project-error">{$currentProject.error}</p>
+  {/if}
 </div>
 
 <style>
@@ -124,5 +127,11 @@
     font-size: 10px;
     padding: 0 8px;
     line-height: 12px;
+  }
+
+  .project-error {
+    color: var(--text-error);
+    font-size: 12px;
+    line-height: 14px;
   }
 </style>

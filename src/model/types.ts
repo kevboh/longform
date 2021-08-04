@@ -25,13 +25,15 @@ export interface LongformPluginSettings {
   selectedDraft: string | null;
 }
 
-export interface ProjectFolderContents {
-  [projectPath: string]: {
-    [draftName: string]: string[];
-  };
+export enum ProjectLoadError {
+  None,
+  MissingMetadata = "This project’s metadata is either missing or invalid. Please check its index file. If all else fails, you can reset all project tracking in settings and re-mark folders as Longform projects.",
 }
 
-export type ProjectDetails = LongformProjectSettings & IndexFileMetadata;
+export type ProjectDetails = LongformProjectSettings &
+  IndexFileMetadata & {
+    error: ProjectLoadError;
+  };
 
 export const DEFAULT_SETTINGS: LongformPluginSettings = {
   version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
