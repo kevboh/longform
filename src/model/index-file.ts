@@ -5,8 +5,11 @@ import {
   LONGFORM_CURRENT_INDEX_VERSION,
 } from "./types";
 
-const WARNING =
-  "This file is managed by Longform. Please avoid editing it directly; doing so will almost certainly confuse the plugin, and may cause a loss of data.";
+const WARNING = `
+This file is managed by Longform. Please avoid editing it directly; doing so will almost certainly confuse the plugin, and may cause a loss of data.
+
+Longform uses this file to organize your folders and notes into a project. For more details, please see [The Index File](https://github.com/kevboh/longform#the-index-file) section of the plugin’s README.
+`;
 
 export const EmptyIndexFileMetadata: IndexFileMetadata = {
   version: LONGFORM_CURRENT_INDEX_VERSION,
@@ -21,7 +24,7 @@ export const EmptyIndexFileMetadata: IndexFileMetadata = {
 
 export function indexBodyFor(state: IndexFileMetadata): string {
   const body = dump(state, { flowLevel: -1 });
-  return `---\n${body}---\n\n%% ${WARNING} %%`;
+  return `---\n${body}---\n\n${WARNING}\n`;
 }
 
 export function buildDraftsLookup(drafts: DraftsMetadata[]): {
