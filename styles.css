@@ -1,0 +1,8 @@
+.longform-settings-destructive-button {
+  color: var(--text-normal);
+  background-color: var(--text-error) !important;
+}
+
+.longform-settings-destructive-button:hover {
+  background-color: var(--text-error-hover) !important;
+}
