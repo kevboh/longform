@@ -4,6 +4,8 @@ Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write an
 
 To get started, right-click any folder you’d like to write a Longform project in and select “Mark as Longform Project.” You can always remove folders from Longform by right-clicking them and selecting “Unmark as Longform Project.” Unmarking a project does not delete anything: it just stops the plugin from tracking that folder and showing it in any UI.
 
+Once you’ve marked a folder as a Longform project, you can switch to the Longform pane and add scenes (notes in a draft folder) to start writing.
+
 Currently, Longform includes:
 
 ### The Project Explorer
@@ -106,13 +108,17 @@ So that’s the idea. Treat your text and form as a unitary expression of the ar
 
 ## Installing
 
-Longform is available in the Community Plugins section of Obsidian. You may also install it manually by copying the `main.js`, `manifest.json`, and `styles.css` files from a release into a `longform/` folder in the `.obsidian/plugins` folder of your vault. The Community Plugins interface is preferred.
+Longform [will soon be available](https://github.com/obsidianmd/obsidian-releases/pull/400) in the Community Plugins section of Obsidian. You may also install it manually by copying the `main.js`, `manifest.json`, and `styles.css` files from a release into a `longform/` folder in the `.obsidian/plugins` folder of your vault. The Community Plugins interface is preferred.
 
 ## Troubleshooting
 
 First, the most important bit: **Longform is built specifically to never alter the contents on your notes.** The only note it rewrites is a project’s index file. As such, Longform can’t delete or lose your notes.
 
 Longform does a lot of complex tracking to bridge a project’s metadata with the state of files on disk. Although it tries to cover lots of edge cases, it is possible to cause desync between what Longform thinks is happening with projects and what’s actually going on. This tends to look like projects unavailable in the picker dropdown, or no scenes appearing in the scene list despite the notes definitely being there in the folder. If this happens to you, there’s a big red button in the plugin settings called `Untrack All Projects`. Clicking this will wipe Longform’s local understanding of what are and aren’t projects. After using that button, you can manually re-mark projects as Longform ones by right-clicking the folder in the file explorer. This should hopefully re-sync everything. If that doesn’t work, please file an issue!
+
+## Sponsorship
+
+Any [sponsorship](https://github.com/sponsors/kevboh) is deeply appreciated, although by no means necessary.
 
 ## License
 
