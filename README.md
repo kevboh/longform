@@ -28,6 +28,8 @@ The plan is to dramatically expand what compilation can do down the road. Ideall
 
 If you have suggestions or ideas for how you’d like this feature to work, please comment on the issue linked above noting so.
 
+**Heads up**: Due to [this issue in the Templater plugin](https://github.com/SilentVoid13/Templater/issues/315), if you have Templater installed and its `Trigger Templater on new file creation` setting enabled, compiling very large drafts (~200k words) can occasionally cause Obsidian to freeze. Disable that setting before compiling if you have Templater installed.
+
 ### Scene-only Styling
 
 Longform will automatically attach a `.longform-leaf` class to the container panes of any notes that are part of a Longform project. This means you can add custom CSS snippets to Obsidian that style your writing environment and _only_ your writing environment. For example, I prefer a dark theme for Obsidian but a light theme for writing, so my writing snippet looks something like this:
