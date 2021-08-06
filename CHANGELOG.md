@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.2
+
+- Updates based on the [community plugin PR](https://github.com/obsidianmd/obsidian-releases/pull/400).
+
 ## 1.0.1
 
 - Small refactor to make metadata sync more reliable.

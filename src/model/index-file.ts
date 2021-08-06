@@ -1,4 +1,4 @@
-import { dump } from "js-yaml";
+import { stringifyYaml } from "obsidian";
 import {
   DraftsMetadata,
   IndexFileMetadata,
@@ -23,7 +23,7 @@ export const EmptyIndexFileMetadata: IndexFileMetadata = {
 };
 
 export function indexBodyFor(state: IndexFileMetadata): string {
-  const body = dump(state, { flowLevel: -1 });
+  const body = stringifyYaml(state);
   return `---\n${body}---\n\n${WARNING}\n`;
 }
 

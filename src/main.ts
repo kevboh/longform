@@ -6,6 +6,7 @@ import {
   normalizePath,
   FileView,
   addIcon,
+  TFolder,
 } from "obsidian";
 import { get, Unsubscriber } from "svelte/store";
 import {
@@ -42,8 +43,6 @@ const LONGFORM_LEAF_CLASS = "longform-leaf";
 // TODO: Try and abstract away more logic from actual plugin hooks here
 
 export default class LongformPlugin extends Plugin {
-  // @ts-ignore
-  private view: ExplorerPane;
   // Local mirror of the pluginSettings store
   // since this class does a lot of ad-hoc settings fetching.
   // More efficient than a lot of get() calls.
@@ -59,13 +58,12 @@ export default class LongformPlugin extends Plugin {
 
     this.registerView(
       VIEW_TYPE_LONGFORM_EXPLORER,
-      (leaf: WorkspaceLeaf) => (this.view = new ExplorerPane(leaf))
+      (leaf: WorkspaceLeaf) => new ExplorerPane(leaf)
     );
 
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file: TAbstractFile) => {
-        // @ts-expect-error "children" exists on folders that are abstract files
-        if (!file || !file.children) {
+        if (!(file instanceof TFolder)) {
           return;
         }
         if (isLongformProject(file.path, this.cachedSettings)) {
@@ -103,53 +101,37 @@ export default class LongformPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new LongformSettingsTab(this.app, this));
 
-    if (this.app.workspace.layoutReady) {
-      this.postLayoutInit();
-    } else {
-      this.registerEvent(
-        this.app.workspace.on("layout-ready", this.postLayoutInit.bind(this))
-      );
-    }
+    this.app.workspace.onLayoutReady(this.postLayoutInit.bind(this));
 
     // Track active file
     activeFile.set(this.app.workspace.getActiveFile());
     this.registerEvent(
-      this.app.workspace.on(
-        "active-leaf-change",
-        (leaf) => {
-          if (leaf.view instanceof FileView) {
-            activeFile.set(leaf.view.file);
-          }
-        },
-        "longform-context"
-      )
+      this.app.workspace.on("active-leaf-change", (leaf) => {
+        if (leaf.view instanceof FileView) {
+          activeFile.set(leaf.view.file);
+        }
+      })
     );
 
     // Dynamically style longform scenes
     this.registerEvent(
-      this.app.workspace.on(
-        "layout-change",
-        () => {
-          this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
-            if (leaf.view instanceof FileView) {
-              if (
-                isInLongformProject(leaf.view.file.path, this.cachedSettings)
-              ) {
-                leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
-              } else {
-                leaf.view.containerEl.classList.remove(LONGFORM_LEAF_CLASS);
-              }
+      this.app.workspace.on("layout-change", () => {
+        this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
+          if (leaf.view instanceof FileView) {
+            if (isInLongformProject(leaf.view.file.path, this.cachedSettings)) {
+              leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
+            } else {
+              leaf.view.containerEl.classList.remove(LONGFORM_LEAF_CLASS);
             }
+          }
 
-            // @ts-ignore
-            const leafId = leaf.id;
-            if (leafId) {
-              leaf.view.containerEl.dataset.leafId = leafId;
-            }
-          });
-        },
-        "longform-context"
-      )
+          // @ts-ignore
+          const leafId = leaf.id;
+          if (leafId) {
+            leaf.view.containerEl.dataset.leafId = leafId;
+          }
+        });
+      })
     );
   }
 
@@ -269,33 +251,28 @@ export default class LongformPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on(
         "create",
-        this.foldersObserver.fileCreated.bind(this.foldersObserver),
-        "longform-context"
+        this.foldersObserver.fileCreated.bind(this.foldersObserver)
       )
     );
 
     this.registerEvent(
       this.app.vault.on(
         "delete",
-        this.foldersObserver.fileDeleted.bind(this.foldersObserver),
-        "longform-context"
+        this.foldersObserver.fileDeleted.bind(this.foldersObserver)
       )
     );
 
     this.registerEvent(
       this.app.vault.on(
         "rename",
-        this.foldersObserver.fileRenamed.bind(this.foldersObserver),
-        "longform-context"
+        this.foldersObserver.fileRenamed.bind(this.foldersObserver)
       )
     );
 
     this.registerEvent(
       this.app.metadataCache.on(
         "changed",
-        this.metadataObserver.metadataCacheChanged.bind(this.metadataObserver),
-        // this.metadataObserverChanged.bind(this),
-        "longform-context"
+        this.metadataObserver.metadataCacheChanged.bind(this.metadataObserver)
       )
     );
 
