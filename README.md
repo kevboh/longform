@@ -2,6 +2,12 @@
 
 Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects.
 
+## Installing
+
+Longform is in the Community Plugins section of Obsidian’s settings. You may also install it manually by copying the `main.js`, `manifest.json`, and `styles.css` files from a release into a `longform/` folder in the `.obsidian/plugins` folder of your vault. The Community Plugins interface is preferred.
+
+## Getting Started
+
 To get started, right-click any folder you’d like to write a Longform project in and select “Mark as Longform Project.” You can always remove folders from Longform by right-clicking them and selecting “Unmark as Longform Project.” Unmarking a project does not delete anything: it just stops the plugin from tracking that folder and showing it in any UI.
 
 Once you’ve marked a folder as a Longform project, you can switch to the Longform pane and add scenes (notes in a draft folder) to start writing.
@@ -105,10 +111,6 @@ Obsidian already has lots of affordances for writing freely. Its plugin architec
 When working in Scrivener I always struggled to link research notes to my scenes. I was using either Simplenote or Ulysses at the time (it took me a long, long time to write a novel!), and I ended up duplicating relevant notes in a scene’s scratch inspector area. It wasn’t ideal and it fell apart when research changed. Looking back, there are lots of references in my book that I now either can’t recall or would have to chase down. In Obsidian, you can just…link to the note. Or put a comment next to the text. Maybe linking here requires special formatting to not render the link on preview—I’ll figure that out when I get to it—but I can now make obscure literary references in peace, knowing that I have the citation tucked away elsewhere in a note.
 
 So that’s the idea. Treat your text and form as a unitary expression of the art, keep it all in one place, and lean on Obsidian to interlink the text with its research. I may throw this all away in a year; time will tell.
-
-## Installing
-
-Longform [will soon be available](https://github.com/obsidianmd/obsidian-releases/pull/400) in the Community Plugins section of Obsidian. You may also install it manually by copying the `main.js`, `manifest.json`, and `styles.css` files from a release into a `longform/` folder in the `.obsidian/plugins` folder of your vault. The Community Plugins interface is preferred.
 
 ## Troubleshooting
 
