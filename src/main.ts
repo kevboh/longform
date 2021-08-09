@@ -54,6 +54,7 @@ export default class LongformPlugin extends Plugin {
   private unsubscribeCurrentDraftPath: Unsubscriber;
 
   async onload(): Promise<void> {
+    console.log(`[Longform] Starting Longform ${this.manifest.version}…`);
     addIcon(ICON_NAME, ICON_SVG);
 
     this.registerView(
