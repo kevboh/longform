@@ -113,6 +113,20 @@ export default class LongformPlugin extends Plugin {
       })
     );
 
+    this.addCommand({
+      id: "longform-show-view",
+      name: "Open Longform Pane",
+      callback: () => {
+        this.initLeaf();
+        const leaf = this.app.workspace
+          .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
+          .first();
+        if (leaf) {
+          this.app.workspace.revealLeaf(leaf);
+        }
+      },
+    });
+
     // Dynamically style longform scenes
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
@@ -233,6 +247,11 @@ export default class LongformPlugin extends Plugin {
       }
     );
 
+    this.initLeaf();
+    initialized.set(true);
+  }
+
+  private initLeaf(): void {
     if (
       this.app.workspace.getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER).length
     ) {
@@ -241,8 +260,6 @@ export default class LongformPlugin extends Plugin {
     this.app.workspace.getLeftLeaf(false).setViewState({
       type: VIEW_TYPE_LONGFORM_EXPLORER,
     });
-
-    initialized.set(true);
   }
 
   private watchProjects(): void {
