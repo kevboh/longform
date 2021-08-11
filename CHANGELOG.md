@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.3
+
+- Update the way metadata is patched, fixes [#15](https://github.com/kevboh/longform/issues/15) and possibly [#9](https://github.com/kevboh/longform/issues/9).
+
 ## 1.0.2
 
 - Updates based on the [community plugin PR](https://github.com/obsidianmd/obsidian-releases/pull/400).
