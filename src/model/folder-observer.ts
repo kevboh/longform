@@ -16,6 +16,7 @@ import {
   currentDraftPath,
 } from "../view/stores";
 import { buildDraftsLookup } from "./index-file";
+import type { DraftsMetadata, IndexFileMetadata } from "./types";
 
 enum DraftsMembership {
   Draft,
@@ -104,8 +105,39 @@ export class FolderObserver {
       // Sync files on disk with scenes in metadata;
       // Existing files are sorted by scene order,
       // new ones are added to the bottom.
-      const newMetadata = cloneDeep(metadata);
+      let newMetadata = cloneDeep(metadata);
+
+      // javascript is stupid.
+      // eslint-disable-next-line
+      const functionalSplice = (arr: any[], index: number, value: any) => {
+        const v = [...arr];
+        v.splice(index, 1, value);
+        return v;
+      };
+      const cleanlyReplaceDraft = (
+        meta: Record<string, IndexFileMetadata>,
+        _projectPath: string,
+        _draftIndex: number,
+        _draft: DraftsMetadata
+      ) => ({
+        ...meta,
+        [_projectPath]: {
+          ...meta[_projectPath],
+          drafts: functionalSplice(
+            newMetadata[_projectPath].drafts,
+            _draftIndex,
+            _draft
+          ),
+        },
+      });
+
       Object.keys(toStore).forEach((projectPath) => {
+        // Handle cases where the metadata cache hasn't caught up to disk yet
+        // and thus no project exists there at all.
+        if (!newMetadata[projectPath]) {
+          return;
+        }
+
         // If a draft has been renamed, sub in the renamed draft in metadata
         if (renameInfo && renameInfo.newFile instanceof TFolder) {
           const oldFolder = renameInfo.oldPath.split("/").slice(-1)[0];
@@ -115,9 +147,16 @@ export class FolderObserver {
           );
           if (draftIndex >= 0) {
             const draft = newMetadata[projectPath].drafts[draftIndex];
-            draft.folder = newFolder;
-            draft.name = newFolder;
-            newMetadata[projectPath].drafts[draftIndex] = draft;
+            newMetadata = cleanlyReplaceDraft(
+              newMetadata,
+              projectPath,
+              draftIndex,
+              {
+                ...draft,
+                folder: newFolder,
+                name: newFolder,
+              }
+            );
           }
         }
 
@@ -161,22 +200,44 @@ export class FolderObserver {
           const draftIndex = newMetadata[projectPath].drafts.findIndex(
             (d) => d.folder === draftPath
           );
+
           if (draftIndex >= 0) {
-            newMetadata[projectPath].drafts[draftIndex].scenes = scenes;
+            const draft = newMetadata[projectPath].drafts[draftIndex];
+            newMetadata = cleanlyReplaceDraft(
+              newMetadata,
+              projectPath,
+              draftIndex,
+              {
+                ...draft,
+                scenes,
+              }
+            );
           } else {
-            newMetadata[projectPath].drafts.push({
+            const draft = {
               name: draftPath,
               folder: draftPath,
               scenes,
-            });
+            };
+            newMetadata = cleanlyReplaceDraft(
+              newMetadata,
+              projectPath,
+              newMetadata[projectPath].drafts.length,
+              draft
+            );
           }
         });
 
         // Delete any orphaned drafts that are in metadata but no longer on disk
         const fileDrafts = Object.keys(toStore[projectPath]);
-        newMetadata[projectPath].drafts = newMetadata[
-          projectPath
-        ].drafts.filter((d) => fileDrafts.contains(d.folder));
+        newMetadata = {
+          ...newMetadata,
+          [projectPath]: {
+            ...newMetadata[projectPath],
+            drafts: newMetadata[projectPath].drafts.filter((d) =>
+              fileDrafts.contains(d.folder)
+            ),
+          },
+        };
       });
       return newMetadata;
     });

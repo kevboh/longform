@@ -51,11 +51,15 @@ export class IndexMetadataObserver {
       // Load existing projects' metadata
       const allMetadata: Record<string, IndexFileMetadata> = {};
       this.watchedIndexPaths.forEach((paths) => {
-        const metadata = this.cache.getCache(paths.indexPath)
-          .frontmatter as unknown;
-        allMetadata[paths.projectPath] = filterMetadata(
-          metadata as IndexFileMetadata
-        );
+        const metadata = this.cache.getCache(paths.indexPath);
+        // Sometimes this can be undefined, especially if you're creating a new project.
+        // In that case, we'll get the metadata event later, so it's okay to skip it here.
+        if (metadata) {
+          const frontmatter = metadata.frontmatter as unknown;
+          allMetadata[paths.projectPath] = filterMetadata(
+            frontmatter as IndexFileMetadata
+          );
+        }
       });
 
       this.lastKnownMetadataState = cloneDeep(allMetadata);
@@ -85,15 +89,18 @@ export class IndexMetadataObserver {
     // Is this a file we're watching?
     const paths = this.watchedIndexPaths.find((p) => p.indexPath === file.path);
     if (paths) {
-      const newMetadata = this.cache.getFileCache(file).frontmatter as unknown;
-      // Ignore invalid YAML results, file likely mid-edit
-      if (!newMetadata) {
+      const fileMetadata = this.cache.getFileCache(file);
+      // Ignore missing or invalid YAML results, file likely mid-edit
+      if (!fileMetadata || !fileMetadata.frontmatter) {
         return;
       }
+      const newProjectMetadata = fileMetadata.frontmatter as unknown;
       this.ignoreNextMetadataUpdate = true;
       projectMetadata.update((value) => {
         const v = value;
-        v[paths.projectPath] = filterMetadata(newMetadata as IndexFileMetadata);
+        v[paths.projectPath] = filterMetadata(
+          newProjectMetadata as IndexFileMetadata
+        );
         this.lastKnownMetadataState = cloneDeep(v);
         return v;
       });
