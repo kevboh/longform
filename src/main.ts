@@ -185,7 +185,11 @@ export default class LongformPlugin extends Plugin {
     const indexFilePath = normalizePath(`${path}/${project.indexFile}.md`);
     let indexFile = this.app.vault.getAbstractFileByPath(indexFilePath);
     if (!indexFile) {
-      const contents = indexBodyFor(EmptyIndexFileMetadata);
+      let contents = indexBodyFor(EmptyIndexFileMetadata);
+      if (!contents) {
+        console.error("[Longform] Unable to initialize index file.");
+        contents = "";
+      }
       indexFile = await this.app.vault.create(indexFilePath, contents);
     }
 

@@ -1,10 +1,5 @@
-import { normalizePath, Vault } from "obsidian";
-import { indexBodyFor } from "./index-file";
-import type {
-  LongformProjectSettings,
-  LongformPluginSettings,
-  IndexFileMetadata,
-} from "./types";
+import { normalizePath } from "obsidian";
+import type { LongformProjectSettings, LongformPluginSettings } from "./types";
 
 export function addProject(
   path: string,
@@ -64,20 +59,4 @@ export function isIndexFile(
   project: LongformProjectSettings
 ): boolean {
   return path === indexFilePath(project);
-}
-
-export async function saveProjectIndex(
-  vault: Vault,
-  projectPath: string,
-  settings: LongformPluginSettings,
-  state: IndexFileMetadata
-): Promise<void> {
-  // Get general settings
-  const projectSettings = projectFor(projectPath, settings);
-  if (!projectSettings) {
-    return;
-  }
-
-  const body = indexBodyFor(state);
-  await vault.adapter.write(indexFilePath(projectSettings), body);
 }

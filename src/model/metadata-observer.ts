@@ -120,7 +120,9 @@ export class IndexMetadataObserver {
         !isEqual(this.lastKnownMetadataState[projectPath], newIndexMetadata);
       if (paths && isNew) {
         const contents = indexBodyFor(newIndexMetadata);
-        this.vault.adapter.write(paths.indexPath, contents);
+        if (contents) {
+          this.vault.adapter.write(paths.indexPath, contents);
+        }
       }
     });
     this.lastKnownMetadataState = cloneDeep(value);

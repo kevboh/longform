@@ -22,8 +22,14 @@ export const EmptyIndexFileMetadata: IndexFileMetadata = {
   ],
 };
 
-export function indexBodyFor(state: IndexFileMetadata): string {
+export function indexBodyFor(state: IndexFileMetadata): string | null {
+  if (!state) {
+    return null;
+  }
   const body = stringifyYaml(state);
+  if (!body || body === "undefined") {
+    return null;
+  }
   return `---\n${body}---\n\n${WARNING}\n`;
 }
 
