@@ -53,9 +53,7 @@ export const RemoveLinksStep = makeBuiltinStep({
         });
       }
       if (removeExternalLinks) {
-        contents = contents.replace(EXTERNAL_LINKS_REGEX, (match, p1) => {
-          return p1;
-        });
+        contents = contents.replace(EXTERNAL_LINKS_REGEX, (match, p1) => p1);
       }
 
       return contents;
