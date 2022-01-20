@@ -13,6 +13,7 @@ Longform uses this file to organize your folders and notes into a project. For m
 
 export const EmptyIndexFileMetadata: IndexFileMetadata = {
   version: LONGFORM_CURRENT_INDEX_VERSION,
+  workflow: null,
   drafts: [
     {
       name: "Draft 1",

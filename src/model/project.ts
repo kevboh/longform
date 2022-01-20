@@ -26,16 +26,18 @@ export function removeProject(
 
 export function isLongformProject(
   path: string,
-  settings: LongformPluginSettings
+  settings: LongformPluginSettings | null
 ): boolean {
-  return !!settings.projects[path];
+  return settings && !!settings.projects[path];
 }
 
 export function isInLongformProject(
   path: string,
-  settings: LongformPluginSettings
+  settings: LongformPluginSettings | null
 ): boolean {
-  return !!Object.keys(settings.projects).find((p) => path.startsWith(p));
+  return (
+    settings && !!Object.keys(settings.projects).find((p) => path.startsWith(p))
+  );
 }
 
 export function projectFor(

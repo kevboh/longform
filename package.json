@@ -1,6 +1,6 @@
 {
   "name": "longform",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Write novels, screenplays, and other long projects in Obsidian (https://obsidian.md).",
   "main": "main.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "^7.29.0",
-    "obsidian": "^0.12.11",
+    "obsidian": "^0.13.21",
     "rollup": "^2.32.1",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-svelte": "^7.1.0",
@@ -32,6 +32,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.2",
     "lodash": "^4.17.21",
     "sortablejs": "^1.14.0",
     "svelte": "^3.38.2"

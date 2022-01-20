@@ -1,4 +1,7 @@
 import { ItemView, Menu, WorkspaceLeaf } from "obsidian";
+import { compile, CompileStatus, CompileStepKind, Workflow } from "src/compile";
+import AddStepModal from "../compile/add-step-modal";
+import ConfirmActionModal from "../ConfirmActionModal";
 import { ICON_NAME } from "../icon";
 import ExplorerView from "./ExplorerView.svelte";
 
@@ -25,6 +28,29 @@ export class ExplorerPane extends ItemView {
 
   async onOpen(): Promise<void> {
     const context = new Map();
+
+    // Context function for showing a generic confirmation modal
+    context.set(
+      "showConfirmModal",
+      (
+        title: string,
+        description: string,
+        yesText: string,
+        yesAction: () => void,
+        noText: string = undefined,
+        noAction: () => void = undefined
+      ) => {
+        new ConfirmActionModal(
+          this.app,
+          title,
+          description,
+          yesText,
+          yesAction,
+          noText,
+          noAction
+        ).open();
+      }
+    );
 
     // Context function for opening scene notes on click
     context.set("onSceneClick", (path: string, newLeaf: boolean) => {
@@ -94,7 +120,57 @@ export class ExplorerPane extends ItemView {
     context.set("renameFolder", (oldPath: string, newPath: string) => {
       this.app.vault.adapter.rename(oldPath, newPath);
     });
-    context.set("getVault", () => this.app.vault);
+
+    context.set(
+      "compile",
+      (
+        projectPath: string,
+        draftName: string,
+        workflow: Workflow,
+        kinds: CompileStepKind[],
+        statusCallback: (status: CompileStatus) => void
+      ) => {
+        compile(
+          this.app,
+          projectPath,
+          draftName,
+          workflow,
+          kinds,
+          statusCallback
+        );
+      }
+    );
+
+    context.set("openCompileStepMenu", () => new AddStepModal(this.app).open());
+    context.set(
+      "showCompileActionsMenu",
+      (
+        x: number,
+        y: number,
+        currentWorkflowName: string,
+        action: (type: "new" | "rename" | "delete") => void
+      ) => {
+        const menu = new Menu(this.app);
+        menu.addItem((item) => {
+          item.setTitle("Add new workflow");
+          item.setIcon("plus-with-circle");
+          item.onClick(() => action("new"));
+        });
+        if (currentWorkflowName) {
+          menu.addItem((item) => {
+            item.setTitle(`Rename "${currentWorkflowName}"`);
+            item.setIcon("pencil");
+            item.onClick(() => action("rename"));
+          });
+          menu.addItem((item) => {
+            item.setTitle(`Delete "${currentWorkflowName}"`);
+            item.setIcon("trash");
+            item.onClick(() => action("delete"));
+          });
+        }
+        menu.showAtPosition({ x, y });
+      }
+    );
 
     this.explorerView = new ExplorerView({
       target: this.contentEl,
