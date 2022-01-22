@@ -1,6 +1,6 @@
 <script lang="ts">
   import type Sortable from "sortablejs";
-  import { Vault, normalizePath } from "obsidian";
+  import type { Vault } from "obsidian";
 
   import {
     CompileStatus,
@@ -333,8 +333,6 @@
     statusCallback: (status: CompileStatus) => void
   ) => Vault = getContext("compile");
   function doCompile() {
-    console.log("compiling");
-
     compile(
       $currentProjectPath,
       $currentDraftPath,
@@ -444,6 +442,9 @@
       run once per scene.<br /><b>Join</b> workflows run once and combine the
       rest of your scene steps into a single manuscript.<br /><b>Manuscript</b>
       steps run once on the joined manuscript.<br />Drag to rearrange.
+      <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md"
+        >Documentation here.</a
+      >
     </p>
 
     <div class="longform-compile-run-container">

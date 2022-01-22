@@ -30,11 +30,7 @@ The **Scenes** tab is where you’ll do most of your composition. There’s also
 
 ### Compiling
 
-Right now, the Compile tab is a simplified version of the long-term vision for this feature. It currently is capable of generating a single `.md` file that consists of all the scenes in a given draft, in order, separated by newlines. A single checkbox option allows you to insert note titles as H1s (`#`) before each scene.
-
-The plan is to dramatically expand what compilation can do down the road. Ideally, I’d like to get it to a place where you can define flexible [compilation workflows made up of multiple steps](https://github.com/kevboh/longform/issues/2). This way you could go from a Longform draft to a PDF manuscript, Word doc, or website. You may even be able to share workflows with others. This is a complicated feature, however, which requires a lot of thinking up-front about how best to build it. It’s also not something I’ll immediately need, and as such (and accordingly to this plugin’s philosophy, below) I won’t immediately build it. I will, however, try my best to help the community do what they’d like to do with their projects: after all, the entire point of this plugin is to no longer be locked into closed composition systems.
-
-If you have suggestions or ideas for how you’d like this feature to work, please comment on the issue linked above noting so.
+The Compile tab allows you to create custom workflows that turn your project into a manuscript. See [COMPILE.md](https://github.com/kevboh/longform/blob/main/docs/COMPILE.md) for more.
 
 **Heads up**: Due to [this issue in the Templater plugin](https://github.com/SilentVoid13/Templater/issues/315), if you have Templater installed and its `Trigger Templater on new file creation` setting enabled, compiling very large drafts (~200k words) can occasionally cause Obsidian to freeze. Disable that setting before compiling if you have Templater installed.
 
