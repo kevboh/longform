@@ -1,4 +1,4 @@
-export const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 1;
+export const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 2;
 export const LONGFORM_CURRENT_INDEX_VERSION = 1;
 
 export interface DraftsMetadata {
@@ -9,6 +9,7 @@ export interface DraftsMetadata {
 
 export interface IndexFileMetadata {
   version: number;
+  workflow: string | null;
   drafts: DraftsMetadata[];
 }
 
@@ -18,11 +19,24 @@ export interface LongformProjectSettings {
   draftsPath: string;
 }
 
+export type SerializedStep = {
+  id: string;
+  optionValues: { [id: string]: unknown };
+};
+
+export type SerializedWorkflow = {
+  name: string;
+  description: string;
+  steps: SerializedStep[];
+};
+
 export interface LongformPluginSettings {
   version: number;
   projects: { [path: string]: LongformProjectSettings };
   selectedProject: string | null;
   selectedDraft: string | null;
+  workflows: Record<string, SerializedWorkflow> | null;
+  userScriptFolder: string | null;
 }
 
 export enum ProjectLoadError {
@@ -40,4 +54,14 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   projects: {},
   selectedProject: null,
   selectedDraft: null,
+  workflows: null,
+  userScriptFolder: null,
 };
+
+export const TRACKED_SETTINGS_PATHS = [
+  "version",
+  "projects",
+  "selectedProject",
+  "selectedDraft",
+  "userScriptFolder",
+];

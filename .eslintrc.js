@@ -9,5 +9,6 @@ module.exports = {
       { args: "all", argsIgnorePattern: "^_" },
     ],
     "@typescript-eslint/ban-ts-comment": 0,
+    "@typescript-eslint/no-explicit-any": 0,
   },
 };

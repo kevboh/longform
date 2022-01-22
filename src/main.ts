@@ -8,6 +8,8 @@ import {
   addIcon,
   TFolder,
 } from "obsidian";
+import debounce from "lodash/debounce";
+import pick from "lodash/pick";
 import { get, Unsubscriber } from "svelte/store";
 import {
   VIEW_TYPE_LONGFORM_EXPLORER,
@@ -18,6 +20,8 @@ import {
   LongformProjectSettings,
   DEFAULT_SETTINGS,
   LongformPluginSettings,
+  SerializedWorkflow,
+  TRACKED_SETTINGS_PATHS,
 } from "./model/types";
 import {
   addProject,
@@ -34,9 +38,17 @@ import {
   currentProjectPath,
   initialized,
   pluginSettings,
+  userScriptSteps,
+  workflows,
 } from "./view/stores";
 import { ICON_NAME, ICON_SVG } from "./view/icon";
 import { LongformSettingsTab } from "./view/settings/LongformSettings";
+import {
+  deserializeWorkflow,
+  serializeWorkflow,
+} from "./compile/serialization";
+import { Workflow, DEFAULT_WORKFLOWS } from "./compile";
+import { UserScriptObserver } from "./model/user-script-observer";
 
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 
@@ -46,10 +58,12 @@ export default class LongformPlugin extends Plugin {
   // Local mirror of the pluginSettings store
   // since this class does a lot of ad-hoc settings fetching.
   // More efficient than a lot of get() calls.
-  cachedSettings: LongformPluginSettings;
+  cachedSettings: LongformPluginSettings | null = null;
   private unsubscribeSettings: Unsubscriber;
+  private unsubscribeWorkflows: Unsubscriber;
   private metadataObserver: IndexMetadataObserver;
   private foldersObserver: FolderObserver;
+  private userScriptObserver: UserScriptObserver;
   private unsubscribeCurrentProjectPath: Unsubscriber;
   private unsubscribeCurrentDraftPath: Unsubscriber;
 
@@ -95,8 +109,20 @@ export default class LongformPlugin extends Plugin {
     );
 
     // Settings
-    this.unsubscribeSettings = pluginSettings.subscribe((value) => {
+    this.unsubscribeSettings = pluginSettings.subscribe(async (value) => {
+      let shouldSave = false;
+      if (
+        this.cachedSettings &&
+        this.cachedSettings.userScriptFolder !== value.userScriptFolder
+      ) {
+        shouldSave = true;
+      }
+
       this.cachedSettings = value;
+
+      if (shouldSave) {
+        await this.saveSettings();
+      }
     });
 
     await this.loadSettings();
@@ -153,9 +179,11 @@ export default class LongformPlugin extends Plugin {
   onunload(): void {
     this.metadataObserver.destroy();
     this.foldersObserver.destroy();
+    this.userScriptObserver.destroy();
     this.unsubscribeSettings();
     this.unsubscribeCurrentProjectPath();
     this.unsubscribeCurrentDraftPath();
+    this.unsubscribeWorkflows();
     this.app.workspace
       .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
       .forEach((leaf) => leaf.detach());
@@ -163,13 +191,53 @@ export default class LongformPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     const settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    pluginSettings.set(settings);
-    currentDraftPath.set(settings.selectedDraft);
-    currentProjectPath.set(settings.selectedProject);
+
+    const _pluginSettings: LongformPluginSettings = pick(
+      settings,
+      TRACKED_SETTINGS_PATHS
+    ) as LongformPluginSettings;
+    pluginSettings.set(_pluginSettings);
+    currentDraftPath.set(_pluginSettings.selectedDraft);
+    currentProjectPath.set(_pluginSettings.selectedProject);
+
+    // We load user scripts imperatively first to cover cases where we need to deserialize
+    // workflows that may contain them.
+    const userScriptFolder = settings["userScriptFolder"];
+    this.userScriptObserver = new UserScriptObserver(
+      this.app.vault,
+      userScriptFolder
+    );
+    await this.userScriptObserver.loadUserSteps();
+
+    let _workflows = settings["workflows"];
+
+    if (!_workflows) {
+      console.log("[Longform] No workflows found; adding default workflow.");
+      _workflows = DEFAULT_WORKFLOWS;
+    }
+
+    const deserializedWorkflows: Record<string, Workflow> = {};
+    Object.entries(_workflows).forEach(([key, value]) => {
+      deserializedWorkflows[key as string] = deserializeWorkflow(value);
+    });
+    workflows.set(deserializedWorkflows);
   }
 
   async saveSettings(): Promise<void> {
-    await this.saveData(this.cachedSettings);
+    if (!this.cachedSettings) {
+      return;
+    }
+
+    const _workflows = get(workflows);
+    const serializedWorkflows: Record<string, SerializedWorkflow> = {};
+    Object.entries(_workflows).forEach(([key, value]) => {
+      serializedWorkflows[key as string] = serializeWorkflow(value);
+    });
+
+    await this.saveData({
+      ...this.cachedSettings,
+      workflows: serializedWorkflows,
+    });
   }
 
   promptToAddProject(path: string): void {
@@ -227,6 +295,7 @@ export default class LongformPlugin extends Plugin {
   private postLayoutInit(): void {
     this.metadataObserver = new IndexMetadataObserver(this.app);
     this.foldersObserver = new FolderObserver(this.app);
+    this.userScriptObserver.beginObserving();
     this.watchProjects();
     this.unsubscribeCurrentProjectPath = currentProjectPath.subscribe(
       async (selectedProject) => {
@@ -246,11 +315,22 @@ export default class LongformPlugin extends Plugin {
         }
         pluginSettings.update((s) => ({ ...s, selectedDraft }));
         // Force cached settings update immediately for save to work
-        // test
         this.cachedSettings = get(pluginSettings);
         await this.saveSettings();
       }
     );
+
+    // Workflows
+    const saveWorkflows = debounce(() => {
+      this.saveSettings();
+    }, 3000);
+    this.unsubscribeWorkflows = workflows.subscribe(() => {
+      if (!get(initialized)) {
+        return;
+      }
+
+      saveWorkflows();
+    });
 
     this.initLeaf();
     initialized.set(true);
@@ -272,23 +352,39 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on(
-        "create",
-        this.foldersObserver.fileCreated.bind(this.foldersObserver)
+        "modify",
+        this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)
       )
     );
 
     this.registerEvent(
-      this.app.vault.on(
-        "delete",
-        this.foldersObserver.fileDeleted.bind(this.foldersObserver)
-      )
+      this.app.vault.on("create", (file) => {
+        this.foldersObserver.fileCreated.bind(this.foldersObserver)(file);
+        this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
+          file
+        );
+      })
     );
 
     this.registerEvent(
-      this.app.vault.on(
-        "rename",
-        this.foldersObserver.fileRenamed.bind(this.foldersObserver)
-      )
+      this.app.vault.on("delete", (file) => {
+        this.foldersObserver.fileDeleted.bind(this.foldersObserver)(file);
+        this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
+          file
+        );
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        this.foldersObserver.fileRenamed.bind(this.foldersObserver)(
+          file,
+          oldPath
+        );
+        this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
+          file
+        );
+      })
     );
 
     this.registerEvent(

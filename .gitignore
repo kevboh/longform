@@ -1,6 +1,5 @@
 # npm
 node_modules
-package-lock.json
 
 # build
 main.js
@@ -14,3 +13,9 @@ data.json
 
 # macos
 *.DS_Store
+
+# test vault
+test-longform-vault/.obsidian/workspace
+test-longform-vault/.obsidian/plugins/longform/*.css
+test-longform-vault/.obsidian/plugins/longform/*.js
+test-longform-vault/.obsidian/plugins/longform/*.json

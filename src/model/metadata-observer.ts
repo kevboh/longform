@@ -135,6 +135,7 @@ function filterMetadata(metadata: IndexFileMetadata): IndexFileMetadata {
 
   return {
     version: metadata.version,
+    workflow: metadata.workflow,
     drafts: metadata.drafts,
   };
 }
