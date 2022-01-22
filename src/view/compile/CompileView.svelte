@@ -1,4 +1,5 @@
 <script lang="ts">
+  // @ts-nocheck
   import type Sortable from "sortablejs";
   import type { Vault } from "obsidian";
 
@@ -15,7 +16,6 @@
     currentDraftPath,
     currentProject,
     currentProjectPath,
-    pluginSettings,
     workflows,
     currentWorkflow,
     projectMetadata,
@@ -127,8 +127,6 @@
   function addStep() {
     openCompileStepMenu();
   }
-
-  let error: string | null = null;
 
   enum WorkflowError {
     Valid = "",
@@ -421,7 +419,7 @@
             const newWorkflow = {
               ...$currentWorkflow,
               steps: $currentWorkflow.steps.filter(
-                (e, index) => item.index !== index
+                (_e, index) => item.index !== index
               ),
             };
             $workflows[currentWorkflowName] = newWorkflow;

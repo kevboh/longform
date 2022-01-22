@@ -100,7 +100,7 @@ export function makeBuiltinStep(
       context: CompileContext
     ) => CompileInput | Promise<CompileInput>;
   },
-  isScript: boolean = false
+  isScript = false
 ): CompileStep {
   return {
     ...v,
@@ -139,5 +139,5 @@ export const PLACEHOLDER_MISSING_STEP: CompileStep = {
     options: [],
   },
   optionValues: {},
-  compile: (a, b) => a,
+  compile: (a) => a,
 };

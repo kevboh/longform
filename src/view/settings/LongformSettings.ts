@@ -118,7 +118,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
   }
 
-  hide() {
+  hide(): void {
     this.unsubscribeUserScripts();
   }
 }

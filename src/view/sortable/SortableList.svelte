@@ -34,7 +34,6 @@
   };
 
   // Element handles and mount sortable
-  // @ts-ignore
   let sortable: SortableType;
   let listElement: HTMLElement;
   onMount(() => {

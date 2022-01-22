@@ -10,8 +10,8 @@ import {
   CompileStepOptionType,
 } from "./abstract-compile-step";
 
-const WIKILINKS_REGEX = /\[\[([^\[|]+)(|[^\[]+)?\]\]/gm;
-const EXTERNAL_LINKS_REGEX = /\[([^\[]+)\](\(.*\))/gm;
+const WIKILINKS_REGEX = /\[\[([^[|]+)(|[^[]+)?\]\]/gm;
+const EXTERNAL_LINKS_REGEX = /\[([^[]+)\](\(.*\))/gm;
 
 export const RemoveLinksStep = makeBuiltinStep({
   id: "remove-links",
@@ -44,7 +44,7 @@ export const RemoveLinksStep = makeBuiltinStep({
 
     const replaceLinks = (contents: string) => {
       if (removeWikilinks) {
-        contents = contents.replace(WIKILINKS_REGEX, (match, p1, p2) => {
+        contents = contents.replace(WIKILINKS_REGEX, (_match, p1, p2) => {
           if (p2) {
             return p2.slice(1);
           } else {
@@ -53,7 +53,7 @@ export const RemoveLinksStep = makeBuiltinStep({
         });
       }
       if (removeExternalLinks) {
-        contents = contents.replace(EXTERNAL_LINKS_REGEX, (match, p1) => p1);
+        contents = contents.replace(EXTERNAL_LINKS_REGEX, (_match, p1) => p1);
       }
 
       return contents;

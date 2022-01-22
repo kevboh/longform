@@ -7,9 +7,6 @@ drafts:
     scenes:
       - first scene
       - second scene
-  - name: Draft 2
-    folder: Draft 2
-    scenes: []
 ---
 
 

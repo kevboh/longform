@@ -58,7 +58,7 @@ export async function compile(
   workflow: Workflow,
   kinds: CompileStepKind[],
   statusCallback: (status: CompileStatus) => void
-) {
+): Promise<void> {
   // Grab draft path and metadata
   const projectSettings = get(pluginSettings).projects[projectPath];
   if (!projectSettings) {

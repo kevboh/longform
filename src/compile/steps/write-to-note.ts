@@ -52,7 +52,9 @@ export const WriteToNoteStep = makeBuiltinStep({
 
       try {
         await context.app.vault.createFolder(pathComponents.join("/"));
-      } catch (e) {}
+      } catch (e) {
+        // do nothing, folder already existed
+      }
 
       await context.app.vault.adapter.write(path, input.contents);
 

@@ -16,7 +16,7 @@ export default class ConfirmActionModal extends Modal {
     explanation: string,
     yesText: string,
     yesAction: () => void,
-    noText: string = "Cancel",
+    noText = "Cancel",
     noAction: () => void = () => this.close()
   ) {
     super(app);

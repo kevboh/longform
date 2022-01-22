@@ -37,7 +37,7 @@ export class UserScriptObserver {
     this.unsubscribeScriptFolder();
   }
 
-  beginObserving() {
+  beginObserving(): void {
     if (this.unsubscribeScriptFolder) {
       this.unsubscribeScriptFolder();
     }
@@ -64,7 +64,7 @@ export class UserScriptObserver {
     });
   }
 
-  async loadUserSteps() {
+  async loadUserSteps(): Promise<CompileStep[]> {
     if (!this.userScriptFolder) {
       return;
     }
@@ -140,12 +140,15 @@ export class UserScriptObserver {
   }
 
   private async loadScript(path: string): Promise<CompileStep> {
-    let js = await this.vault.adapter.read(path);
+    const js = await this.vault.adapter.read(path);
 
+    // eslint-disable-next-line prefer-const
     let _require = (s: string) => {
       return window.require && window.require(s);
     };
+    // eslint-disable-next-line prefer-const
     let exports: any = {};
+    // eslint-disable-next-line prefer-const
     let module = {
       exports,
     };
@@ -196,7 +199,7 @@ export class UserScriptObserver {
     };
   }
 
-  fileEventCallback(file: TAbstractFile) {
+  fileEventCallback(file: TAbstractFile): void {
     if (
       this.userScriptFolder &&
       file.path.endsWith("js") &&

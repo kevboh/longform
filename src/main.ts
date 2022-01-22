@@ -38,7 +38,6 @@ import {
   currentProjectPath,
   initialized,
   pluginSettings,
-  userScriptSteps,
   workflows,
 } from "./view/stores";
 import { ICON_NAME, ICON_SVG } from "./view/icon";
