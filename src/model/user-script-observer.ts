@@ -1,5 +1,5 @@
 import debounce from "lodash/debounce";
-import { Vault, FileSystemAdapter, Platform, TAbstractFile } from "obsidian";
+import type { Vault, TAbstractFile } from "obsidian";
 import {
   CompileStep,
   CompileStepKind,
@@ -48,8 +48,14 @@ export class UserScriptObserver {
       ) {
         return;
       }
+
+      const valid = await this.vault.adapter.exists(s.userScriptFolder);
+      if (!valid) {
+        return;
+      }
+
       this.userScriptFolder = s.userScriptFolder;
-      if (this.userScriptFolder && Platform.isDesktopApp) {
+      if (this.userScriptFolder) {
         await this.loadUserSteps();
       } else {
         userScriptSteps.set(null);
@@ -60,7 +66,11 @@ export class UserScriptObserver {
 
   async loadUserSteps() {
     if (!this.userScriptFolder) {
-      console.log("no user script folder");
+      return;
+    }
+
+    const valid = await this.vault.adapter.exists(this.userScriptFolder);
+    if (!valid) {
       return;
     }
 
@@ -130,35 +140,35 @@ export class UserScriptObserver {
   }
 
   private async loadScript(path: string): Promise<CompileStep> {
-    if (!(this.vault.adapter instanceof FileSystemAdapter)) {
-      console.error(
-        "[Longform] Attempted to load user scripts on a platform without a FileSystemAdapter."
-      );
-      throw new Error(`User scripts can only load and run on desktop.`);
-    }
-    const vaultPath = this.vault.adapter.getBasePath();
-    const filePath = `${vaultPath}/${path}`;
+    let js = await this.vault.adapter.read(path);
 
-    if (Object.keys(window.require.cache).contains(filePath)) {
-      delete window.require.cache[window.require.resolve(filePath)];
-    }
-    const userScript = await import(filePath);
+    let _require = (s: string) => {
+      return window.require && window.require(s);
+    };
+    let exports: any = {};
+    let module = {
+      exports,
+    };
 
-    if (!userScript.default) {
+    const evaluateScript = window.eval(
+      "(function anonymous(require, module, exports){" + js + "\n})"
+    );
+    evaluateScript(_require, module, exports);
+    const loadedStep: any = exports["default"] || module.exports;
+
+    if (!loadedStep) {
       console.error(
-        `[Longform] Failed to load user script ${filePath}. No exports detected.`
+        `[Longform] Failed to load user script ${path}. No exports detected.`
       );
       throw new Error(
-        `Failed to load user script ${filePath}. No exports detected.`
+        `Failed to load user script ${path}. No exports detected.`
       );
     }
-
-    const loadedStep = await Promise.resolve(userScript.default);
 
     const step = makeBuiltinStep(
       {
         ...loadedStep,
-        id: filePath,
+        id: path,
         description: {
           ...loadedStep.description,
           availableKinds: loadedStep.description.availableKinds.map(
@@ -177,10 +187,10 @@ export class UserScriptObserver {
 
     return {
       ...step,
-      id: filePath,
+      id: path,
       description: {
         ...step.description,
-        canonicalID: filePath,
+        canonicalID: path,
         isScript: true,
       },
     };

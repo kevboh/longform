@@ -1,4 +1,4 @@
-import { normalizePath, App, Platform } from "obsidian";
+import { normalizePath, App } from "obsidian";
 import type { SerializedWorkflow } from "src/model/types";
 import { get } from "svelte/store";
 
@@ -10,19 +10,6 @@ import type {
   Workflow,
 } from "./steps/abstract-compile-step";
 export * from "./steps/abstract-compile-step";
-
-// @ts-ignore
-let executeScript = (_command: string, _options: any) => {
-  console.log("[Longfrom] User script execution not enabled in this context.");
-};
-(async () => {
-  if (!Platform.isMobileApp) {
-    const { exec } = await import("child_process");
-    const { promisify } = await import("util");
-
-    executeScript = promisify(exec);
-  }
-})();
 
 export interface CompileOptions {
   includeHeaders: boolean;
