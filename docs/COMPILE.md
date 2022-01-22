@@ -20,68 +20,67 @@ Steps may sometimes have _options_, which are text or checkbox fields that the s
 
 ### Built-in Steps
 
-Longform comes with a lot of steps for you to add to compilation. They are documented here.
+Longform comes with a lot of steps for you to add to compilation.
 
 #### Prepend Title
+_Scene_
 
-Prepends each scene's title (its note name) before its content.
+Prepends each scene's title (its note name) before its content. Options:
 
-**Type**: Scene
-**Options**:
-
-- Title Format (text): A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft).
-- Separator (text): Some text to insert between the formatted title and the rest of the scene.
+| Name | Type  | Default | Description |
+| --- | --- | --- | --- |
+| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). |
+| Separator | Text | \n\n | Some text to insert between the formatted title and the rest of the scene. |
 
 #### Remove Comments
+_Scene, Manuscript_
 
-Removes markdown and/or HTML comments.
+Removes markdown and/or HTML comments. Options:
 
-**Type**: Scene, Manuscript
-**Options**:
-
-- Remove Markdown Comments (checkbox): If checked, will remove markdown comments (`%%`).
-- Remove HTML Comments (checkbox): If checked, will remove HTML comments (`<!-- -->`).
+| Name | Type  | Default | Description |
+| --- | --- | --- | --- |
+| Remove Markdown Comments | Boolean | true | If checked, will remove markdown comments (`%%`). |
+| Remove HTML Comments | Boolean | true | If checked, will remove HTML comments (`<!-- -->`). |
 
 #### Remove Links
+_Scene, Manuscript_
 
-Removes internal and/or external links
+Removes internal and/or external links. Options:
 
-**Type**: Scene, Manuscript
-**Options**:
-
-- Remove Wikilinks (checkbox): If checked, will remove internal links (`[[ ]]`).
-- Remove External Links (checkbox): If checked, will remove external links (`[ ]()`).
+| Name | Type  | Default | Description |
+| --- | --- | --- | --- |
+| Remove Wikilinks | Boolean | true | If checked, will remove internal links (`[[ ]]`). |
+| Remove External Links | Boolean | true | If checked, will remove external links (`[ ]()`). |
 
 #### Remove Strikethroughs
+_Scene, Manuscript_
 
 Removes any ~~struck through~~ text (`~~ ~~`).
 
-**Type**: Scene, Manuscript
-
 #### Strip Frontmatter
+_Scene, Manuscript._
 
 Removes any [YAML frontmatter](https://help.obsidian.md/Advanced+topics/YAML+front+matter) from the beginning of a scene or manuscript.
 
-**Type**: Scene, Manuscript.
-
 #### Concatenate Text
+_Join_
 
-Joins scenes into a manuscript by concatenating them together with some optional text between.
+Joins scenes into a manuscript by concatenating them together with some optional text between. Options:
 
-**Type**: Join
-**Options**:
+| Name | Type  | Default | Description |
+| --- | --- | --- | --- |
+| Separator | Text | \n\n | Text to put between the joined scenes. |
 
-- Separator (text): Text to put between the joined scenes.
 
 #### Write to Note
+_Manuscript_
 
-Saves the manuscript as Markdown note in your vault.
+Saves the manuscript as Markdown note in your vault. Options:
 
-**Type**: Manuscript
-**Options**:
-
-- Output path (text): Path relative to your project at which to save your compiled manuscript.
-- Open Compiled Manuscript (boolean): If checked, the written note will be opened in a new pane after this step runs.
+| Name | Type  | Default | Description |
+| --- | --- | --- | --- |
+| Output Path | Text | manuscript.md | Path relative to your project at which to save your compiled manuscript. |
+| Open Compiled Manuscript | Boolean | true | If checked, open the compiled manuscript in a new pane. |
 
 ### User Script Steps
 
