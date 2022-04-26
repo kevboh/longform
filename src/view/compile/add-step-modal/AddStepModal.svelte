@@ -1,19 +1,20 @@
 <script lang="ts">
   import {
+    selectedDraft,
     workflows,
     currentWorkflow,
-    projectMetadata,
-    currentProjectPath,
     userScriptSteps,
-  } from "src/view/stores";
+  } from "src/model/stores";
   import { getContext } from "svelte";
 
   import { BUILTIN_STEPS } from "../../../compile/steps";
-  import {
+  import type {
     CompileStep,
+    Workflow,
+  } from "../../../compile/steps/abstract-compile-step";
+  import {
     explainStepKind,
     formatStepKind,
-    Workflow,
   } from "../../../compile/steps/abstract-compile-step";
 
   const close: () => void = getContext("close");
@@ -27,7 +28,7 @@
         { ...step, id: `${step.id}-${Date.now()}` },
       ],
     } as Workflow;
-    const currentWorkflowName = $projectMetadata[$currentProjectPath].workflow;
+    const currentWorkflowName = $selectedDraft.workflow;
     $workflows[currentWorkflowName] = newWorkflow;
     close();
   }

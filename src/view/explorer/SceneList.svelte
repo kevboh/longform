@@ -6,29 +6,75 @@
   import type Sortable from "sortablejs";
   import { getContext } from "svelte";
 
-  import {
-    activeFile,
-    currentDraft,
-    currentDraftPath,
-    currentProjectPath,
-    projectMetadata,
-  } from "../stores";
+  import { activeFile } from "../stores";
+
+  import { drafts, selectedDraft } from "src/model/stores";
+
   import SortableList from "../sortable/SortableList.svelte";
+  import type { IndentedScene, MultipleSceneDraft } from "src/model/types";
+
+  let currentDraftIndex: number;
+  $: {
+    currentDraftIndex = $drafts.findIndex(
+      (d) => d.vaultPath === $selectedDraft.vaultPath
+    );
+  }
 
   // Function to make paths from scene names
-  const makeScenePath: (scene: string) => string = getContext("makeScenePath");
+  const makeScenePath: (draft: MultipleSceneDraft, scene: string) => string =
+    getContext("makeScenePath");
 
   // Map current list of scenes to data for our sortable list
-  type SceneItem = { id: string; name: string; path: string };
+  type SceneItem = {
+    id: string;
+    name: string;
+    path: string;
+    indent: number;
+    collapsible: boolean;
+  };
   let items: SceneItem[];
   $: {
-    items = $currentDraft
-      ? $currentDraft.scenes.map((s) => ({
-          id: s,
-          name: s,
-          path: makeScenePath(s),
-        }))
-      : [];
+    items =
+      $selectedDraft && $selectedDraft.format === "scenes"
+        ? itemsFromScenes($selectedDraft.scenes, collapsedItems)
+        : [];
+  }
+
+  // INDENTATION & COLLAPSING
+  let ghostIndent = 0;
+  let draggingIndent = 0;
+  let draggingID: string = null;
+  let collapsedItems: string[] = [];
+
+  function itemsFromScenes(
+    scenes: IndentedScene[],
+    _collapsedItems: string[]
+  ): SceneItem[] {
+    const itemsToReturn: SceneItem[] = [];
+    let ignoringUntilIndent = Infinity;
+
+    scenes.forEach(({ title, indent }, index) => {
+      if (indent <= ignoringUntilIndent) {
+        ignoringUntilIndent = Infinity;
+
+        const collapsed = _collapsedItems.contains(title);
+        if (collapsed) {
+          ignoringUntilIndent = indent;
+        }
+
+        const nextScene = index < scenes.length - 1 ? scenes[index + 1] : false;
+        const item = {
+          id: title,
+          name: title,
+          indent: indent,
+          path: makeScenePath($selectedDraft as MultipleSceneDraft, title),
+          collapsible: nextScene && nextScene.indent > indent,
+        };
+        itemsToReturn.push(item);
+      }
+    });
+
+    return itemsToReturn;
   }
 
   // Track sort state for styling, set sorting options
@@ -44,22 +90,44 @@
     },
   };
 
-  // Called when sorting ends an the item order has been updated.
-  // Reorder scenes according and set into the store.
   function itemOrderChanged(event: CustomEvent<SceneItem[]>) {
-    const currentDraftIndex = $projectMetadata[
-      $currentProjectPath
-    ].drafts.findIndex((d) => d.folder === $currentDraftPath);
-    $projectMetadata[$currentProjectPath].drafts[currentDraftIndex].scenes =
-      event.detail.map((d) => d.name);
+    if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
+      const scenes = event.detail.map((d) => ({
+        title: d.name,
+        indent: d.name === draggingID ? draggingIndent : d.indent,
+      }));
+      ($drafts[currentDraftIndex] as MultipleSceneDraft).scenes = scenes;
+    }
+  }
+
+  function itemIndentChanged(
+    event: CustomEvent<{
+      itemID: string;
+      itemIndex: number;
+      newIndent: number;
+      indentWidth: number;
+    }>
+  ) {
+    draggingID = event.detail.itemID;
+    draggingIndent = event.detail.newIndent;
+    ghostIndent = draggingIndent * event.detail.indentWidth;
   }
 
   // Grab the click context function and call it when a valid scene is clicked.
   const onSceneClick: (path: string, newLeaf: boolean) => void =
     getContext("onSceneClick");
-  function onItemClick(path: string, event: MouseEvent) {
-    if (path) {
-      onSceneClick(path, event.metaKey);
+  function onItemClick(item: any, event: MouseEvent) {
+    const sceneItem = item as SceneItem;
+    if (sceneItem.path) {
+      if (sceneItem.collapsible && sceneItem.path === $activeFile.path) {
+        if (!collapsedItems.contains(sceneItem.id)) {
+          collapsedItems = [...collapsedItems, sceneItem.id];
+        } else {
+          collapsedItems = collapsedItems.filter((i) => i !== sceneItem.id);
+        }
+      } else {
+        onSceneClick(sceneItem.path, event.metaKey);
+      }
     }
   }
 
@@ -76,30 +144,111 @@
       onContextClick(scenePath, x, y);
     }
   }
+
+  function doWithUnknown(fileName: string, action: "add" | "ignore") {
+    const currentDraftIndex = $drafts.findIndex(
+      (d) => d.vaultPath === $selectedDraft.vaultPath
+    );
+    if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
+      drafts.update((d) => {
+        const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
+        if (action === "add") {
+          (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
+            ...targetDraft.scenes,
+            { title: fileName, indent: 0 },
+          ];
+        } else {
+          (d[currentDraftIndex] as MultipleSceneDraft).ignoredFiles = [
+            ...targetDraft.ignoredFiles,
+            fileName,
+          ];
+        }
+        (d[currentDraftIndex] as MultipleSceneDraft).unknownFiles =
+          targetDraft.unknownFiles.filter((f) => f !== fileName);
+        return d;
+      });
+    }
+  }
 </script>
 
-<div id="scene-list" class:dragging={isSorting}>
-  <SortableList
-    bind:items
-    let:item
-    on:orderChanged={itemOrderChanged}
-    {sortableOptions}
-    class="sortable-scene-list"
+<div>
+  <div
+    id="scene-list"
+    class:dragging={isSorting}
+    style="--ghost-indent: {ghostIndent}px"
   >
-    <div
-      class="scene-container"
-      class:selected={$activeFile && $activeFile.path === item.path}
-      on:click={(e) =>
-        typeof item.path === "string" ? onItemClick(item.path, e) : {}}
-      on:contextmenu|preventDefault={onContext}
-      data-scene-path={item.path}
+    <SortableList
+      trackIndents
+      bind:items
+      let:item
+      on:orderChanged={itemOrderChanged}
+      on:indentChanged={itemIndentChanged}
+      {sortableOptions}
+      class="sortable-scene-list"
     >
-      {item.name}
+      <div
+        class="scene-container"
+        style="margin-left: {item.indent * 32}px"
+        class:selected={$activeFile && $activeFile.path === item.path}
+        class:collapsed={collapsedItems.contains(item.id)}
+        on:click={(e) =>
+          typeof item.path === "string" ? onItemClick(item, e) : {}}
+        on:contextmenu|preventDefault={onContext}
+        data-scene-path={item.path}
+        data-scene-indent={item.indent}
+      >
+        {#if item.collapsible}
+          <svg viewBox="0 0 100 100" class="right-triangle" width="8" height="8"
+            ><path
+              fill="currentColor"
+              stroke="currentColor"
+              d="M94.9,20.8c-1.4-2.5-4.1-4.1-7.1-4.1H12.2c-3,0-5.7,1.6-7.1,4.1c-1.3,2.4-1.2,5.2,0.2,7.6L43.1,88c1.5,2.3,4,3.7,6.9,3.7 s5.4-1.4,6.9-3.7l37.8-59.6C96.1,26,96.2,23.2,94.9,20.8L94.9,20.8z"
+            /></svg
+          >
+        {/if}
+        <span style="pointer-events: none;">{item.name}</span>
+      </div>
+    </SortableList>
+  </div>
+  {#if $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
+    <div id="longform-unknown-files-wizard">
+      <div class="longform-unknown-inner">
+        <p class="longform-unknown-explanation">
+          Longform has found {$selectedDraft.unknownFiles.length} new file{$selectedDraft
+            .unknownFiles.length === 1
+            ? ""
+            : "s"} in your scenes folder.
+        </p>
+        <ul>
+          {#each $selectedDraft.unknownFiles as fileName}
+            <li>
+              <div class="longform-unknown-file">
+                <span>{fileName}</span>
+                <div>
+                  <button
+                    class="longform-unknown-add"
+                    on:click={() => doWithUnknown(fileName, "add")}>Add</button
+                  >
+                  <button
+                    class="longform-unknown-ignore"
+                    on:click={() => doWithUnknown(fileName, "ignore")}
+                    >Ignore</button
+                  >
+                </div>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      </div>
     </div>
-  </SortableList>
+  {/if}
 </div>
 
 <style>
+  :global(.group) {
+    margin-left: 8px;
+  }
+
   #scene-list {
     margin: 4px 0px;
   }
@@ -112,6 +261,8 @@
 
   .scene-container {
     display: flex;
+    flex-direction: row;
+    align-items: center;
     border: 1px solid transparent;
     border-radius: 3px;
     cursor: pointer;
@@ -128,13 +279,59 @@
     color: var(--text-normal);
   }
 
+  .right-triangle {
+    transition: transform 0.3s;
+    margin-right: 8px;
+  }
+
+  .collapsed .right-triangle {
+    transform: rotate(-90deg);
+  }
+
   .scene-container:active {
     background-color: inherit;
     color: var(--text-muted);
   }
 
+  #longform-unknown-files-wizard {
+    border-top: 1px solid var(--text-muted);
+    padding: 8px 0px;
+  }
+
+  .longform-unknown-inner {
+    border-left: 2px solid var(--text-accent);
+    padding: 0px 0px 0px 4px;
+  }
+
+  .longform-unknown-explanation {
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  #longform-unknown-files-wizard ul {
+    list-style-type: none;
+    padding: 0px 0px 0px 8px;
+  }
+
+  .longform-unknown-file {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .longform-unknown-add {
+    color: var(--text-accent);
+    font-weight: bold;
+  }
+
+  .longform-unknown-ignore {
+    color: var(--text-muted);
+    font-weight: bold;
+  }
+
   :global(.scene-ghost) {
     background-color: var(--interactive-accent-hover);
     color: var(--text-on-accent);
+    margin-left: var(--ghost-indent);
   }
 </style>

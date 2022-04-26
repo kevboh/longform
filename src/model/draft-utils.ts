@@ -1,0 +1,118 @@
+import { stringifyYaml } from "obsidian";
+import { omit } from "lodash";
+
+import type { Draft, IndentedScene } from "./types";
+import { stripFrontmatter } from "./note-utils";
+
+export function draftTitle(draft: Draft): string {
+  return draft.draftTitle ?? draft.vaultPath;
+}
+
+export function draftToYAML(draft: Draft): string {
+  let longformEntry: Record<string, any> = {};
+  longformEntry["format"] = draft.format;
+  if (draft.titleInFrontmatter) {
+    longformEntry["title"] = draft.title;
+  }
+  if (draft.draftTitle) {
+    longformEntry["draftTitle"] = draft.draftTitle;
+  }
+  if (draft.workflow) {
+    longformEntry["workflow"] = draft.workflow;
+  }
+
+  if (draft.format === "scenes") {
+    longformEntry = Object.assign(longformEntry, {
+      folder: draft.sceneFolder,
+      scenes: indentedScenesToArrays(draft.scenes),
+      ignoredFiles: draft.ignoredFiles,
+    });
+  }
+
+  const obj = {
+    longform: longformEntry,
+  };
+
+  return stringifyYaml(obj).trim();
+}
+
+function indentedScenesToArrays(indented: IndentedScene[]) {
+  const result: any = [];
+  // track our current indentation level
+  let currentIndent = 0;
+  // array for the current indentation level
+  let currentNesting = result;
+  // memoized arrays so that later, lesser indents can use earlier-created array
+  const nestingAt: Record<number, any> = {};
+  nestingAt[0] = currentNesting;
+
+  indented.forEach(({ title, indent }) => {
+    if (indent > currentIndent) {
+      // we're at a deeper indentation level than current,
+      // so build up a nest and memoize it
+      while (currentIndent < indent) {
+        currentIndent = currentIndent + 1;
+        const newNesting: any = [];
+        currentNesting.push(newNesting);
+        nestingAt[currentIndent] = newNesting;
+        currentNesting = newNesting;
+      }
+    } else if (indent < currentIndent) {
+      // we're at a lesser indentation level than current,
+      // so drop back to previously memoized nesting
+      currentNesting = nestingAt[indent];
+      currentIndent = indent;
+    }
+
+    // actually insert the value
+    currentNesting.push(title);
+  });
+  return result;
+}
+
+export function arraysToIndentedScenes(
+  arr: any,
+  result: IndentedScene[] = [],
+  currentIndent = -1
+): IndentedScene[] {
+  if (arr instanceof Array) {
+    if (arr.length === 0) {
+      return result;
+    }
+
+    const next = arr.shift();
+    const inner = arraysToIndentedScenes(next, [], currentIndent + 1);
+    return arraysToIndentedScenes(arr, [...result, ...inner], currentIndent);
+  } else {
+    return [
+      {
+        title: arr,
+        indent: currentIndent,
+      },
+    ];
+  }
+}
+
+export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
+  const metadata = app.metadataCache.getCache(path);
+  let formatted = "";
+  if (metadata) {
+    const fm = omit(metadata.frontmatter, ["position", "longform"]);
+    formatted =
+      Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
+  }
+
+  const newFm = `---\n${draftToYAML(draft)}\n${formatted}---\n\n`;
+
+  const exists = await app.vault.adapter.exists(path);
+  let contents = "";
+  if (exists) {
+    const fileContents = await app.vault.adapter.read(path);
+    contents = stripFrontmatter(fileContents);
+    contents = newFm + contents;
+  } else {
+    contents = newFm;
+  }
+
+  await app.vault.adapter.write(path, contents);
+}

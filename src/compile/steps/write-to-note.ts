@@ -1,8 +1,6 @@
 import { normalizePath } from "obsidian";
-import type { CompileManuscriptInput } from "..";
-
+import type { CompileContext, CompileManuscriptInput } from "..";
 import {
-  CompileContext,
   CompileStepKind,
   CompileStepOptionType,
   makeBuiltinStep,
@@ -19,7 +17,7 @@ export const WriteToNoteStep = makeBuiltinStep({
         id: "target",
         name: "Output path",
         description:
-          "Path for the created manuscript note, relative to your project.",
+          "Path for the created manuscript note, relative to your project. $1 will be replaced with your project’s title.",
         type: CompileStepOptionType.Text,
         default: "manuscript.md",
       },
@@ -39,7 +37,9 @@ export const WriteToNoteStep = makeBuiltinStep({
     if (context.kind !== CompileStepKind.Manuscript) {
       throw new Error("Cannot write non-manuscript as note.");
     } else {
-      const target = context.optionValues["target"] as string;
+      let target = context.optionValues["target"] as string;
+      target = target.replace("$1", context.draft.title);
+
       const openAfter = context.optionValues["open-after"] as boolean;
       if (!target || target.length == 0) {
         throw new Error("Invalid path for Save as Note.");

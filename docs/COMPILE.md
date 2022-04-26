@@ -29,7 +29,7 @@ Prepends each scene's title (its note name) before its content. Options:
 
 | Name | Type  | Default | Description |
 | --- | --- | --- | --- |
-| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). |
+| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for an unindented scenes becomes “#”. |
 | Separator | Text | \n\n | Some text to insert between the formatted title and the rest of the scene. |
 
 #### Remove Comments
@@ -79,7 +79,7 @@ Saves the manuscript as Markdown note in your vault. Options:
 
 | Name | Type  | Default | Description |
 | --- | --- | --- | --- |
-| Output Path | Text | manuscript.md | Path relative to your project at which to save your compiled manuscript. |
+| Output Path | Text | manuscript.md | Path relative to your project at which to save your compiled manuscript. $1, if present, will be replaced with your project’s title. |
 | Open Compiled Manuscript | Boolean | true | If checked, open the compiled manuscript in a new pane. |
 
 ### User Script Steps
@@ -144,6 +144,7 @@ module.exports = {
         name: string; // file name of scene
         contents: string; // text contents of scene
         metadata: CachedMetadata; // Obsidian metadata of scene
+        indentationLevel?: number; // The indent level (starting at zero) of the scene
       }
     If the step is of kind Manuscript (see context), this will be of type:
       {
@@ -156,6 +157,7 @@ module.exports = {
         kind: string; // "Scene" | "Join" | "Manuscript"
         optionValues: { [id: string]: unknown } // Map of option IDs to values
         projectPath: string; // path in vault to compiling project
+        draft: Draft; // The Draft type describing your project
         app: App; // Obsidian app
       }
     @returns If of kind "Scene" or "Manuscript", the same shape as `input`

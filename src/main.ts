@@ -1,53 +1,40 @@
-import {
-  Plugin,
-  WorkspaceLeaf,
-  TAbstractFile,
-  Notice,
-  normalizePath,
-  FileView,
-  addIcon,
-  TFolder,
-} from "obsidian";
+import { Plugin, WorkspaceLeaf, FileView, addIcon } from "obsidian";
 import debounce from "lodash/debounce";
 import pick from "lodash/pick";
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import {
   VIEW_TYPE_LONGFORM_EXPLORER,
   ExplorerPane,
 } from "./view/explorer/ExplorerPane";
-import AddProjectModal from "./view/AddProjectModal";
-import {
-  LongformProjectSettings,
-  DEFAULT_SETTINGS,
+import type {
+  Draft,
   LongformPluginSettings,
   SerializedWorkflow,
-  TRACKED_SETTINGS_PATHS,
 } from "./model/types";
-import {
-  addProject,
-  removeProject,
-  isLongformProject,
-  isInLongformProject,
-} from "./model/project";
-import { EmptyIndexFileMetadata, indexBodyFor } from "./model/index-file";
-import { IndexMetadataObserver } from "./model/metadata-observer";
-import { FolderObserver } from "./model/folder-observer";
-import {
-  activeFile,
-  currentDraftPath,
-  currentProjectPath,
-  initialized,
-  pluginSettings,
-  workflows,
-} from "./view/stores";
+import { DEFAULT_SETTINGS, TRACKED_SETTINGS_PATHS } from "./model/types";
+import { activeFile } from "./view/stores";
 import { ICON_NAME, ICON_SVG } from "./view/icon";
 import { LongformSettingsTab } from "./view/settings/LongformSettings";
 import {
   deserializeWorkflow,
   serializeWorkflow,
 } from "./compile/serialization";
-import { Workflow, DEFAULT_WORKFLOWS } from "./compile";
+import type { Workflow } from "./compile";
+import { DEFAULT_WORKFLOWS } from "./compile";
 import { UserScriptObserver } from "./model/user-script-observer";
+import { StoreVaultSync } from "./model/store-vault-sync";
+import {
+  selectedDraft,
+  selectedDraftVaultPath,
+  workflows,
+  initialized,
+  pluginSettings,
+  drafts,
+} from "./model/stores";
+import { addCommands } from "./commands";
+import { determineMigrationStatus } from "./model/migration";
+import { draftForPath } from "./model/scene-navigation";
 
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 
@@ -60,11 +47,11 @@ export default class LongformPlugin extends Plugin {
   cachedSettings: LongformPluginSettings | null = null;
   private unsubscribeSettings: Unsubscriber;
   private unsubscribeWorkflows: Unsubscriber;
-  private metadataObserver: IndexMetadataObserver;
-  private foldersObserver: FolderObserver;
+  private unsubscribeDrafts: Unsubscriber;
+  private unsubscribeSelectedDraft: Unsubscriber;
   private userScriptObserver: UserScriptObserver;
-  private unsubscribeCurrentProjectPath: Unsubscriber;
-  private unsubscribeCurrentDraftPath: Unsubscriber;
+
+  private storeVaultSync: StoreVaultSync;
 
   async onload(): Promise<void> {
     console.log(`[Longform] Starting Longform ${this.manifest.version}…`);
@@ -73,38 +60,6 @@ export default class LongformPlugin extends Plugin {
     this.registerView(
       VIEW_TYPE_LONGFORM_EXPLORER,
       (leaf: WorkspaceLeaf) => new ExplorerPane(leaf)
-    );
-
-    this.registerEvent(
-      this.app.workspace.on("file-menu", (menu, file: TAbstractFile) => {
-        if (!(file instanceof TFolder)) {
-          return;
-        }
-        if (isLongformProject(file.path, this.cachedSettings)) {
-          menu.addItem((item) => {
-            item
-              .setTitle(`Unmark as Longform Project`)
-              .setIcon(ICON_NAME)
-              .onClick(async () => {
-                pluginSettings.update((settings): LongformPluginSettings => {
-                  return removeProject(file.path, settings);
-                });
-                // this.settings = removeProject(file.path, this.settings);
-                await this.saveSettings();
-                new Notice(`${file.path} is no longer a Longform project.`);
-              });
-          });
-        } else {
-          menu.addItem((item) => {
-            item
-              .setTitle(`Mark as Longform Project`)
-              .setIcon(ICON_NAME)
-              .onClick(async () => {
-                this.promptToAddProject(file.path);
-              });
-          });
-        }
-      })
     );
 
     // Settings
@@ -127,6 +82,8 @@ export default class LongformPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new LongformSettingsTab(this.app, this));
 
+    this.storeVaultSync = new StoreVaultSync(this.app);
+
     this.app.workspace.onLayoutReady(this.postLayoutInit.bind(this));
 
     // Track active file
@@ -139,50 +96,26 @@ export default class LongformPlugin extends Plugin {
       })
     );
 
-    this.addCommand({
-      id: "longform-show-view",
-      name: "Open Longform Pane",
-      callback: () => {
-        this.initLeaf();
-        const leaf = this.app.workspace
-          .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
-          .first();
-        if (leaf) {
-          this.app.workspace.revealLeaf(leaf);
-        }
-      },
-    });
+    addCommands(this);
 
     // Dynamically style longform scenes
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
-          if (leaf.view instanceof FileView) {
-            if (isInLongformProject(leaf.view.file.path, this.cachedSettings)) {
-              leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
-            } else {
-              leaf.view.containerEl.classList.remove(LONGFORM_LEAF_CLASS);
-            }
-          }
-
-          // @ts-ignore
-          const leafId = leaf.id;
-          if (leafId) {
-            leaf.view.containerEl.dataset.leafId = leafId;
-          }
-        });
+        this.styleLongformLeaves();
       })
     );
+    this.unsubscribeDrafts = drafts.subscribe((allDrafts) => {
+      this.styleLongformLeaves(allDrafts);
+    });
   }
 
   onunload(): void {
-    this.metadataObserver.destroy();
-    this.foldersObserver.destroy();
     this.userScriptObserver.destroy();
+    this.storeVaultSync.destroy();
     this.unsubscribeSettings();
-    this.unsubscribeCurrentProjectPath();
-    this.unsubscribeCurrentDraftPath();
     this.unsubscribeWorkflows();
+    this.unsubscribeSelectedDraft();
+    this.unsubscribeDrafts();
     this.app.workspace
       .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
       .forEach((leaf) => leaf.detach());
@@ -196,8 +129,8 @@ export default class LongformPlugin extends Plugin {
       TRACKED_SETTINGS_PATHS
     ) as LongformPluginSettings;
     pluginSettings.set(_pluginSettings);
-    currentDraftPath.set(_pluginSettings.selectedDraft);
-    currentProjectPath.set(_pluginSettings.selectedProject);
+    selectedDraftVaultPath.set(_pluginSettings.selectedDraftVaultPath);
+    determineMigrationStatus(_pluginSettings);
 
     // We load user scripts imperatively first to cover cases where we need to deserialize
     // workflows that may contain them.
@@ -239,85 +172,21 @@ export default class LongformPlugin extends Plugin {
     });
   }
 
-  promptToAddProject(path: string): void {
-    const modal = new AddProjectModal(this.app, this, path);
-    modal.open();
-  }
-
-  async markPathAsProject(
-    path: string,
-    project: LongformProjectSettings
-  ): Promise<void> {
-    // Conditionally create index file and drafts folder
-    const indexFilePath = normalizePath(`${path}/${project.indexFile}.md`);
-    let indexFile = this.app.vault.getAbstractFileByPath(indexFilePath);
-    if (!indexFile) {
-      let contents = indexBodyFor(EmptyIndexFileMetadata);
-      if (!contents) {
-        console.error("[Longform] Unable to initialize index file.");
-        contents = "";
-      }
-      indexFile = await this.app.vault.create(indexFilePath, contents);
-    }
-
-    const draftsFolderPath = normalizePath(`${path}/${project.draftsPath}`);
-    const draftsFolder = this.app.vault.getAbstractFileByPath(draftsFolderPath);
-    if (!draftsFolder) {
-      await this.app.vault.createFolder(draftsFolderPath);
-      const defaultDrafts = EmptyIndexFileMetadata.drafts;
-      if (defaultDrafts.length > 0) {
-        const firstDraftFolderName = defaultDrafts[0].folder;
-        const firstDraftFolderPath = normalizePath(
-          `${draftsFolderPath}/${firstDraftFolderName}`
-        );
-        await this.app.vault.createFolder(firstDraftFolderPath);
-      }
-    }
-
-    // Add to tracked projects
-    pluginSettings.update((settings): LongformPluginSettings => {
-      return addProject(path, project, settings);
-    });
-    await this.saveSettings();
-
-    this.foldersObserver.loadProjects();
-
-    // If this is the only project, make it current
-    const projects = Object.keys(get(pluginSettings).projects);
-    if (projects.length === 1) {
-      currentProjectPath.set(projects[0]);
-    }
-
-    new Notice(`${path} is now a Longform project.`);
-  }
-
   private postLayoutInit(): void {
-    this.metadataObserver = new IndexMetadataObserver(this.app);
-    this.foldersObserver = new FolderObserver(this.app);
     this.userScriptObserver.beginObserving();
     this.watchProjects();
-    this.unsubscribeCurrentProjectPath = currentProjectPath.subscribe(
-      async (selectedProject) => {
-        if (!get(initialized)) {
-          return;
-        }
-        pluginSettings.update((s) => ({ ...s, selectedProject }));
-        // Force cached settings update immediately for save to work
-        this.cachedSettings = get(pluginSettings);
-        await this.saveSettings();
+
+    this.unsubscribeSelectedDraft = selectedDraft.subscribe(async (d) => {
+      if (!get(initialized) || !d) {
+        return;
       }
-    );
-    this.unsubscribeCurrentDraftPath = currentDraftPath.subscribe(
-      async (selectedDraft) => {
-        if (!get(initialized)) {
-          return;
-        }
-        pluginSettings.update((s) => ({ ...s, selectedDraft }));
-        // Force cached settings update immediately for save to work
-        this.cachedSettings = get(pluginSettings);
-        await this.saveSettings();
-      }
-    );
+      pluginSettings.update((s) => ({
+        ...s,
+        selectedDraftVaultPath: d.vaultPath,
+      }));
+      this.cachedSettings = get(pluginSettings);
+      await this.saveSettings();
+    });
 
     // Workflows
     const saveWorkflows = debounce(() => {
@@ -335,7 +204,7 @@ export default class LongformPlugin extends Plugin {
     initialized.set(true);
   }
 
-  private initLeaf(): void {
+  initLeaf(): void {
     if (
       this.app.workspace.getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER).length
     ) {
@@ -347,8 +216,6 @@ export default class LongformPlugin extends Plugin {
   }
 
   private watchProjects(): void {
-    this.foldersObserver.loadProjects();
-
     this.registerEvent(
       this.app.vault.on(
         "modify",
@@ -358,7 +225,6 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on("create", (file) => {
-        this.foldersObserver.fileCreated.bind(this.foldersObserver)(file);
         this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
           file
         );
@@ -367,7 +233,6 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on("delete", (file) => {
-        this.foldersObserver.fileDeleted.bind(this.foldersObserver)(file);
         this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
           file
         );
@@ -375,24 +240,57 @@ export default class LongformPlugin extends Plugin {
     );
 
     this.registerEvent(
-      this.app.vault.on("rename", (file, oldPath) => {
-        this.foldersObserver.fileRenamed.bind(this.foldersObserver)(
-          file,
-          oldPath
-        );
+      this.app.vault.on("rename", (file, _oldPath) => {
         this.userScriptObserver.fileEventCallback.bind(this.userScriptObserver)(
           file
         );
       })
     );
+
+    this.storeVaultSync.discoverDrafts();
 
     this.registerEvent(
       this.app.metadataCache.on(
         "changed",
-        this.metadataObserver.metadataCacheChanged.bind(this.metadataObserver)
+        this.storeVaultSync.fileMetadataChanged.bind(this.storeVaultSync)
       )
     );
 
-    console.log(`[Longform] Loaded and watching projects.`);
+    this.registerEvent(
+      this.app.vault.on(
+        "delete",
+        this.storeVaultSync.fileDeleted.bind(this.storeVaultSync)
+      )
+    );
+
+    this.registerEvent(
+      this.app.vault.on(
+        "rename",
+        this.storeVaultSync.fileRenamed.bind(this.storeVaultSync)
+      )
+    );
+  }
+
+  private styleLongformLeaves(allDrafts: Draft[] = get(drafts)) {
+    this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
+      if (leaf.view instanceof FileView) {
+        const draft = draftForPath(
+          leaf.view.file.path,
+          allDrafts,
+          this.app.vault
+        );
+        if (draft) {
+          leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
+        } else {
+          leaf.view.containerEl.classList.remove(LONGFORM_LEAF_CLASS);
+        }
+      }
+
+      // @ts-ignore
+      const leafId = leaf.id;
+      if (leafId) {
+        leaf.view.containerEl.dataset.leafId = leafId;
+      }
+    });
   }
 }

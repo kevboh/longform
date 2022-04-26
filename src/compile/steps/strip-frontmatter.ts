@@ -1,13 +1,11 @@
+import { stripFrontmatter } from "src/model/note-utils";
 import type {
+  CompileContext,
   CompileInput,
   CompileManuscriptInput,
   CompileSceneInput,
 } from "..";
-import {
-  CompileContext,
-  CompileStepKind,
-  makeBuiltinStep,
-} from "./abstract-compile-step";
+import { CompileStepKind, makeBuiltinStep } from "./abstract-compile-step";
 
 export const StripFrontmatterStep = makeBuiltinStep({
   id: "strip-frontmatter",
@@ -21,10 +19,7 @@ export const StripFrontmatterStep = makeBuiltinStep({
   compile(input: CompileInput, context: CompileContext): CompileInput {
     if (context.kind === CompileStepKind.Scene) {
       return (input as CompileSceneInput[]).map((sceneInput) => {
-        const contents = sceneInput.contents.replace(
-          /^---(.*?\n)*---\n*/gm,
-          ""
-        );
+        const contents = stripFrontmatter(sceneInput.contents);
         return {
           ...sceneInput,
           contents,
@@ -33,10 +28,7 @@ export const StripFrontmatterStep = makeBuiltinStep({
     } else {
       return {
         ...(input as CompileManuscriptInput),
-        contents: (input as CompileManuscriptInput).contents.replace(
-          /^---(.*?\n)*---\n*/gm,
-          ""
-        ),
+        contents: stripFrontmatter((input as CompileManuscriptInput).contents),
       };
     }
   },

@@ -1,4 +1,5 @@
 import type { App, CachedMetadata } from "obsidian";
+import type { Draft } from "src/model/types";
 
 export enum CompileStepKind {
   /** Takes an array of scene files, processes them in some way, and outputs an array of scene files. */
@@ -58,6 +59,7 @@ export type CompileSceneInput = {
   name: string;
   contents: string;
   metadata: CachedMetadata;
+  indentationLevel?: number;
 };
 
 export type CompileManuscriptInput = {
@@ -72,6 +74,7 @@ export type CompileContext = {
   kind: CompileStepKind;
   optionValues: { [id: string]: unknown };
   projectPath: string;
+  draft: Draft;
   app: App;
 };
 

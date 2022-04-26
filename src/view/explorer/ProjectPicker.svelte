@@ -1,35 +1,56 @@
 <script lang="ts">
-  import { normalizePath } from "obsidian";
   import {
-    currentDraftPath,
-    currentProject,
-    currentProjectPath,
-    initialized,
     projects,
-  } from "../stores";
+    selectedDraftVaultPath,
+    selectedProjectHasMultipleDrafts,
+    selectedProject,
+    selectedDraft,
+  } from "../../model/stores";
+  import { last } from "lodash";
+  import { getContext } from "svelte";
+  import { draftTitle } from "src/model/draft-utils";
+
+  const openFileAtPath: (path: string, newLeaf: boolean) => void =
+    getContext("onSceneClick");
 
   // Map current projects to options for select element
-  let projectOptions: { name: string; path: string }[] = [];
+  let projectOptions: string[] = [];
   $: {
-    projectOptions = Object.keys($projects).map((path) => ({
-      name: path.split("/").slice(-1)[0],
-      path,
-    }));
+    projectOptions = Object.keys($projects);
   }
 
-  // Recover if you've changed projects and there's no matching draft folder
-  // by setting the current draft to the last one in the project.
-  $: if (
-    $initialized &&
-    $currentProject &&
-    !$currentProject.drafts.find((d) => d.folder === $currentDraftPath)
-  ) {
-    const drafts = $currentProject.drafts;
-    if (drafts.length > 0) {
-      $currentDraftPath = drafts[drafts.length - 1].folder;
-    } else {
-      $currentDraftPath = null;
+  let draftOptions: { path: string; title: string }[] = [];
+  $: {
+    draftOptions = $selectedProject
+      ? $selectedProject.map((d) => ({
+          path: d.vaultPath,
+          title: draftTitle(d),
+        }))
+      : [];
+  }
+
+  // Add some indirection around project picking to make sure that selecting a project
+  // with multiple drafts picks the latest draft by default, and doesn't try to select
+  // the previous draft on a new project.
+  function projectSelected(event: Event) {
+    // @ts-ignore
+    const title = event.target.value;
+    if ($selectedDraft && title === $selectedDraft.title) {
+      return;
     }
+    const newProject = $projects[title];
+    let draftPath: string;
+    if (newProject && newProject.length > 1) {
+      draftPath = last(newProject).vaultPath;
+    } else {
+      draftPath = newProject[0].vaultPath;
+      openFileAtPath(draftPath, false);
+    }
+    $selectedDraftVaultPath = draftPath;
+  }
+
+  function onDraftClick(e: MouseEvent) {
+    openFileAtPath($selectedDraft.vaultPath, e.metaKey);
   }
 </script>
 
@@ -37,28 +58,32 @@
   {#if projectOptions.length > 0}
     <div id="project-picker">
       <div class="select" id="select-projects">
-        <select name="projects" bind:value={$currentProjectPath}>
+        <select
+          name="projects"
+          value={$selectedDraft && $selectedDraft.title}
+          on:change={projectSelected}
+        >
           {#each projectOptions as projectOption}
-            <option class="projectOption" value={projectOption.path}
-              >{projectOption.name}</option
+            <option class="projectOption" value={projectOption}
+              >{projectOption}</option
             >
           {/each}
         </select>
       </div>
-      {#if $currentDraftPath && $currentProject && $currentProject.drafts}
+      {#if $selectedProjectHasMultipleDrafts}
         <span class="right-arrow" />
         <div class="select" id="select-drafts">
-          <select name="drafts" bind:value={$currentDraftPath}>
-            {#each $currentProject.drafts as draftOption}
-              <option value={draftOption.folder}>{draftOption.name}</option>
+          <select name="drafts" bind:value={$selectedDraftVaultPath}>
+            {#each draftOptions as draftOption}
+              <option value={draftOption.path}>{draftOption.title}</option>
             {/each}
           </select>
         </div>
       {/if}
     </div>
-    {#if $currentDraftPath}
-      <div class="current-draft-path">
-        {normalizePath(`${$currentProjectPath}/${$currentDraftPath}`)}
+    {#if $selectedDraft}
+      <div class="current-draft-path" on:click={(e) => onDraftClick(e)}>
+        {$selectedDraft.vaultPath}
       </div>
     {/if}
   {:else}
@@ -66,9 +91,6 @@
       To use Longform, start by marking a folder as a Longform project by
       right-clicking it and selecting "Mark as Longform project."
     </p>
-  {/if}
-  {#if $currentProject && $currentProject.error}
-    <p class="project-error">{$currentProject.error}</p>
   {/if}
 </div>
 
@@ -125,13 +147,12 @@
   .current-draft-path {
     color: var(--text-muted);
     font-size: 10px;
-    padding: 0 8px;
+    padding: 0 4px;
     line-height: 12px;
   }
 
-  .project-error {
-    color: var(--text-error);
-    font-size: 12px;
-    line-height: 14px;
+  .current-draft-path:hover {
+    color: var(--text-accent);
+    cursor: pointer;
   }
 </style>

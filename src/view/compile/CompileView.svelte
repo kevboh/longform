@@ -4,25 +4,23 @@
   import type { Vault } from "obsidian";
 
   import {
-    CompileStatus,
+    type CompileStatus,
     CompileStepKind,
     formatStepKind,
-    Workflow,
+    type Workflow,
     PLACEHOLDER_MISSING_STEP,
   } from "src/compile";
   import { getContext } from "svelte";
   import {
-    currentDraft,
-    currentDraftPath,
-    currentProject,
-    currentProjectPath,
+    drafts,
+    selectedDraft,
     workflows,
     currentWorkflow,
-    projectMetadata,
-  } from "../stores";
+  } from "src/model/stores";
   import CompileStepView from "./CompileStepView.svelte";
   import SortableList from "../sortable/SortableList.svelte";
   import AutoTextArea from "../components/AutoTextArea.svelte";
+  import type { Draft } from "src/model/types";
 
   let workflowContextButton: HTMLElement;
   let workflowInputState: "hidden" | "new" | "rename" = "hidden";
@@ -41,22 +39,40 @@
     yesAction: () => void
   ) => void = getContext("showConfirmModal");
 
+  let currentDraftIndex: number;
+  $: {
+    currentDraftIndex =
+      $selectedDraft &&
+      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+  }
+
   // WORKFLOW MANAGEMENT
 
   $: allWorkflowNames = Object.keys($workflows).sort() ?? [];
 
   $: {
-    const metadata = $projectMetadata[$currentProjectPath];
-    currentWorkflowName = metadata?.workflow;
+    if ($selectedDraft) {
+      currentWorkflowName = $selectedDraft.workflow;
 
-    if (
-      !isDeletingWorkflow &&
-      metadata &&
-      !currentWorkflowName &&
-      allWorkflowNames.length > 0
-    ) {
-      $projectMetadata[$currentProjectPath].workflow = allWorkflowNames[0];
+      if (
+        !isDeletingWorkflow &&
+        $selectedDraft &&
+        !currentWorkflowName &&
+        allWorkflowNames.length > 0
+      ) {
+        // shadowed here to prevent circular reference
+        const _currentDraftIndex = $drafts.findIndex(
+          (d) => d.vaultPath === $selectedDraft.vaultPath
+        );
+        $drafts[_currentDraftIndex].workflow = allWorkflowNames[0];
+      }
     }
+  }
+
+  function selectedWorkflow(event: Event) {
+    // @ts-ignore
+    const title = event.target.value;
+    $drafts[currentDraftIndex].workflow = title;
   }
 
   const showCompileActionsMenu: (
@@ -83,9 +99,9 @@
           const toDelete = currentWorkflowName;
           const remaining = allWorkflowNames.filter((n) => n != toDelete);
           if (remaining.length > 0) {
-            $projectMetadata[$currentProjectPath].workflow = remaining[0];
+            $drafts[currentDraftIndex].workflow = remaining[0];
           } else {
-            $projectMetadata[$currentProjectPath].workflow = null;
+            $drafts[currentDraftIndex].workflow = null;
           }
 
           $workflows = delete $workflows[toDelete] && $workflows;
@@ -109,10 +125,11 @@
       };
     } else if (workflowInputState == "rename") {
       const workflow = $workflows[currentWorkflowName];
+      workflow.name = workflowInputValue;
       $workflows[workflowInputValue] = workflow;
       $workflows = delete $workflows[currentWorkflowName] && $workflows;
     }
-    $projectMetadata[$currentProjectPath].workflow = workflowInputValue;
+    $drafts[currentDraftIndex].workflow = workflowInputValue;
     workflowInputValue = "";
     workflowInputState = "hidden";
   }
@@ -134,6 +151,7 @@
     MissingJoinStep = "A Manuscript step must occur after a Join step; Manuscript steps run on a single file, not all scenes.",
     ScenesStepPostJoin = "A Scene or Join step cannot occur after a Join step; at this point in the workflow, steps must operate on a single file.",
     UnloadedStep = "This workflow contains a step that could not be loaded. Please delete or replace it.",
+    JoinForSingle = "Single-scene projects do not support Join steps.",
   }
 
   type WorkflowValidationResult = {
@@ -142,7 +160,8 @@
   };
 
   function calculateWorkflow(
-    workflow: Workflow
+    workflow: Workflow,
+    isMultiScene: boolean
   ): [WorkflowValidationResult, CompileStepKind[]] {
     if (!workflow) {
       return;
@@ -160,6 +179,7 @@
 
       const hasSceneKind = kinds.includes(CompileStepKind.Scene);
       const hasJoinKind = kinds.includes(CompileStepKind.Join);
+      const hasManuscriptKind = kinds.includes(CompileStepKind.Manuscript);
 
       if (
         step.description.canonicalID ===
@@ -174,26 +194,24 @@
         ];
       }
 
-      // Calculate the next step kind
-      if (!currentKind) {
-        // First step calculation
-        if (hasJoinKind) {
-          currentKind = CompileStepKind.Join;
-        } else if (hasSceneKind) {
+      if (!isMultiScene) {
+        if (hasSceneKind) {
           currentKind = CompileStepKind.Scene;
+        } else if (hasManuscriptKind) {
+          currentKind = CompileStepKind.Manuscript;
         } else {
           return [
             {
-              error: WorkflowError.BadFirstStep,
+              error: WorkflowError.JoinForSingle,
               stepPosition,
             },
             calculatedKinds,
           ];
         }
       } else {
-        // Subsequent step calculations
-        if (!calculatedKinds.includes(CompileStepKind.Join)) {
-          // We're pre-join, all kinds must be scene or join
+        // Calculate the next step kind
+        if (!currentKind) {
+          // First step calculation
           if (hasJoinKind) {
             currentKind = CompileStepKind.Join;
           } else if (hasSceneKind) {
@@ -201,24 +219,42 @@
           } else {
             return [
               {
-                error: WorkflowError.MissingJoinStep,
+                error: WorkflowError.BadFirstStep,
                 stepPosition,
               },
               calculatedKinds,
             ];
           }
         } else {
-          // We're post-join, all kinds must be of type manuscript
-          if (kinds.includes(CompileStepKind.Manuscript)) {
-            currentKind = CompileStepKind.Manuscript;
+          // Subsequent step calculations
+          if (!calculatedKinds.includes(CompileStepKind.Join)) {
+            // We're pre-join, all kinds must be scene or join
+            if (hasJoinKind) {
+              currentKind = CompileStepKind.Join;
+            } else if (hasSceneKind) {
+              currentKind = CompileStepKind.Scene;
+            } else {
+              return [
+                {
+                  error: WorkflowError.MissingJoinStep,
+                  stepPosition,
+                },
+                calculatedKinds,
+              ];
+            }
           } else {
-            return [
-              {
-                error: WorkflowError.ScenesStepPostJoin,
-                stepPosition,
-              },
-              calculatedKinds,
-            ];
+            // We're post-join, all kinds must be of type manuscript
+            if (kinds.includes(CompileStepKind.Manuscript)) {
+              currentKind = CompileStepKind.Manuscript;
+            } else {
+              return [
+                {
+                  error: WorkflowError.ScenesStepPostJoin,
+                  stepPosition,
+                },
+                calculatedKinds,
+              ];
+            }
           }
         }
       }
@@ -243,7 +279,10 @@
   let calculatedKinds: CompileStepKind[] = [];
   $: {
     if ($currentWorkflow) {
-      [validation, calculatedKinds] = calculateWorkflow($currentWorkflow);
+      [validation, calculatedKinds] = calculateWorkflow(
+        $currentWorkflow,
+        $selectedDraft.format === "scenes"
+      );
     } else {
       validation = VALID;
       calculatedKinds = [];
@@ -324,16 +363,14 @@
   }
 
   const compile: (
-    projectPath: string,
-    draftName: string,
+    draft: Draft,
     workflow: Workflow,
     kinds: CompileStepKind[],
     statusCallback: (status: CompileStatus) => void
   ) => Vault = getContext("compile");
   function doCompile() {
     compile(
-      $currentProjectPath,
-      $currentDraftPath,
+      $selectedDraft,
       $currentWorkflow,
       calculatedKinds,
       onCompileStatusChange
@@ -341,7 +378,7 @@
   }
 </script>
 
-{#if $currentProject && $currentDraft}
+{#if $selectedDraft}
   <div class="longform-compile-container">
     <div class="longform-workflow-picker-container">
       <div class="longform-workflow-picker">
@@ -371,7 +408,8 @@
             <div class="select">
               <select
                 id="longform-workflows"
-                bind:value={$projectMetadata[$currentProjectPath].workflow}
+                value={$selectedDraft.workflow}
+                on:change={selectedWorkflow}
               >
                 {#each allWorkflowNames as workflowOption}
                   <option value={workflowOption}>{workflowOption}</option>

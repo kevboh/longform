@@ -1,9 +1,15 @@
 import { ItemView, Menu, WorkspaceLeaf } from "obsidian";
-import { compile, CompileStatus, CompileStepKind, Workflow } from "src/compile";
+import type { CompileStatus, Workflow } from "src/compile";
+import { compile, CompileStepKind } from "src/compile";
+import type { Draft, MultipleSceneDraft } from "src/model/types";
 import AddStepModal from "../compile/add-step-modal";
 import ConfirmActionModal from "../ConfirmActionModal";
 import { ICON_NAME } from "../icon";
 import ExplorerView from "./ExplorerView.svelte";
+import { scenePath } from "src/model/scene-navigation";
+import { migrate } from "src/model/migration";
+import { get } from "svelte/store";
+import { pluginSettings } from "src/model/stores";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
@@ -50,6 +56,13 @@ export class ExplorerPane extends ItemView {
           noAction
         ).open();
       }
+    );
+
+    // Create a fully-qualified path to a scene from its name.
+    context.set(
+      "makeScenePath",
+      (draft: MultipleSceneDraft, sceneName: string) =>
+        scenePath(sceneName, draft, this.app.vault)
     );
 
     // Context function for opening scene notes on click
@@ -124,20 +137,12 @@ export class ExplorerPane extends ItemView {
     context.set(
       "compile",
       (
-        projectPath: string,
-        draftName: string,
+        draft: Draft,
         workflow: Workflow,
         kinds: CompileStepKind[],
         statusCallback: (status: CompileStatus) => void
       ) => {
-        compile(
-          this.app,
-          projectPath,
-          draftName,
-          workflow,
-          kinds,
-          statusCallback
-        );
+        compile(this.app, draft, workflow, kinds, statusCallback);
       }
     );
 
@@ -171,6 +176,10 @@ export class ExplorerPane extends ItemView {
         menu.showAtPosition({ x, y });
       }
     );
+
+    context.set("migrate", () => {
+      migrate(get(pluginSettings), this.app);
+    });
 
     this.explorerView = new ExplorerView({
       target: this.contentEl,

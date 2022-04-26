@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { getContext } from "svelte";
 
   import {
@@ -141,4 +141,4 @@
     line-height: 12px;
     color: var(--text-muted);
   }
-</style>
+</style> -->

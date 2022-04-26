@@ -1,9 +1,6 @@
 import { stringifyYaml } from "obsidian";
-import {
-  DraftsMetadata,
-  IndexFileMetadata,
-  LONGFORM_CURRENT_INDEX_VERSION,
-} from "./types";
+import type { DraftsMetadata, IndexFileMetadata } from "./types";
+import { LONGFORM_CURRENT_INDEX_VERSION } from "./types";
 
 const WARNING = `
 This file is managed by Longform. Please avoid editing it directly; doing so will almost certainly confuse the plugin, and may cause a loss of data.

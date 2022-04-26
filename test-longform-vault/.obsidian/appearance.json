@@ -1,5 +1,8 @@
 {
   "baseFontSize": 16,
   "theme": "moonstone",
-  "translucency": false
+  "translucency": false,
+  "enabledCssSnippets": [
+    "writing"
+  ]
 }

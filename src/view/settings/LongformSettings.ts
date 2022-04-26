@@ -1,14 +1,14 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 
 import type LongformPlugin from "../../main";
 import { DEFAULT_SETTINGS } from "../../model/types";
 import {
-  currentDraftPath,
-  currentProjectPath,
   pluginSettings,
+  selectedDraftVaultPath,
   userScriptSteps,
-} from "../stores";
+} from "src/model/stores";
 import { FolderSuggest } from "./folder-suggest";
 
 export class LongformSettingsTab extends PluginSettingTab {
@@ -95,8 +95,7 @@ export class LongformSettingsTab extends PluginSettingTab {
               DEFAULT_SETTINGS
             );
             pluginSettings.set(DEFAULT_SETTINGS);
-            currentProjectPath.set(null);
-            currentDraftPath.set(null);
+            selectedDraftVaultPath.set(null);
             this.plugin.cachedSettings = get(pluginSettings);
             await this.plugin.saveSettings();
           });

@@ -1,7 +1,6 @@
 import type { CompileManuscriptInput } from "..";
+import type { CompileContext, CompileInput } from "./abstract-compile-step";
 import {
-  CompileContext,
-  CompileInput,
   CompileStepKind,
   CompileStepOptionType,
   makeBuiltinStep,

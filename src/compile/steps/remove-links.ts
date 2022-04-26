@@ -1,10 +1,10 @@
 import type {
+  CompileContext,
   CompileInput,
   CompileManuscriptInput,
   CompileSceneInput,
 } from "..";
 import {
-  CompileContext,
   CompileStepKind,
   makeBuiltinStep,
   CompileStepOptionType,

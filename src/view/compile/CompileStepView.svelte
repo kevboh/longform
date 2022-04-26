@@ -1,7 +1,7 @@
 <script lang="ts">
   // @ts-nocheck
   import {
-    CompileStep,
+    type CompileStep,
     CompileStepKind,
     CompileStepOptionType,
     explainStepKind,

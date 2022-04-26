@@ -1,3 +1,8 @@
+TODO:
+
+- [ ] word counts?
+- [ ] new draft button + modal
+
 ## Longform
 
 Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects.

@@ -1,0 +1,8 @@
+.longform-leaf {
+  color: red;
+}
+
+.longform-leaf .markdown-source-view {
+  --font-text: Baskerville;
+  color: red;
+}

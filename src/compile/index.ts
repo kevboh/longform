@@ -1,13 +1,15 @@
-import { normalizePath, App } from "obsidian";
-import type { SerializedWorkflow } from "src/model/types";
-import { get } from "svelte/store";
-
-import { pluginSettings, projectMetadata } from "../view/stores";
-
-import type {
-  CompileContext,
+import type { App } from "obsidian";
+import { stripFrontmatter } from "src/model/note-utils";
+import {
+  projectFolderPath,
+  sceneFolderPath,
+  scenePathForFolder,
+} from "src/model/scene-navigation";
+import type { Draft, SerializedWorkflow } from "src/model/types";
+import {
   CompileStepKind,
-  Workflow,
+  type CompileContext,
+  type Workflow,
 } from "./steps/abstract-compile-step";
 export * from "./steps/abstract-compile-step";
 
@@ -53,56 +55,48 @@ function formatOptionValues(values: { [key: string]: unknown }): {
 
 export async function compile(
   app: App,
-  projectPath: string,
-  draftName: string,
+  draft: Draft,
   workflow: Workflow,
   kinds: CompileStepKind[],
   statusCallback: (status: CompileStatus) => void
 ): Promise<void> {
-  // Grab draft path and metadata
-  const projectSettings = get(pluginSettings).projects[projectPath];
-  if (!projectSettings) {
-    const error = `No tracked project at ${projectPath} exists for compilation.`;
-    console.error(`[Longform] ${error}`);
-    statusCallback({
-      kind: "CompileStatusError",
-      error,
-    });
-    return;
-  }
+  // TODO: Compilation for single-scene projects!
 
-  const scenePath = (scene: string) =>
-    normalizePath(
-      `${projectPath}/${projectSettings.draftsPath}/${draftName}/${scene}.md`
-    );
+  let currentInput: any;
 
-  const draftMetadata = get(projectMetadata)[projectPath].drafts.find(
-    (d) => d.folder === draftName
-  );
-  if (!draftMetadata) {
-    const error = `No draft named ${draftName} exists in ${projectPath} for compilation.`;
-    console.error(`[Longform] ${error}`);
-    statusCallback({
-      kind: "CompileStatusError",
-      error,
-    });
-    return;
-  }
-
-  let currentInput: any = [];
-
-  // Build initial inputs
-  for (const scene of draftMetadata.scenes) {
-    const path = scenePath(scene);
-    const contents = await app.vault.adapter.read(path);
+  if (draft.format === "single") {
+    const path = draft.vaultPath;
+    const fullContents = await app.vault.adapter.read(path);
+    const contents = stripFrontmatter(fullContents);
     const metadata = app.metadataCache.getCache(path);
 
-    currentInput.push({
-      path,
-      name: scene,
-      contents,
-      metadata,
-    });
+    currentInput = [
+      {
+        path,
+        name: draft.title,
+        contents,
+        metadata,
+      },
+    ];
+  } else {
+    const folderPath = sceneFolderPath(draft, app.vault);
+
+    currentInput = [];
+
+    // Build initial inputs
+    for (const scene of draft.scenes) {
+      const path = scenePathForFolder(scene.title, folderPath);
+      const contents = await app.vault.adapter.read(path);
+      const metadata = app.metadataCache.getCache(path);
+
+      currentInput.push({
+        path,
+        name: scene.title,
+        contents,
+        metadata,
+        indentationLevel: scene.indent,
+      });
+    }
   }
 
   for (let index = 0; index < workflow.steps.length; index++) {
@@ -120,7 +114,8 @@ export async function compile(
     const context: CompileContext = {
       kind,
       optionValues: formatOptionValues(step.optionValues),
-      projectPath,
+      projectPath: projectFolderPath(draft, app.vault),
+      draft,
       app,
     };
 
@@ -138,7 +133,18 @@ export async function compile(
 
     // TODO: how to enforce typings here?
     try {
-      currentInput = await step.compile(currentInput, context);
+      // handle the case where we're going scene -> manuscript -> scene
+      if (draft.format === "single" && kind === CompileStepKind.Manuscript) {
+        const result = await step.compile(
+          {
+            contents: currentInput[0].contents,
+          },
+          context
+        );
+        currentInput[0].contents = result;
+      } else {
+        currentInput = await step.compile(currentInput, context);
+      }
     } catch (error) {
       console.error("[Longform]", error);
       statusCallback({
@@ -179,7 +185,7 @@ export const DEFAULT_WORKFLOWS: Record<string, SerializedWorkflow> = {
       {
         id: "prepend-title",
         optionValues: {
-          format: "## $1",
+          format: "$3{#} $1",
           separator: "\n\n",
         },
       },

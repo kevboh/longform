@@ -1,13 +1,10 @@
 import type {
+  CompileContext,
   CompileInput,
   CompileManuscriptInput,
   CompileSceneInput,
 } from "..";
-import {
-  CompileContext,
-  CompileStepKind,
-  makeBuiltinStep,
-} from "./abstract-compile-step";
+import { CompileStepKind, makeBuiltinStep } from "./abstract-compile-step";
 
 const STRIKETHROUGH_REGEX = /~~(.*?)~~/gm;
 

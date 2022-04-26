@@ -1,14 +1,14 @@
 import debounce from "lodash/debounce";
 import type { Vault, TAbstractFile } from "obsidian";
+import type { CompileStep, Workflow } from "src/compile";
 import {
-  CompileStep,
   CompileStepKind,
   CompileStepOptionType,
   makeBuiltinStep,
-  Workflow,
 } from "src/compile";
-import { pluginSettings, userScriptSteps, workflows } from "src/view/stores";
-import { get, Unsubscriber } from "svelte/store";
+import { pluginSettings, userScriptSteps, workflows } from "src/model/stores";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 
 const DEBOUNCE_SCRIPT_LOAD_DELAY_MS = 10_000;
 

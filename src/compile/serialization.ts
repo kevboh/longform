@@ -1,13 +1,10 @@
 import { get } from "svelte/store";
 
 import { BUILTIN_STEPS } from "./steps";
-import {
-  CompileStep,
-  Workflow,
-  PLACEHOLDER_MISSING_STEP,
-} from "./steps/abstract-compile-step";
+import type { CompileStep, Workflow } from "./steps/abstract-compile-step";
+import { PLACEHOLDER_MISSING_STEP } from "./steps/abstract-compile-step";
 import type { SerializedStep, SerializedWorkflow } from "src/model/types";
-import { userScriptSteps } from "src/view/stores";
+import { userScriptSteps } from "src/model/stores";
 
 /**
  * Prepare a workflow for storage as json.
@@ -43,7 +40,7 @@ function lookupStep(id: string, userSteps: CompileStep[] = []): CompileStep {
 
 /**
  * Deserializes an array of JSON-compatible steps into one that can be run as a workflow.
- * @param steps The JSON-compatible steps to deserialize.
+ * @param w The JSON-compatible steps to deserialize.
  * @returns deserialized Array of `CompileStep`s to use as a workflow.
  */
 export function deserializeWorkflow(w: SerializedWorkflow): Workflow {
