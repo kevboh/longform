@@ -3,6 +3,8 @@ TODO:
 - [ ] word counts?
 - [ ] new draft button + modal
 
+**WARNING**: This branch of Longform is in beta. It may not be stable. While the docs in `docs/` are up-to-date, this README is not. Please use it with caution.
+
 ## Longform
 
 Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects.
