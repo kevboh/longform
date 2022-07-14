@@ -44,7 +44,9 @@
       draftPath = last(newProject).vaultPath;
     } else {
       draftPath = newProject[0].vaultPath;
-      openFileAtPath(draftPath, false);
+      if (newProject[0].format === "single") {
+        openFileAtPath(draftPath, false);
+      }
     }
     $selectedDraftVaultPath = draftPath;
   }
