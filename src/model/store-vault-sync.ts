@@ -9,7 +9,6 @@ import {
   type Vault,
 } from "obsidian";
 import { cloneDeep, isEqual, omit } from "lodash";
-import picomatch from "picomatch";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
@@ -299,8 +298,9 @@ export class StoreVaultSync {
       );
 
       // ignore all new scenes that are known-to-ignore per ignoredFiles
+      const ignoredRegexes = ignoredFiles.map((p) => ignoredPatternToRegex(p));
       const unknownFiles = newScenes.filter(
-        (s) => !picomatch.isMatch(s, ignoredFiles)
+        (s) => ignoredRegexes.find((r) => r.test(s)) === undefined
       );
 
       return {
@@ -353,4 +353,25 @@ export class StoreVaultSync {
     const newContents = replaceFrontmatter(contents, newFm);
     await this.vault.adapter.write(draft.vaultPath, newContents);
   }
+}
+
+const ESCAPED_CHARACTERS = new Set("/&$^+.()=!|[]{},".split(""));
+function ignoredPatternToRegex(pattern: string): RegExp {
+  let regex = "";
+
+  for (let index = 0; index < pattern.length; index++) {
+    const c = pattern[index];
+
+    if (ESCAPED_CHARACTERS.has(c)) {
+      regex += "\\" + c;
+    } else if (c === "*") {
+      regex += ".*";
+    } else if (c === "?") {
+      regex += ".";
+    } else {
+      regex += c;
+    }
+  }
+
+  return new RegExp(`^${regex}$`);
 }
