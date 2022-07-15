@@ -1,11 +1,55 @@
-import { stringifyYaml } from "obsidian";
+import { stringifyYaml, Vault } from "obsidian";
 import { omit } from "lodash";
+import type { Writable } from "svelte/store";
 
-import type { Draft, IndentedScene } from "./types";
+import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
 import { stripFrontmatter } from "./note-utils";
+import { scenePath } from "src/model/scene-navigation";
 
 export function draftTitle(draft: Draft): string {
   return draft.draftTitle ?? draft.vaultPath;
+}
+
+type SceneInsertionLocation = {
+  at: "before" | "after" | "end";
+  relativeTo: number | null;
+};
+
+export async function insertScene(
+  draftsStore: Writable<Draft[]>,
+  draft: MultipleSceneDraft,
+  sceneName: string,
+  vault: Vault,
+  location: SceneInsertionLocation,
+  createNoteCallback: (path: string) => Promise<void>
+) {
+  const newScenePath = scenePath(sceneName, draft, vault);
+
+  if (!newScenePath || !draft || draft.format !== "scenes") {
+    return;
+  }
+
+  await createNoteCallback(newScenePath);
+  draftsStore.update((allDrafts) => {
+    return allDrafts.map((d) => {
+      if (d.vaultPath === draft.vaultPath && d.format === "scenes") {
+        if (location.at === "end") {
+          d.scenes = [...d.scenes, { title: sceneName, indent: 0 }];
+        } else {
+          const relativeScene = d.scenes[location.relativeTo];
+          const index =
+            location.at === "before"
+              ? location.relativeTo
+              : location.relativeTo + 1;
+          d.scenes.splice(index, 0, {
+            title: sceneName,
+            indent: relativeScene.indent,
+          });
+        }
+      }
+      return d;
+    });
+  });
 }
 
 export function draftToYAML(draft: Draft): string {

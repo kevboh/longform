@@ -24,34 +24,11 @@
     }
   }
 
-  const makeScenePath: (draft: MultipleSceneDraft, scene: string) => string =
-    getContext("makeScenePath");
-  const onNewScene: (path: string) => void = getContext("onNewScene");
+  const onNewScene: (name: string) => void = getContext("onNewScene");
   function onNewSceneEnter() {
     if (newSceneName.length > 0 && !error) {
-      const scenePath = makeScenePath(
-        $selectedDraft as MultipleSceneDraft,
-        newSceneName
-      );
-      if (scenePath) {
-        onNewScene(scenePath);
-
-        const currentDraftIndex = $drafts.findIndex(
-          (d) => d.vaultPath === $selectedDraft.vaultPath
-        );
-        if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
-          drafts.update((d) => {
-            const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
-            (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
-              ...targetDraft.scenes,
-              { title: newSceneName, indent: 0 },
-            ];
-            return d;
-          });
-        }
-
-        newSceneName = "";
-      }
+      onNewScene(newSceneName);
+      newSceneName = "";
     }
   }
 </script>

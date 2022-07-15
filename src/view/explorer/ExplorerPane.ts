@@ -1,4 +1,4 @@
-import { ItemView, Menu, WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, TAbstractFile, WorkspaceLeaf } from "obsidian";
 import type { CompileStatus, Workflow } from "src/compile";
 import { compile, CompileStepKind } from "src/compile";
 import type { Draft, MultipleSceneDraft } from "src/model/types";
@@ -9,7 +9,8 @@ import ExplorerView from "./ExplorerView.svelte";
 import { scenePath } from "src/model/scene-navigation";
 import { migrate } from "src/model/migration";
 import { get } from "svelte/store";
-import { pluginSettings } from "src/model/stores";
+import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
+import { insertScene } from "src/model/draft-utils";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
@@ -71,9 +72,18 @@ export class ExplorerPane extends ItemView {
     });
 
     // Context function for creating new scene notes given a path
-    context.set("onNewScene", async (path: string) => {
-      await this.app.vault.create(path, "");
-      this.app.workspace.openLinkText(path, "/", false);
+    context.set("onNewScene", async (name: string) => {
+      await insertScene(
+        drafts,
+        get(selectedDraft) as MultipleSceneDraft,
+        name,
+        this.app.vault,
+        { at: "end", relativeTo: null },
+        async (path) => {
+          await this.app.vault.create(path, "");
+          this.app.workspace.openLinkText(path, "/", false);
+        }
+      );
     });
 
     // Context function for creating new draft folders given a path
@@ -91,6 +101,35 @@ export class ExplorerPane extends ItemView {
         }
       }
     );
+
+    const addRelativeScene = (at: "before" | "after", file: TAbstractFile) => {
+      const draft = get(selectedDraft) as MultipleSceneDraft;
+      let sceneName = "Untitled";
+      let count = 0;
+      const sceneNames = new Set(draft.scenes.map((s) => s.title));
+      while (sceneNames.has(sceneName)) {
+        count = count + 1;
+        sceneName = `Untitled ${count}`;
+      }
+
+      const relativeTo = draft.scenes
+        .map((s) => s.title)
+        .indexOf(file.name.split(".md")[0]);
+
+      if (relativeTo >= 0) {
+        insertScene(
+          drafts,
+          draft,
+          sceneName,
+          this.app.vault,
+          { at, relativeTo },
+          async (path) => {
+            await this.app.vault.create(path, "");
+            this.app.workspace.openLinkText(path, "/", false);
+          }
+        );
+      }
+    };
 
     // Context function for showing a right-click menu
     context.set("onContextClick", (path: string, x: number, y: number) => {
@@ -112,6 +151,16 @@ export class ExplorerPane extends ItemView {
         item.setTitle("Open in new pane");
         item.setIcon("vertical-split");
         item.onClick(() => this.app.workspace.openLinkText(path, "/", true));
+      });
+      menu.addItem((item) => {
+        item.setTitle("Add new scene above");
+        item.setIcon("document");
+        item.onClick(() => addRelativeScene("before", file));
+      });
+      menu.addItem((item) => {
+        item.setTitle("Add new scene below");
+        item.setIcon("document");
+        item.onClick(() => addRelativeScene("after", file));
       });
       // Triggering this event lets other apps insert menu items
       // including Obsidian, giving us lots of stuff for free.
