@@ -80,27 +80,6 @@ export class LongformSettingsTab extends PluginSettingTab {
         "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with Longform after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script—check the dev console for it.";
     });
 
-    new Setting(containerEl).setName("Debugging").setHeading();
-
-    new Setting(containerEl)
-      .setDesc(
-        "Removes all projects from Longform. Useful for debugging issues. No notes will be lost."
-      )
-      .addButton((cb) => {
-        cb.setButtonText("Untrack All Projects")
-          .setWarning()
-          .onClick(async () => {
-            console.log(
-              "[Longform] Resetting plugin data to: ",
-              DEFAULT_SETTINGS
-            );
-            pluginSettings.set(DEFAULT_SETTINGS);
-            selectedDraftVaultPath.set(null);
-            this.plugin.cachedSettings = get(pluginSettings);
-            await this.plugin.saveSettings();
-          });
-      });
-
     new Setting(containerEl).setName("Credits").setHeading();
 
     containerEl.createEl("p", {}, (el) => {
