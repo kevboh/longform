@@ -1,6 +1,5 @@
 TODO:
 
-- [ ] file adds/renames should trigger unknown file check
 - [ ] word counts?
 - [ ] new draft button + modal
 

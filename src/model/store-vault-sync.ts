@@ -155,6 +155,26 @@ export class StoreVaultSync {
             return d;
           });
         });
+      } else {
+        // check unknown files, delete from there if present
+        const inDraftUnknown = drafts.find(
+          (d) => d.format === "scenes" && d.unknownFiles.contains(file.basename)
+        );
+        if (inDraftUnknown) {
+          draftsStore.update((allDrafts) => {
+            return allDrafts.map((d) => {
+              if (
+                d.vaultPath === inDraftUnknown.vaultPath &&
+                d.format === "scenes"
+              ) {
+                d.unknownFiles = d.unknownFiles.filter(
+                  (f) => f !== file.basename
+                );
+              }
+              return d;
+            });
+          });
+        }
       }
     }
   }
@@ -192,6 +212,31 @@ export class StoreVaultSync {
             return d;
           });
         });
+      } else {
+        // check if a new scene has been moved into this folder
+        const scenePath = file.parent.path;
+        const memberOfDraft = drafts.find((d) => {
+          if (d.format !== "scenes") {
+            return false;
+          }
+          const parentPath = this.vault.getAbstractFileByPath(d.vaultPath)
+            .parent.path;
+          const targetPath = normalizePath(`${parentPath}/${d.sceneFolder}`);
+          return targetPath === scenePath;
+        });
+        if (memberOfDraft) {
+          draftsStore.update((allDrafts) => {
+            return allDrafts.map((d) => {
+              if (
+                d.vaultPath === memberOfDraft.vaultPath &&
+                d.format === "scenes"
+              ) {
+                d.unknownFiles.push(newTitle);
+              }
+              return d;
+            });
+          });
+        }
       }
     }
   }
