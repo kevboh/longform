@@ -104,6 +104,7 @@ The Compile tab allows you to create custom workflows that turn your project int
 Longform will automatically attach a `.longform-leaf` class to the container panes of any notes that are part of a Longform project. This means you can add custom CSS snippets to Obsidian that style your writing environment and _only_ your writing environment. For example, I prefer a dark theme for Obsidian but a light theme for writing, so my writing snippet looks something like this:
 
 ```css
+/* Set some variables for the entire leaf. */
 .longform-leaf {
   --background-primary: white;
   --background-primary-alt: white;
@@ -111,6 +112,7 @@ Longform will automatically attach a `.longform-leaf` class to the container pan
   --background-secondary-alt: white;
 }
 
+/* Style the editor. */
 .longform-leaf .markdown-source-view {
   --background-primary: white;
   --background-primary-alt: white;
@@ -122,14 +124,17 @@ Longform will automatically attach a `.longform-leaf` class to the container pan
   background-color: white;
 }
 
+/* Style text selection. */
 .longform-leaf .suggestion-item.is-selected {
   background-color: var(--text-accent);
 }
 
+/* Style the header of the leaf. */
 .longform-leaf .view-header {
   background-color: white;
 }
 
+/* Style the text content of the leaf header. */
 .longform-leaf .view-header-title {
   --text-normal: black;
 }
