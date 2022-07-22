@@ -3,12 +3,7 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
 import type LongformPlugin from "../../main";
-import { DEFAULT_SETTINGS } from "../../model/types";
-import {
-  pluginSettings,
-  selectedDraftVaultPath,
-  userScriptSteps,
-} from "src/model/stores";
+import { pluginSettings, userScriptSteps } from "src/model/stores";
 import { FolderSuggest } from "./folder-suggest";
 
 export class LongformSettingsTab extends PluginSettingTab {
@@ -23,6 +18,8 @@ export class LongformSettingsTab extends PluginSettingTab {
   }
 
   display(): void {
+    const settings = get(pluginSettings);
+
     const { containerEl } = this;
 
     containerEl.empty();
@@ -37,7 +34,7 @@ export class LongformSettingsTab extends PluginSettingTab {
       .addSearch((cb) => {
         new FolderSuggest(this.app, cb.inputEl);
         cb.setPlaceholder("my/script/steps/")
-          .setValue(get(pluginSettings).userScriptFolder)
+          .setValue(settings.userScriptFolder)
           .onChange((v) => {
             pluginSettings.update((s) => ({
               ...s,
@@ -79,6 +76,97 @@ export class LongformSettingsTab extends PluginSettingTab {
       el.innerHTML =
         "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with Longform after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script—check the dev console for it.";
     });
+
+    new Setting(containerEl).setName("Word Counts & Sessions").setHeading();
+    new Setting(containerEl)
+      .setName("Show word counts in status bar")
+      .setDesc("Click the status item to show the focused note’s project.")
+      .addToggle((cb) => {
+        cb.setValue(settings.showWordCountInStatusBar);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            showWordCountInStatusBar: value,
+          }));
+        });
+      });
+    new Setting(containerEl)
+      .setName("Start new writing sessions each day")
+      .setDesc(
+        "You can always manually start a new session by running the Longform: Start New Writing Session command. Turning this off will cause writing sessions to carry over across multiple days until you manually start a new one."
+      )
+      .addToggle((cb) => {
+        cb.setValue(settings.startNewSessionEachDay);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            startNewSessionEachDay: value,
+          }));
+        });
+      });
+    new Setting(containerEl)
+      .setName("Session word count goal")
+      .setDesc("A number of words to target for a given writing session.")
+      .addText((cb) => {
+        cb.setValue(settings.sessionGoal.toString());
+        cb.onChange((value) => {
+          const numberValue = +value;
+          if (numberValue && numberValue > 0) {
+            pluginSettings.update((s) => ({ ...s, sessionGoal: numberValue }));
+          }
+        });
+      });
+    new Setting(containerEl)
+      .setName("Goal applies to")
+      .setDesc(
+        "You can set your word count goal to target all Longform writing, or you can make each project or scene have its own discrete goal."
+      )
+      .addDropdown((cb) => {
+        cb.addOption("all", "words written across all projects");
+        cb.addOption("project", "each project individually");
+        cb.addOption("note", "each scene or single-scene project");
+        cb.setValue(settings.applyGoalTo);
+        cb.onChange((value: "all" | "project" | "note") => {
+          pluginSettings.update((s) => ({ ...s, applyGoalTo: value }));
+        });
+      });
+    new Setting(containerEl)
+      .setName("Notify on goal reached")
+      .addToggle((cb) => {
+        cb.setValue(settings.notifyOnGoal);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({ ...s, notifyOnGoal: value }));
+        });
+      });
+    new Setting(containerEl)
+      .setName("Count deletions against goal")
+      .setDesc(
+        "If on, deleting words will count as negative words written. You cannot go below zero for a session."
+      )
+      .addToggle((cb) => {
+        cb.setValue(settings.countDeletionsForGoal);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            countDeletionsForGoal: value,
+          }));
+        });
+      });
+    new Setting(containerEl)
+      .setName("Sessions to keep")
+      .setDesc("Number of sessions to store locally.")
+      .addText((cb) => {
+        cb.setValue(settings.keepSessionCount.toString());
+        cb.onChange((value) => {
+          const numberValue = +value;
+          if (numberValue && numberValue > 0) {
+            pluginSettings.update((s) => ({
+              ...s,
+              keepSessionCount: numberValue,
+            }));
+          }
+        });
+      });
 
     new Setting(containerEl).setName("Credits").setHeading();
 

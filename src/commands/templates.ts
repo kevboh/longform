@@ -1,4 +1,4 @@
-import type { App, Editor, MarkdownView } from "obsidian";
+import type { Editor, MarkdownView } from "obsidian";
 
 import { draftForPath } from "src/model/scene-navigation";
 import { drafts, selectedDraftVaultPath } from "src/model/stores";
@@ -16,13 +16,12 @@ const callbackForFormat = (
   format: "scenes" | "single",
   checking: boolean,
   _editor: Editor,
-  view: MarkdownView,
-  app: App
+  view: MarkdownView
 ): boolean | void => {
   const file = view.file;
 
   // check if this is already a draft or scene, if so, do nothing
-  const draft = draftForPath(file.path, get(drafts), app.vault);
+  const draft = draftForPath(file.path, get(drafts));
   if (checking && draft) {
     return false;
   } else if (draft) {
@@ -68,25 +67,19 @@ const callbackForFormat = (
   });
 };
 
-export const insertMultiSceneTemplate: CommandBuilder = (plugin) => ({
+export const insertMultiSceneTemplate: CommandBuilder = (_plugin) => ({
   id: "longform-insert-multi-scene",
   name: "Insert Multi-Scene Frontmatter",
   editorCheckCallback(checking, editor, view) {
-    const result = callbackForFormat(
-      "scenes",
-      checking,
-      editor,
-      view,
-      plugin.app
-    );
+    const result = callbackForFormat("scenes", checking, editor, view);
     return result;
   },
 });
 
-export const insertSingleSceneTemplate: CommandBuilder = (plugin) => ({
+export const insertSingleSceneTemplate: CommandBuilder = (_plugin) => ({
   id: "longform-insert-single-scene",
   name: "Insert Single-Scene Frontmatter",
   editorCheckCallback(checking, editor, view) {
-    return callbackForFormat("single", checking, editor, view, plugin.app);
+    return callbackForFormat("single", checking, editor, view);
   },
 });

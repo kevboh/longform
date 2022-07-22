@@ -1,7 +1,7 @@
-import { Plugin, WorkspaceLeaf, FileView, addIcon } from "obsidian";
+import { Plugin, WorkspaceLeaf, FileView, addIcon, Notice } from "obsidian";
 import debounce from "lodash/debounce";
 import pick from "lodash/pick";
-import type { Unsubscriber } from "svelte/store";
+import { derived, type Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import {
   VIEW_TYPE_LONGFORM_EXPLORER,
@@ -11,9 +11,10 @@ import type {
   Draft,
   LongformPluginSettings,
   SerializedWorkflow,
+  WordCountSession,
 } from "./model/types";
 import { DEFAULT_SETTINGS, TRACKED_SETTINGS_PATHS } from "./model/types";
-import { activeFile } from "./view/stores";
+import { activeFile, goalProgress, selectedTab } from "./view/stores";
 import { ICON_NAME, ICON_SVG } from "./view/icon";
 import { LongformSettingsTab } from "./view/settings/LongformSettings";
 import {
@@ -31,10 +32,12 @@ import {
   initialized,
   pluginSettings,
   drafts,
+  sessions,
 } from "./model/stores";
 import { addCommands } from "./commands";
 import { determineMigrationStatus } from "./model/migration";
 import { draftForPath } from "./model/scene-navigation";
+import { WritingSessionTracker } from "./model/writing-session-tracker";
 
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 
@@ -49,7 +52,10 @@ export default class LongformPlugin extends Plugin {
   private unsubscribeWorkflows: Unsubscriber;
   private unsubscribeDrafts: Unsubscriber;
   private unsubscribeSelectedDraft: Unsubscriber;
+  private unsubscribeSessions: Unsubscriber;
+  private unsubscribeGoalNotification: Unsubscriber;
   private userScriptObserver: UserScriptObserver;
+  writingSessionTracker: WritingSessionTracker;
 
   private storeVaultSync: StoreVaultSync;
 
@@ -65,9 +71,27 @@ export default class LongformPlugin extends Plugin {
     // Settings
     this.unsubscribeSettings = pluginSettings.subscribe(async (value) => {
       let shouldSave = false;
+
+      const changeInKeys = (
+        obj1: Record<string, any>,
+        obj2: Record<string, any>,
+        keys: string[]
+      ): boolean => {
+        return !!keys.find((k) => obj1[k] !== obj2[k]);
+      };
+
       if (
         this.cachedSettings &&
-        this.cachedSettings.userScriptFolder !== value.userScriptFolder
+        changeInKeys(this.cachedSettings, value, [
+          "userScriptFolder",
+          "showWordCountInStatusBar",
+          "startNewSessionEachDay",
+          "sessionGoal",
+          "applyGoalTo",
+          "notifyOnGoal",
+          "countDeletionsForGoal",
+          "keepSessionCount",
+        ])
       ) {
         shouldSave = true;
       }
@@ -116,6 +140,9 @@ export default class LongformPlugin extends Plugin {
     this.unsubscribeWorkflows();
     this.unsubscribeSelectedDraft();
     this.unsubscribeDrafts();
+    this.unsubscribeSessions();
+    this.unsubscribeGoalNotification();
+    this.writingSessionTracker.destroy();
     this.app.workspace
       .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
       .forEach((leaf) => leaf.detach());
@@ -123,6 +150,8 @@ export default class LongformPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     const settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+    // deserialize iso8601 strings as dates
 
     const _pluginSettings: LongformPluginSettings = pick(
       settings,
@@ -153,6 +182,33 @@ export default class LongformPlugin extends Plugin {
       deserializedWorkflows[key as string] = deserializeWorkflow(value);
     });
     workflows.set(deserializedWorkflows);
+
+    const onStatusClick = () => {
+      const file = get(activeFile);
+      if (!file) {
+        return false;
+      }
+      const draft = draftForPath(file.path, get(drafts));
+      if (draft) {
+        selectedDraftVaultPath.set(draft.vaultPath);
+        this.initLeaf();
+        const leaf = this.app.workspace
+          .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
+          .first();
+        if (leaf) {
+          this.app.workspace.revealLeaf(leaf);
+        }
+
+        selectedTab.set("Project");
+      }
+    };
+
+    this.writingSessionTracker = new WritingSessionTracker(
+      settings["sessions"],
+      this.addStatusBarItem(),
+      onStatusClick,
+      this.app.vault
+    );
   }
 
   async saveSettings(): Promise<void> {
@@ -169,6 +225,7 @@ export default class LongformPlugin extends Plugin {
     await this.saveData({
       ...this.cachedSettings,
       workflows: serializedWorkflows,
+      test: new Date(),
     });
   }
 
@@ -200,6 +257,61 @@ export default class LongformPlugin extends Plugin {
       saveWorkflows();
     });
 
+    // Sessions
+    const saveSessions = debounce(async (toSave: WordCountSession[]) => {
+      console.log("saving sessions...", toSave);
+      pluginSettings.update((s) => {
+        const toReturn = {
+          ...s,
+          sessions: toSave,
+        };
+        this.cachedSettings = toReturn;
+        return toReturn;
+      });
+      await this.saveSettings();
+    }, 3000);
+    this.unsubscribeSessions = sessions.subscribe((s) => {
+      if (!get(initialized)) {
+        return;
+      }
+
+      saveSessions(s);
+    });
+
+    this.unsubscribeGoalNotification = derived(
+      [goalProgress, pluginSettings, selectedDraft, activeFile],
+      (stores) => stores
+    ).subscribe(
+      ([$goalProgress, $pluginSettings, $selectedDraft, $activeFile]) => {
+        if ($goalProgress >= 1 && $pluginSettings.notifyOnGoal) {
+          let target: string;
+          if ($pluginSettings.applyGoalTo === "all") {
+            target = "all";
+          } else if ($pluginSettings.applyGoalTo === "project") {
+            target = `draft::${$selectedDraft.vaultPath}`;
+          } else if ($pluginSettings.applyGoalTo === "note") {
+            if ($selectedDraft && $selectedDraft.format === "single") {
+              target = `note::${$selectedDraft.vaultPath}`;
+            } else if (
+              $selectedDraft &&
+              $selectedDraft.format === "scenes" &&
+              $activeFile
+            ) {
+              target = `note::${$activeFile.path}`;
+            }
+          }
+          console.log(target);
+          if (
+            target &&
+            !this.writingSessionTracker.goalsNotifiedFor.has(target)
+          ) {
+            this.writingSessionTracker.goalsNotifiedFor.add(target);
+            new Notice("Writing goal met!");
+          }
+        }
+      }
+    );
+
     this.initLeaf();
     initialized.set(true);
   }
@@ -216,6 +328,7 @@ export default class LongformPlugin extends Plugin {
   }
 
   private watchProjects(): void {
+    // USER SCRIPTS
     this.registerEvent(
       this.app.vault.on(
         "modify",
@@ -247,6 +360,7 @@ export default class LongformPlugin extends Plugin {
       })
     );
 
+    // STORE-VAULT SYNC
     this.storeVaultSync.discoverDrafts();
 
     this.registerEvent(
@@ -269,16 +383,44 @@ export default class LongformPlugin extends Plugin {
         this.storeVaultSync.fileRenamed.bind(this.storeVaultSync)
       )
     );
+
+    // WORD COUNTS
+    this.registerEvent(
+      this.app.vault.on(
+        "modify",
+        this.writingSessionTracker.fileModified.bind(this.writingSessionTracker)
+      )
+    );
+
+    this.registerEvent(
+      this.app.vault.on("create", (file) => {
+        this.writingSessionTracker.debouncedCountDraftContaining.bind(
+          this.writingSessionTracker
+        )(file);
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        this.writingSessionTracker.debouncedCountDraftContaining.bind(
+          this.writingSessionTracker
+        )(file);
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("rename", (file, _oldPath) => {
+        this.writingSessionTracker.debouncedCountDraftContaining.bind(
+          this.writingSessionTracker
+        )(file);
+      })
+    );
   }
 
   private styleLongformLeaves(allDrafts: Draft[] = get(drafts)) {
     this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
       if (leaf.view instanceof FileView) {
-        const draft = draftForPath(
-          leaf.view.file.path,
-          allDrafts,
-          this.app.vault
-        );
+        const draft = draftForPath(leaf.view.file.path, allDrafts);
         if (draft) {
           leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
         } else {

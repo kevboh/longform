@@ -3,7 +3,12 @@
 import { derived, writable } from "svelte/store";
 import { groupBy, sortBy } from "lodash";
 
-import type { Draft, LongformPluginSettings } from "./types";
+import type {
+  WordCountSession,
+  Draft,
+  LongformPluginSettings,
+  DraftWordCounts,
+} from "./types";
 import type {
   Workflow,
   CompileStep,
@@ -41,6 +46,17 @@ export const workflows = writable<Record<string, Workflow>>({});
  * Writeable store of all loaded user script steps, or `null` if none are loaded.
  */
 export const userScriptSteps = writable<CompileStep[] | null>(null);
+
+/**
+ * Writeable store of recent writing session word counts, ordered by start date descending.
+ */
+export const sessions = writable<WordCountSession[]>([]);
+
+/**
+ * Writeable store mapping draft vault paths to either a map of scene names to word counts or,
+ * in the case of single-scene drafts, the word count.
+ */
+export const draftWordCounts = writable<DraftWordCounts>({});
 
 // DERIVED STORES
 

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { drafts, selectedDraft } from "src/model/stores";
-  import type { MultipleSceneDraft } from "src/model/types";
+  import { selectedDraft } from "src/model/stores";
 
   let newSceneName: string = "";
   let newSceneInput: HTMLElement;

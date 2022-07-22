@@ -1,6 +1,5 @@
 TODO:
 
-- [ ] word counts?
 - [ ] new draft button + modal
 
 **WARNING**: This branch of Longform is in beta. It may not be stable. While the docs in `docs/` are up-to-date, this README is not. Please use it with caution.
@@ -49,8 +48,8 @@ You can ignore that frontmatter for now. The tldr is that Longform uses the fron
 Your editor also now has the scene open and ready to write. If you click the small `My Great Novel/My Great Novel.md` link under your project name, you’ll be taken back to the index file where you’ll see your new scene listed under the `scenes` frontmatter entry:
 
 ```yaml
-  scenes:
-    - The Sun Rises on Dublin
+scenes:
+  - The Sun Rises on Dublin
 ```
 
 This is how Longform tracks your work.

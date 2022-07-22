@@ -63,13 +63,57 @@ export type SerializedWorkflow = {
   steps: SerializedStep[];
 };
 
+/**
+ * Draft vault paths to either a map of scene names to word counts or,
+ * in the case of single-scene drafts, the word count.
+ */
+export type DraftWordCounts = Record<string, Record<string, number> | number>;
+
+export type WordCountSession = {
+  /**
+   * Start date for this session.
+   */
+  start: Date;
+
+  /**
+   * Total number of words written in this session.
+   */
+  total: number;
+
+  /**
+   * Stats in this session per draft.
+   */
+  drafts: Record<
+    string,
+    {
+      /**
+       * Total words written in this draft in this session.
+       */
+      total: number;
+
+      /**
+       * Stats in this session per scene.
+       */
+      scenes: Record<string, number>;
+    }
+  >;
+};
+
 export interface LongformPluginSettings {
   version: number;
-  // DEPRECATED. To be removed in future, needed now for migrations.
-  projects: { [path: string]: LongformProjectSettings };
   selectedDraftVaultPath: string | null;
   workflows: Record<string, SerializedWorkflow> | null;
   userScriptFolder: string | null;
+  sessions: WordCountSession[];
+  showWordCountInStatusBar: boolean;
+  startNewSessionEachDay: boolean;
+  sessionGoal: number;
+  applyGoalTo: "all" | "project" | "note";
+  notifyOnGoal: boolean;
+  countDeletionsForGoal: boolean;
+  keepSessionCount: number;
+  // DEPRECATED. To be removed in future, needed now for migrations.
+  projects: { [path: string]: LongformProjectSettings };
 }
 
 export enum ProjectLoadError {
@@ -84,10 +128,18 @@ export type ProjectDetails = LongformProjectSettings &
 
 export const DEFAULT_SETTINGS: LongformPluginSettings = {
   version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
-  projects: {},
   selectedDraftVaultPath: null,
   workflows: null,
   userScriptFolder: null,
+  sessions: [],
+  showWordCountInStatusBar: true,
+  startNewSessionEachDay: true,
+  sessionGoal: 500,
+  applyGoalTo: "all",
+  notifyOnGoal: true,
+  countDeletionsForGoal: false,
+  keepSessionCount: 30,
+  projects: {},
 };
 
 export const TRACKED_SETTINGS_PATHS = [
@@ -95,4 +147,12 @@ export const TRACKED_SETTINGS_PATHS = [
   "projects",
   "selectedDraftVaultPath",
   "userScriptFolder",
+  "sessions",
+  "showWordCountInStatusBar",
+  "startNewSessionEachDay",
+  "sessionGoal",
+  "applyGoalTo",
+  "notifyOnGoal",
+  "countDeletionsForGoal",
+  "keepSessionCount",
 ];

@@ -2,18 +2,29 @@
   import CompileView from "../compile/CompileView.svelte";
 
   import { selectedDraft } from "src/model/stores";
+  import { selectedTab } from "../stores";
 
-  import { Tab, Tabs, TabList, TabPanel } from "../tabs";
   import NewSceneField from "./NewSceneField.svelte";
   import ProjectPicker from "./ProjectPicker.svelte";
   import SceneList from "./SceneList.svelte";
   import ProjectDetails from "./ProjectDetails.svelte";
   import { needsMigration } from "src/model/migration";
   import { getContext } from "svelte";
+  import Tab from "./Tab.svelte";
 
   const _migrate: () => void = getContext("migrate");
   function doMigration() {
     _migrate();
+  }
+
+  $: {
+    if (
+      $selectedDraft &&
+      $selectedDraft.format === "single" &&
+      $selectedTab === "Scenes"
+    ) {
+      $selectedTab = "Project";
+    }
   }
 </script>
 
@@ -38,34 +49,45 @@
   <ProjectPicker />
   {#if $selectedDraft && $selectedDraft.format === "scenes"}
     <div>
-      <Tabs>
-        <TabList>
-          <Tab>Scenes</Tab>
-          <Tab>Project</Tab>
-          <Tab>Compile</Tab>
-        </TabList>
-        <TabPanel>
+      <div class="tabs">
+        <div class="tab-list">
+          <Tab tab="Scenes" />
+          <Tab tab="Project" />
+          <Tab tab="Compile" />
+        </div>
+      </div>
+      {#if $selectedTab === "Scenes"}
+        <div class="tab-panel-container">
           <SceneList />
           <NewSceneField />
-        </TabPanel>
-        <TabPanel>
+        </div>
+      {:else if $selectedTab === "Project"}
+        <div class="tab-panel-container">
           <ProjectDetails />
-        </TabPanel>
-        <TabPanel><CompileView /></TabPanel>
-      </Tabs>
+        </div>
+      {:else}
+        <div class="tab-panel-container">
+          <CompileView />
+        </div>
+      {/if}
     </div>
   {:else}
     <div>
-      <Tabs>
-        <TabList>
-          <Tab>Project</Tab>
-          <Tab>Compile</Tab>
-        </TabList>
-        <TabPanel>
+      <div class="tabs">
+        <div class="tab-list">
+          <Tab tab="Project" />
+          <Tab tab="Compile" />
+        </div>
+      </div>
+      {#if $selectedTab === "Project"}
+        <div class="tab-panel-container">
           <ProjectDetails />
-        </TabPanel>
-        <TabPanel><CompileView /></TabPanel>
-      </Tabs>
+        </div>
+      {:else}
+        <div class="tab-panel-container">
+          <CompileView />
+        </div>
+      {/if}
     </div>
   {/if}
 {/if}
@@ -78,5 +100,14 @@
 
   .longform-migrate-button:hover {
     background-color: var(--interactive-accent-hover);
+  }
+
+  .tab-list {
+    margin: 4px 8px;
+    border-bottom: 1px solid var(--text-muted);
+  }
+
+  .tab-panel-container {
+    padding: 0 8px;
   }
 </style>

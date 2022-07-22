@@ -13,6 +13,7 @@ import {
   insertMultiSceneTemplate,
   insertSingleSceneTemplate,
 } from "./templates";
+import { startNewSession } from "./word-counts";
 
 const commandBuilders = [
   focusCurrentDraft,
@@ -26,6 +27,7 @@ const commandBuilders = [
   showLongform,
   insertMultiSceneTemplate,
   insertSingleSceneTemplate,
+  startNewSession,
 ];
 
 export function addCommands(plugin: LongformPlugin) {

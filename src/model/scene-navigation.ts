@@ -31,19 +31,18 @@ export function scenePath(
 
 export function findScene(
   path: string,
-  drafts: Draft[],
-  vault: Vault
+  drafts: Draft[]
 ): { draft: Draft; index: number; currentIndent: number } | null {
   for (const draft of drafts) {
     if (draft.format === "scenes") {
-      const file = vault.getAbstractFileByPath(draft.vaultPath);
-      if (!file) {
+      const parentPath = draft.vaultPath.split("/").slice(0, -1).join("/");
+      if (parentPath !== "" && !parentPath) {
         continue;
       }
-      const root = file.parent.path;
       const index = draft.scenes.findIndex(
         (s) =>
-          normalizePath(`${root}/${draft.sceneFolder}/${s.title}.md`) === path
+          normalizePath(`${parentPath}/${draft.sceneFolder}/${s.title}.md`) ===
+          path
       );
       if (index >= 0) {
         return { draft, index, currentIndent: draft.scenes[index].indent };
@@ -53,16 +52,12 @@ export function findScene(
   return null;
 }
 
-export function draftForPath(
-  path: string,
-  drafts: Draft[],
-  vault: Vault
-): Draft | null {
+export function draftForPath(path: string, drafts: Draft[]): Draft | null {
   for (const draft of drafts) {
     if (draft.vaultPath === path) {
       return draft;
     } else {
-      const found = findScene(path, drafts, vault);
+      const found = findScene(path, drafts);
       if (found) {
         return found.draft;
       }

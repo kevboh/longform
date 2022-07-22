@@ -157,7 +157,7 @@
   }
 
   .longform-compile-step-options {
-    padding-left: 0.5rem;
+    padding: 0.5rem;
     border-left: 1px solid var(--interactive-accent);
   }
 
@@ -185,6 +185,7 @@
   .longform-compile-step-option input[type="text"] {
     color: var(--text-accent);
     margin: 0 0 4px 0;
+    width: 100%;
   }
 
   .longform-compile-step-option input[type="checkbox"] {

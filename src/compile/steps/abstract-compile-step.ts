@@ -76,6 +76,9 @@ export type CompileContext = {
   projectPath: string;
   draft: Draft;
   app: App;
+  utilities: {
+    normalizePath: (path: string) => string;
+  };
 };
 
 export interface CompileStep {

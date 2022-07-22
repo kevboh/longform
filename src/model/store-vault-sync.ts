@@ -142,7 +142,7 @@ export class StoreVaultSync {
       }
     } else {
       // scene deletion = remove scene from draft
-      const found = findScene(file.path, drafts, this.vault);
+      const found = findScene(file.path, drafts);
       if (found) {
         draftsStore.update((_drafts) => {
           return _drafts.map((d) => {
@@ -199,7 +199,7 @@ export class StoreVaultSync {
     } else {
       // scene renamed
       const newTitle = fileNameFromPath(file.path);
-      const found = findScene(oldPath, drafts, this.vault);
+      const found = findScene(oldPath, drafts);
       if (found) {
         draftsStore.update((_drafts) => {
           return _drafts.map((d) => {

@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import { type App, normalizePath } from "obsidian";
 import { stripFrontmatter } from "src/model/note-utils";
 import {
   projectFolderPath,
@@ -117,6 +117,9 @@ export async function compile(
       projectPath: projectFolderPath(draft, app.vault),
       draft,
       app,
+      utilities: {
+        normalizePath,
+      },
     };
 
     console.log(

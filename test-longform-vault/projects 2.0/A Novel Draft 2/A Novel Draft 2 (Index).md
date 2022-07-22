@@ -4,7 +4,8 @@ longform:
   title: A Novel; or, What Projects Look Like Now
   workflow: test
   folder: /
-  scenes: []
+  scenes:
+    - in this draft
   ignoredFiles: []
 othermetadata: sure
 ---

@@ -1,7 +1,7 @@
 <script lang="ts">
   // @ts-nocheck
   import type Sortable from "sortablejs";
-  import type { Vault } from "obsidian";
+  import { Notice, type Vault } from "obsidian";
 
   import {
     type CompileStatus,
@@ -349,6 +349,7 @@
       compileStatus.innerText = "Compiled manuscript.";
       compileStatus.classList.add("compile-status-success");
       restoreDefaultStatusAfter();
+      new Notice("Compile complete.");
     } else {
       compileStatus.innerText = "default??";
     }

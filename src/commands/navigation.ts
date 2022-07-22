@@ -89,7 +89,7 @@ export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
     ),
 });
 
-export const focusCurrentDraft: CommandBuilder = (plugin) => ({
+export const focusCurrentDraft: CommandBuilder = () => ({
   id: "longform-focus-current-draft",
   name: "Show Current Project in Longform",
   editorCheckCallback(checking) {
@@ -105,7 +105,7 @@ export const focusCurrentDraft: CommandBuilder = (plugin) => ({
       selectedDraftVaultPath.set(draft.vaultPath);
     } else {
       // is the current path a scene?
-      const scene = findScene(path, drafts, plugin.app.vault);
+      const scene = findScene(path, drafts);
       if (checking && scene) {
         return true;
       } else if (!checking && scene) {
