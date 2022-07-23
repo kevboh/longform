@@ -274,14 +274,10 @@ export class StoreVaultSync {
     fileWithMetadata: FileWithMetadata
   ): Promise<{ draft: Draft; dirty: boolean } | null> {
     if (!fileWithMetadata.metadata.frontmatter) {
-      console.log(`no frontmatter at ${fileWithMetadata.file.path}`);
       return null;
     }
     const longformEntry = fileWithMetadata.metadata.frontmatter["longform"];
     if (!longformEntry) {
-      console.log(
-        `no longform frontmatter entry at ${fileWithMetadata.file.path}`
-      );
       return null;
     }
     const format = longformEntry["format"];

@@ -243,8 +243,6 @@ export class WritingSessionTracker {
       drafts: {},
     };
 
-    console.log("Starting new session:", newSession);
-
     sessionsStore.update((s) => [newSession, ...s]);
     this.goalsNotifiedFor = new Set();
     this.cachedLatestSession = newSession;
@@ -278,7 +276,6 @@ export class WritingSessionTracker {
     }
 
     if (shouldStartNewSession) {
-      console.log("should start new", this.cachedLatestSession, wordCounts);
       this.startNewSession();
     }
 
@@ -309,7 +306,6 @@ export class WritingSessionTracker {
       const draftCount = wordCounts[vaultPath];
       const startCount = this.sessionStartCounts[vaultPath];
       const startDiff = this.sessionStartDiffs.drafts[vaultPath];
-      console.log(draftCount, startCount, startDiff);
       if (typeof draftCount === "number") {
         const startNum = typeof startCount === "number" ? startCount : null;
         const diff = startNum ? Math.max(draftCount - startNum, 0) : 0;

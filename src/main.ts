@@ -259,7 +259,6 @@ export default class LongformPlugin extends Plugin {
 
     // Sessions
     const saveSessions = debounce(async (toSave: WordCountSession[]) => {
-      console.log("saving sessions...", toSave);
       pluginSettings.update((s) => {
         const toReturn = {
           ...s,
@@ -300,7 +299,6 @@ export default class LongformPlugin extends Plugin {
               target = `note::${$activeFile.path}`;
             }
           }
-          console.log(target);
           if (
             target &&
             !this.writingSessionTracker.goalsNotifiedFor.has(target)

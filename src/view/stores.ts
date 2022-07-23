@@ -88,7 +88,6 @@ export const goalProgress = derived(
         return draftTotals.total;
       } else {
         const sceneTotal = draftTotals.scenes[name] ?? 0;
-        console.log(draftTotals, sceneTotal);
         return Math.min(sceneTotal / goal, 1);
       }
     }
