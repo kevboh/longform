@@ -47,6 +47,7 @@ import { determineMigrationStatus } from "./model/migration";
 import { draftForPath } from "./model/scene-navigation";
 import { WritingSessionTracker } from "./model/writing-session-tracker";
 import NewProjectModal from "./view/project-lifecycle/new-project-modal";
+import { LongformAPI } from "./api/LongformAPI";
 
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 
@@ -65,6 +66,7 @@ export default class LongformPlugin extends Plugin {
   private unsubscribeGoalNotification: Unsubscriber;
   private userScriptObserver: UserScriptObserver;
   writingSessionTracker: WritingSessionTracker;
+  public api: LongformAPI;
 
   private storeVaultSync: StoreVaultSync;
 
@@ -156,6 +158,8 @@ export default class LongformPlugin extends Plugin {
     this.unsubscribeDrafts = drafts.subscribe((allDrafts) => {
       this.styleLongformLeaves(allDrafts);
     });
+
+    this.api = new LongformAPI();
   }
 
   onunload(): void {

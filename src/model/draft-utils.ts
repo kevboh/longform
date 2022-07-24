@@ -80,7 +80,7 @@ export function draftToYAML(draft: Draft): string {
   return stringifyYaml(obj).trim();
 }
 
-function indentedScenesToArrays(indented: IndentedScene[]) {
+export function indentedScenesToArrays(indented: IndentedScene[]) {
   const result: any = [];
   // track our current indentation level
   let currentIndent = 0;
