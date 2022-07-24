@@ -44,8 +44,10 @@ export function statsForScene(
     const count = counts[vaultPath];
     if (typeof count === "number") {
       return count;
-    } else {
+    } else if (typeof count === "object") {
       return sum(Object.values(count));
+    } else {
+      return 0;
     }
   };
 

@@ -381,10 +381,16 @@ export class StoreVaultSync {
 
   private async writeDraftFrontmatter(draft: Draft) {
     // Get index file frontmatter
-    const fm = omit(this.metadataCache.getCache(draft.vaultPath).frontmatter, [
-      "position",
-      "longform",
-    ]);
+    const metadata = this.metadataCache.getCache(draft.vaultPath);
+    if (!metadata) {
+      return;
+    }
+    const exists = await this.vault.adapter.exists(draft.vaultPath);
+    if (!exists) {
+      return;
+    }
+
+    const fm = omit(metadata.frontmatter, ["position", "longform"]);
     const formatted =
       Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
 

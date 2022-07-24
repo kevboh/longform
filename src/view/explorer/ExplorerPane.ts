@@ -11,6 +11,7 @@ import { migrate } from "src/model/migration";
 import { get } from "svelte/store";
 import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
 import { insertScene } from "src/model/draft-utils";
+import NewDraftModal from "src/view/project-lifecycle/new-draft-modal";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
@@ -228,6 +229,10 @@ export class ExplorerPane extends ItemView {
 
     context.set("migrate", () => {
       migrate(get(pluginSettings), this.app);
+    });
+
+    context.set("showNewDraftModal", () => {
+      new NewDraftModal(this.app).open();
     });
 
     this.explorerView = new ExplorerView({

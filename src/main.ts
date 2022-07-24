@@ -1,4 +1,12 @@
-import { Plugin, WorkspaceLeaf, FileView, addIcon, Notice } from "obsidian";
+import {
+  Plugin,
+  WorkspaceLeaf,
+  FileView,
+  addIcon,
+  Notice,
+  TAbstractFile,
+  TFolder,
+} from "obsidian";
 import debounce from "lodash/debounce";
 import pick from "lodash/pick";
 import { derived, type Unsubscriber } from "svelte/store";
@@ -38,6 +46,7 @@ import { addCommands } from "./commands";
 import { determineMigrationStatus } from "./model/migration";
 import { draftForPath } from "./model/scene-navigation";
 import { WritingSessionTracker } from "./model/writing-session-tracker";
+import NewProjectModal from "./view/project-lifecycle/new-project-modal";
 
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 
@@ -66,6 +75,22 @@ export default class LongformPlugin extends Plugin {
     this.registerView(
       VIEW_TYPE_LONGFORM_EXPLORER,
       (leaf: WorkspaceLeaf) => new ExplorerPane(leaf)
+    );
+
+    this.registerEvent(
+      this.app.workspace.on("file-menu", (menu, file: TAbstractFile) => {
+        if (!(file instanceof TFolder)) {
+          return;
+        }
+        menu.addItem((item) => {
+          item
+            .setTitle("Create Longform Project")
+            .setIcon(ICON_NAME)
+            .onClick(() => {
+              new NewProjectModal(this.app, file).open();
+            });
+        });
+      })
     );
 
     // Settings

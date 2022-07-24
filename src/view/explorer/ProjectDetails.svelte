@@ -7,13 +7,14 @@
     selectedDraft,
     selectedDraftVaultPath,
   } from "src/model/stores";
+  import { getContext } from "svelte";
+  import Icon from "../components/Icon.svelte";
   import {
     selectedDraftWordCountStatus,
     goalProgress,
     activeFile,
   } from "../stores";
   import DraftList from "./DraftList.svelte";
-  // import NewDraftField from "./NewDraftField.svelte";
 
   function titleChanged(event: Event) {
     let newTitle = (event.target as any).value;
@@ -60,11 +61,10 @@
 
   let showProgress = false;
   $: {
-    showProgress =
-      $activeFile &&
-      $selectedDraft &&
-      draftForPath($activeFile.path, $drafts).vaultPath ===
-        $selectedDraft.vaultPath;
+    if ($activeFile && $selectedDraft) {
+      const draft = draftForPath($activeFile.path, $drafts);
+      showProgress = draft && draft.vaultPath === $selectedDraft.vaultPath;
+    }
   }
 
   let goalPercentage: number;
@@ -91,6 +91,11 @@
     } else {
       return `${count.toLocaleString()} ${noun}s`;
     }
+  }
+
+  const showNewDraftModal: () => void = getContext("showNewDraftModal");
+  function onNewDraft() {
+    showNewDraftModal();
   }
 </script>
 
@@ -141,9 +146,13 @@
     </p>
   </div>
   <div class="longform-project-section">
-    <h4>Drafts</h4>
+    <div class="drafts-title-container">
+      <h4>Drafts</h4>
+      <button type="button" on:click={onNewDraft}>
+        <Icon iconName="plus-with-circle" />
+      </button>
+    </div>
     <DraftList />
-    <!-- <NewDraftField /> -->
   </div>
 </div>
 
@@ -200,5 +209,26 @@
   .progress .value {
     height: 100%;
     background-color: var(--text-accent);
+  }
+
+  .drafts-title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .drafts-title-container h4 {
+    margin-right: 8px;
+  }
+
+  .drafts-title-container button {
+    margin: 0;
+    padding: 0 0 0 8px;
+    color: var(--interactive-accent);
+  }
+
+  .drafts-title-container button:hover {
+    background-color: inherit;
   }
 </style>
