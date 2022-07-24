@@ -1,5 +1,3 @@
-// projects 2.0 stores
-
 import { derived, writable } from "svelte/store";
 import { groupBy, sortBy } from "lodash";
 

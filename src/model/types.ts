@@ -1,8 +1,6 @@
 export const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 3;
 export const LONGFORM_CURRENT_INDEX_VERSION = 1;
 
-// projects 2.0
-
 export type IndentedScene = {
   title: string;
   indent: number;
@@ -31,26 +29,6 @@ export type SingleSceneDraft = {
 };
 
 export type Draft = MultipleSceneDraft | SingleSceneDraft;
-
-// projects 1.0
-
-export interface DraftsMetadata {
-  name: string;
-  folder: string;
-  scenes: string[];
-}
-
-export interface IndexFileMetadata {
-  version: number;
-  workflow: string | null;
-  drafts: DraftsMetadata[];
-}
-
-export interface LongformProjectSettings {
-  path: string;
-  indexFile: string;
-  draftsPath: string;
-}
 
 export type SerializedStep = {
   id: string;
@@ -113,18 +91,13 @@ export interface LongformPluginSettings {
   countDeletionsForGoal: boolean;
   keepSessionCount: number;
   // DEPRECATED. To be removed in future, needed now for migrations.
-  projects: { [path: string]: LongformProjectSettings };
-}
-
-export enum ProjectLoadError {
-  None,
-  MissingMetadata = "This project’s metadata is either missing or invalid. Please check its index file. If all else fails, you can reset all project tracking in settings and re-mark folders as Longform projects.",
-}
-
-export type ProjectDetails = LongformProjectSettings &
-  IndexFileMetadata & {
-    error: ProjectLoadError;
+  projects: {
+    [path: string]: {
+      indexFile: string;
+      draftsPath: string;
+    };
   };
+}
 
 export const DEFAULT_SETTINGS: LongformPluginSettings = {
   version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
