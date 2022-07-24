@@ -1,7 +1,3 @@
-TODO:
-
-- [ ] expose yaml indent functions as API
-
 **WARNING**: This branch of Longform is in beta. It may not be stable. While the docs in `docs/` are up-to-date, this README is not. Please use it with caution.
 
 ## Longform
