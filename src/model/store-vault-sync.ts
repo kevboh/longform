@@ -93,15 +93,18 @@ export class StoreVaultSync {
 
   async fileMetadataChanged(file: TFile, _data: string, cache: CachedMetadata) {
     if (this.pathsToIgnoreNextChange.delete(file.path)) {
-      console.debug(
-        `ignored ${file.path} metadata change, anticipated from store`
-      );
       return;
     }
 
     const result = await this.draftFor({ file, metadata: cache });
     if (!result) {
-      console.debug(`no valid draft at ${file.path}, ignoring`);
+      const testDeletedDraft = this.lastKnownDraftsByPath[file.path];
+      if (testDeletedDraft) {
+        // a draft's YAML was removed, remove it from drafts
+        draftsStore.update((drafts) => {
+          return drafts.filter((d) => d.vaultPath !== file.path);
+        });
+      }
       return;
     }
 
