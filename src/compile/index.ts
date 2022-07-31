@@ -60,14 +60,11 @@ export async function compile(
   kinds: CompileStepKind[],
   statusCallback: (status: CompileStatus) => void
 ): Promise<void> {
-  // TODO: Compilation for single-scene projects!
-
   let currentInput: any;
 
   if (draft.format === "single") {
     const path = draft.vaultPath;
-    const fullContents = await app.vault.adapter.read(path);
-    const contents = stripFrontmatter(fullContents);
+    const contents = await app.vault.adapter.read(path);
     const metadata = app.metadataCache.getCache(path);
 
     currentInput = [
