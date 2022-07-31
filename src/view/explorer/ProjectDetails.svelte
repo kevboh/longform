@@ -226,9 +226,6 @@
     margin: 0;
     padding: 0 0 0 8px;
     color: var(--interactive-accent);
-  }
-
-  .drafts-title-container button:hover {
     background-color: inherit;
   }
 </style>
