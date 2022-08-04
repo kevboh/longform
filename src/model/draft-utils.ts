@@ -67,7 +67,7 @@ export function draftToYAML(draft: Draft): string {
 
   if (draft.format === "scenes") {
     longformEntry = Object.assign(longformEntry, {
-      folder: draft.sceneFolder,
+      sceneFolder: draft.sceneFolder,
       scenes: indentedScenesToArrays(draft.scenes),
       ignoredFiles: draft.ignoredFiles,
     });
