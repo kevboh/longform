@@ -144,6 +144,14 @@ export default class LongformPlugin extends Plugin {
         if (leaf.view instanceof FileView) {
           activeFile.set(leaf.view.file);
         }
+        // NOTE: This may break, as it's undocumented.
+        // Need some way to determine the empty state.
+        else if (
+          (leaf.view as any).emptyTitleEl &&
+          (leaf.view as any).emptyStateEl
+        ) {
+          activeFile.set(null);
+        }
       })
     );
 

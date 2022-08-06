@@ -97,6 +97,10 @@
         indent: d.name === draggingID ? draggingIndent : d.indent,
       }));
       ($drafts[currentDraftIndex] as MultipleSceneDraft).scenes = scenes;
+
+      if ($activeFile) {
+        onSceneClick($activeFile.path, false);
+      }
     }
   }
 

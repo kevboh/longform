@@ -24,10 +24,10 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    new Setting(containerEl).setName("User Script Steps").setHeading();
+    new Setting(containerEl).setName("Compile").setHeading();
 
     new Setting(containerEl)
-      .setName("User Script Step Folder")
+      .setName("User script step folder")
       .setDesc(
         ".js files in this folder will be available as User Script Steps in the Compile panel."
       )
