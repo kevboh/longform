@@ -13,7 +13,11 @@ import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
 import { drafts as draftsStore, selectedDraftVaultPath } from "./stores";
-import { arraysToIndentedScenes, draftToYAML } from "src/model/draft-utils";
+import {
+  arraysToIndentedScenes,
+  draftToYAML,
+  manuallyParseFrontmatter,
+} from "src/model/draft-utils";
 import { fileNameFromPath, replaceFrontmatter } from "./note-utils";
 import { findScene } from "./scene-navigation";
 
@@ -303,15 +307,12 @@ export class StoreVaultSync {
         // so we will parse out the yaml directly from the file contents, just in case.
         // discord discussion: https://discord.com/channels/686053708261228577/840286264964022302/994589562082951219
 
-        const contents = await this.vault.adapter.read(
-          fileWithMetadata.file.path
+        const fm = await manuallyParseFrontmatter(
+          fileWithMetadata.file.path,
+          this.vault
         );
-        const regex = /^---\n(?<yaml>(?:.*?\n)*)---/m;
-        const result = contents.match(regex);
-        if (result.groups && result.groups["yaml"]) {
-          const yaml = result.groups["yaml"];
-          const parsed = parseYaml(yaml);
-          rawScenes = parsed["longform"]["scenes"];
+        if (fm) {
+          rawScenes = fm["longform"]["scenes"];
         }
       }
 
@@ -393,7 +394,20 @@ export class StoreVaultSync {
       return;
     }
 
-    const fm = omit(metadata.frontmatter, ["position", "longform"]);
+    let frontmatter = metadata.frontmatter;
+    if (frontmatter && draft.format === "scenes") {
+      // WORKAROUND: See https://github.com/kevboh/longform/issues/86 for details
+      // In the case where this draft is multi-scene, manually fetch and parse frontmatter
+      // to prevent possible data loss, similar to initial load above.
+      frontmatter = await manuallyParseFrontmatter(draft.vaultPath, this.vault);
+    }
+    if (!frontmatter) {
+      console.log(
+        `[Longform] Error parsing frontmatter for draft sync at ${draft.vaultPath}, aborting edit.`
+      );
+      return;
+    }
+    const fm = frontmatter ? omit(frontmatter, ["position", "longform"]) : {};
     const formatted =
       Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
 

@@ -1,4 +1,4 @@
-import { stringifyYaml, Vault } from "obsidian";
+import { parseYaml, stringifyYaml, Vault } from "obsidian";
 import { omit } from "lodash";
 import type { Writable } from "svelte/store";
 
@@ -135,6 +135,20 @@ export function arraysToIndentedScenes(
       },
     ];
   }
+}
+
+export async function manuallyParseFrontmatter(
+  path: string,
+  vault: Vault
+): Promise<any | null> {
+  const contents = await vault.adapter.read(path);
+  const regex = /^---\n(?<yaml>(?:.*?\n)*)---/m;
+  const result = contents.match(regex);
+  if (!result || !result.groups || !result.groups["yaml"]) {
+    return null;
+  }
+  const yaml = result.groups["yaml"];
+  return parseYaml(yaml);
 }
 
 export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
