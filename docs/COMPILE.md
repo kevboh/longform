@@ -23,64 +23,70 @@ Steps may sometimes have _options_, which are text or checkbox fields that the s
 Longform comes with a lot of steps for you to add to compilation.
 
 #### Prepend Title
+
 _Scene_
 
 Prepends each scene's title (its note name) before its content. Options:
 
-| Name | Type  | Default | Description |
-| --- | --- | --- | --- |
-| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for an unindented scenes becomes “#”. |
-| Separator | Text | \n\n | Some text to insert between the formatted title and the rest of the scene. |
+| Name         | Type | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------ | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title Format | Text | $1      | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for an unindented scenes becomes “#”. |
+| Separator    | Text | \n\n    | Some text to insert between the formatted title and the rest of the scene.                                                                                                                                                                                                                                                                                                                                 |
 
 #### Remove Comments
+
 _Scene, Manuscript_
 
 Removes markdown and/or HTML comments. Options:
 
-| Name | Type  | Default | Description |
-| --- | --- | --- | --- |
-| Remove Markdown Comments | Boolean | true | If checked, will remove markdown comments (`%%`). |
-| Remove HTML Comments | Boolean | true | If checked, will remove HTML comments (`<!-- -->`). |
+| Name                     | Type    | Default | Description                                         |
+| ------------------------ | ------- | ------- | --------------------------------------------------- |
+| Remove Markdown Comments | Boolean | true    | If checked, will remove markdown comments (`%%`).   |
+| Remove HTML Comments     | Boolean | true    | If checked, will remove HTML comments (`<!-- -->`). |
 
 #### Remove Links
+
 _Scene, Manuscript_
 
 Removes internal and/or external links. Options:
 
-| Name | Type  | Default | Description |
-| --- | --- | --- | --- |
-| Remove Wikilinks | Boolean | true | If checked, will remove internal links (`[[ ]]`). |
-| Remove External Links | Boolean | true | If checked, will remove external links (`[ ]()`). |
+| Name                  | Type    | Default | Description                                       |
+| --------------------- | ------- | ------- | ------------------------------------------------- |
+| Remove Wikilinks      | Boolean | true    | If checked, will remove internal links (`[[ ]]`). |
+| Remove External Links | Boolean | true    | If checked, will remove external links (`[ ]()`). |
 
 #### Remove Strikethroughs
+
 _Scene, Manuscript_
 
 Removes any ~~struck through~~ text (`~~ ~~`).
 
 #### Strip Frontmatter
+
 _Scene, Manuscript._
 
 Removes any [YAML frontmatter](https://help.obsidian.md/Advanced+topics/YAML+front+matter) from the beginning of a scene or manuscript.
 
 #### Concatenate Text
+
 _Join_
 
 Joins scenes into a manuscript by concatenating them together with some optional text between. Options:
 
-| Name | Type  | Default | Description |
-| --- | --- | --- | --- |
-| Separator | Text | \n\n | Text to put between the joined scenes. |
-
+| Name      | Type | Default | Description                            |
+| --------- | ---- | ------- | -------------------------------------- |
+| Separator | Text | \n\n    | Text to put between the joined scenes. |
 
 #### Write to Note
+
 _Manuscript_
 
 Saves the manuscript as Markdown note in your vault. Options:
 
-| Name | Type  | Default | Description |
-| --- | --- | --- | --- |
-| Output Path | Text | manuscript.md | Path relative to your project at which to save your compiled manuscript. $1, if present, will be replaced with your project’s title. |
-| Open Compiled Manuscript | Boolean | true | If checked, open the compiled manuscript in a new pane. |
+| Name                     | Type    | Default       | Description                                                                                                                          |
+| ------------------------ | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Output Path              | Text    | manuscript.md | Path relative to your project at which to save your compiled manuscript. $1, if present, will be replaced with your project’s title. |
+| Open Compiled Manuscript | Boolean | true          | If checked, open the compiled manuscript in a new pane.                                                                              |
 
 ### User Script Steps
 
@@ -119,7 +125,7 @@ module.exports = {
         type: "Text",
 
         // the option's default value. string if "Text", boolean if "Boolean"
-        default: "Hello world!"
+        default: "Hello world!",
       },
 
       // a boolean option follows as another example
@@ -128,9 +134,9 @@ module.exports = {
         name: "Do Thing?",
         description: "If checked, do some extra thing.",
         type: "Boolean",
-        default: true
-      }
-    ]
+        default: true,
+      },
+    ],
   },
 
   /**
@@ -138,7 +144,7 @@ module.exports = {
     Errors encountered during execution should be thrown and will
     be handled by Longform.
     @param input If the step is of kind Scene or Join (see context),
-    this will be of type:
+    this will be *an array* containing elements of type:
       {
         path: string; // path to scene
         name: string; // file name of scene
@@ -146,6 +152,7 @@ module.exports = {
         metadata: CachedMetadata; // Obsidian metadata of scene
         indentationLevel?: number; // The indent level (starting at zero) of the scene
       }
+    where each element corresponds to a scene (and thus the step has access to all scenes at once in `input`).
     If the step is of kind Manuscript (see context), this will be of type:
       {
         // text contents of manuscript
@@ -160,11 +167,13 @@ module.exports = {
         draft: Draft; // The Draft type describing your project
         app: App; // Obsidian app
       }
+    @note For an example of using `context` to determine the shape of `input`, see
+    https://github.com/kevboh/longform/blob/main/src/compile/steps/strip-frontmatter.ts
     @returns If of kind "Scene" or "Manuscript", the same shape as `input`
     with the appropriate changes made to `contents`. If of kind "Join",
     the same shape as a "Manuscript" step input.
   */
-  compile: compile
+  compile: compile,
 };
 ```
 

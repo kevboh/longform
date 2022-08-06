@@ -1,5 +1,4 @@
 import { type App, normalizePath } from "obsidian";
-import { stripFrontmatter } from "src/model/note-utils";
 import {
   projectFolderPath,
   sceneFolderPath,
