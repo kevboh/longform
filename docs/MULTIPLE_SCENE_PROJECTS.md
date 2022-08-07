@@ -13,11 +13,11 @@ Fundamentally, scenes are a manually-ordered set of notes. The Scenes tab allows
 corresponds to:
 
 ```yaml
-  scenes:
-    - first scene
-    - second scene
-    - third scene
-    - fourth
+scenes:
+  - first scene
+  - second scene
+  - third scene
+  - fourth
 ```
 
 Reordering the list in the Scenes tab with drag-and-drop will reorder this frontmatter array (see [The Index File](./INDEX_FILE.md) for more details on how this works).
@@ -31,11 +31,11 @@ Although the Scenes tab does not correspond directly to a file hierarchy, you ca
 Clicking the disclosure array next to `first scene` will hide the second and third scenes. As you might expect, indentations are also reflected in your index file’s frontmatter:
 
 ```yaml
-  scenes:
-    - first scene
-    - - second scene
-      - third scene
-    - fourth
+scenes:
+  - first scene
+  - - second scene
+    - third scene
+  - fourth
 ```
 
 Longform takes advantage of YAML’s syntax for nested arrays to “indent” the frontmatter and make it look like your hierarchy.
@@ -52,14 +52,16 @@ An important note about scene indentation and nesting is that, because your scen
 Here’s the YAML, if you’re curious:
 
 ```yaml
-  scenes:
-    - - - first scene
-      - second scene
-    - third scene
-    - - - - - - - fourth
+scenes:
+  - - - first scene
+    - second scene
+  - third scene
+  - - - - - - - fourth
 ```
 
 What does this mean? Who knows! It’s your project, organize it how you want.
+
+Of note, Longform includes a documented [API](https://github.com/kevboh/longform/blob/main/src/api/LongformAPI.ts) that can parse and create these YAML lists.
 
 ## Unknown Scenes & Ignored Scenes
 
@@ -71,6 +73,6 @@ If Longform detects a `.md` file in your project’s scene folder that it doesn�
 Ignored files can exist alongside your scenes without appearing in your scenes list or being compiled. Note that the `ignoredFiles` property supports wildcards. If, for example, you wanted to keep a list of scratch notes” alongside each scene, you could suffix them with `-scratch.md` and then manually add the following to your `ignoredFiles` frontmatter:
 
 ```yaml
-  ignoredFiles:
-    - "*-scratch"
+ignoredFiles:
+  - "*-scratch"
 ```

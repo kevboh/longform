@@ -402,7 +402,7 @@ export class StoreVaultSync {
       frontmatter = await manuallyParseFrontmatter(draft.vaultPath, this.vault);
     }
     if (!frontmatter) {
-      console.log(
+      console.error(
         `[Longform] Error parsing frontmatter for draft sync at ${draft.vaultPath}, aborting edit.`
       );
       return;

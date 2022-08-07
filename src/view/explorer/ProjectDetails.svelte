@@ -1,14 +1,16 @@
 <script lang="ts">
   import { last } from "lodash";
-  import { draftForPath } from "src/model/scene-navigation";
+  import { normalizePath } from "obsidian";
+  import { draftForPath, projectFolderPath } from "src/model/scene-navigation";
   import { pluginSettings, projects } from "src/model/stores";
   import {
     drafts,
     selectedDraft,
     selectedDraftVaultPath,
   } from "src/model/stores";
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import Icon from "../components/Icon.svelte";
+  import { FolderSuggest } from "../settings/folder-suggest";
   import {
     selectedDraftWordCountStatus,
     goalProgress,
@@ -44,6 +46,38 @@
       }
       return _drafts;
     });
+  }
+
+  let sceneFolderInput: HTMLInputElement;
+  onMount(() => {
+    if (sceneFolderInput && $selectedDraft.format === "scenes") {
+      const projectPath = projectFolderPath($selectedDraft, app.vault);
+      new FolderSuggest(app, sceneFolderInput, projectPath);
+    }
+  });
+
+  async function sceneFolderChanged(event: Event) {
+    const newFolder = (event.target as any).value;
+    if (newFolder.length <= 0 || !$selectedDraft) {
+      return;
+    }
+    const root = app.vault.getAbstractFileByPath($selectedDraft.vaultPath)
+      .parent.path;
+    const path = normalizePath(`${root}/${newFolder}`);
+    const exists = await app.vault.adapter.exists(path);
+    if (exists) {
+      drafts.update((allDrafts) =>
+        allDrafts.map((d) => {
+          if (
+            d.vaultPath === $selectedDraftVaultPath &&
+            d.format === "scenes"
+          ) {
+            d.sceneFolder = newFolder;
+          }
+          return d;
+        })
+      );
+    }
   }
 
   let projectCount: number;
@@ -110,6 +144,21 @@
         value={$selectedDraft.title}
         on:change={titleChanged}
       />
+      {#if $selectedDraft.format === "scenes"}
+        <div style="margin-top: 8px;" />
+        <label for="longform-project-scene-folder">Scene Folder</label>
+        <input
+          id="longform-project-scene-folder"
+          type="text"
+          value={$selectedDraft.sceneFolder}
+          bind:this={sceneFolderInput}
+          on:input={sceneFolderChanged}
+        />
+        <p class="longform-project-warning">
+          Changing scene folder does not move scenes. If you’re moving scenes to
+          a new folder, move them in your vault first, then change this setting.
+        </p>
+      {/if}
     </div>
   {/if}
   <div
@@ -179,6 +228,14 @@
     font-weight: bold;
     font-size: 85%;
     color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  p.longform-project-warning {
+    color: var(--text-muted);
+    font-size: 70%;
+    margin: 0;
+    line-height: normal;
   }
 
   .word-counts p {
