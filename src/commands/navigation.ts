@@ -1,16 +1,18 @@
-import { FuzzySuggestModal, type App } from "obsidian";
+import { FuzzySuggestModal, TFile, type App } from "obsidian";
 import { get } from "svelte/store";
-import { fromPairs, identity, reverse } from "lodash";
+import { fromPairs, identity, repeat, reverse } from "lodash";
 
 import type { CommandBuilder } from "./types";
 import { activeFile } from "src/view/stores";
 import {
   drafts as draftsStore,
   projects as projectsStore,
+  selectedDraft,
   selectedDraftVaultPath,
 } from "src/model/stores";
 import {
   findScene,
+  scenePath,
   scenePathForLocation,
   type SceneNavigationLocation,
 } from "src/model/scene-navigation";
@@ -203,5 +205,41 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
       identity,
       projectCallback
     ).open();
+  },
+});
+
+export const jumpToScene: CommandBuilder = (plugin) => ({
+  id: "longform-jump-to-scene",
+  name: "Jump to Scene in Current Project",
+  checkCallback(checking) {
+    const currentDraft = get(selectedDraft);
+    if (
+      !currentDraft ||
+      currentDraft.format === "single" ||
+      currentDraft.scenes.length === 0
+    ) {
+      return false;
+    }
+    if (checking) {
+      return true;
+    }
+
+    const scenesToTitles: Record<string, string> = {};
+    const sortedLabels: string[] = [];
+    currentDraft.scenes.forEach((s) => {
+      const label = `${repeat("\t", s.indent)}${s.title}`;
+      scenesToTitles[label] = s.title;
+      sortedLabels.push(label);
+    });
+
+    // lol
+    const sortLabels = (_items: string[]) => sortedLabels;
+
+    new JumpModal(plugin.app, scenesToTitles, sortLabels, (scene: string) => {
+      const path = scenePath(scene, currentDraft, plugin.app.vault);
+      if (path) {
+        plugin.app.workspace.openLinkText(path, "/", false);
+      }
+    }).open();
   },
 });
