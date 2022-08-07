@@ -9,6 +9,7 @@
     selectedDraftVaultPath,
   } from "src/model/stores";
   import { getContext, onMount } from "svelte";
+  import Disclosure from "../components/Disclosure.svelte";
   import Icon from "../components/Icon.svelte";
   import { FolderSuggest } from "../settings/folder-suggest";
   import {
@@ -17,6 +18,10 @@
     activeFile,
   } from "../stores";
   import DraftList from "./DraftList.svelte";
+
+  let showMetdata = true;
+  let showWordCount = true;
+  let showDrafts = true;
 
   function titleChanged(event: Event) {
     let newTitle = (event.target as any).value;
@@ -136,28 +141,41 @@
 <div>
   {#if $selectedDraft}
     <div class="longform-project-section">
-      <h4>Project Metadata</h4>
-      <label for="longform-project-title">Title</label>
-      <input
-        id="longform-project-title"
-        type="text"
-        value={$selectedDraft.title}
-        on:change={titleChanged}
-      />
-      {#if $selectedDraft.format === "scenes"}
-        <div style="margin-top: 8px;" />
-        <label for="longform-project-scene-folder">Scene Folder</label>
-        <input
-          id="longform-project-scene-folder"
-          type="text"
-          value={$selectedDraft.sceneFolder}
-          bind:this={sceneFolderInput}
-          on:input={sceneFolderChanged}
-        />
-        <p class="longform-project-warning">
-          Changing scene folder does not move scenes. If you’re moving scenes to
-          a new folder, move them in your vault first, then change this setting.
-        </p>
+      <div
+        class="longform-project-details-section-header"
+        on:click={() => {
+          showMetdata = !showMetdata;
+        }}
+      >
+        <h4>Project Metadata</h4>
+        <Disclosure collapsed={!showMetdata} />
+      </div>
+      {#if showMetdata}
+        <div>
+          <label for="longform-project-title">Title</label>
+          <input
+            id="longform-project-title"
+            type="text"
+            value={$selectedDraft.title}
+            on:change={titleChanged}
+          />
+          {#if $selectedDraft.format === "scenes"}
+            <div style="margin-top: 8px;" />
+            <label for="longform-project-scene-folder">Scene Folder</label>
+            <input
+              id="longform-project-scene-folder"
+              type="text"
+              value={$selectedDraft.sceneFolder}
+              bind:this={sceneFolderInput}
+              on:input={sceneFolderChanged}
+            />
+            <p class="longform-project-warning">
+              Changing scene folder does not move scenes. If you’re moving
+              scenes to a new folder, move them in your vault first, then change
+              this setting.
+            </p>
+          {/if}
+        </div>
       {/if}
     </div>
   {/if}
@@ -167,41 +185,63 @@
       goalPercentage >= 43 ? "var(--text-on-accent)" : "var(--text-accent)"
     }`}
   >
-    <h4>Word Count</h4>
-    {#if showProgress}
-      <div
-        class="progress"
-        data-label={goalDescription}
-        title={goalDescription}
-      >
-        <div class="value" style={`width:${goalPercentage}%;`} />
+    <div
+      class="longform-project-details-section-header"
+      on:click={() => {
+        showWordCount = !showWordCount;
+      }}
+    >
+      <h4>Word Count</h4>
+      <Disclosure collapsed={!showWordCount} />
+    </div>
+    {#if showWordCount}
+      <div>
+        {#if showProgress}
+          <div
+            class="progress"
+            data-label={goalDescription}
+            title={goalDescription}
+          >
+            <div class="value" style={`width:${goalPercentage}%;`} />
+          </div>
+        {/if}
+        {#if sceneCount}
+          <p title="Word count in this scene of this project.">
+            <strong>Scene:</strong>
+            {pluralize(sceneCount, "word")}
+          </p>
+        {/if}
+        {#if draftCount}
+          <p title="Word count in just this draft of this project.">
+            <strong>Draft:</strong>
+            {pluralize(draftCount, "word")}
+          </p>
+        {/if}
+        <p title="Word count across all drafts of this project.">
+          <strong>Project:</strong>
+          {pluralize(projectCount, "word")}
+        </p>
       </div>
     {/if}
-    {#if sceneCount}
-      <p title="Word count in this scene of this project.">
-        <strong>Scene:</strong>
-        {pluralize(sceneCount, "word")}
-      </p>
-    {/if}
-    {#if draftCount}
-      <p title="Word count in just this draft of this project.">
-        <strong>Draft:</strong>
-        {pluralize(draftCount, "word")}
-      </p>
-    {/if}
-    <p title="Word count across all drafts of this project.">
-      <strong>Project:</strong>
-      {pluralize(projectCount, "word")}
-    </p>
   </div>
   <div class="longform-project-section">
     <div class="drafts-title-container">
-      <h4>Drafts</h4>
+      <div
+        class="longform-project-details-section-header"
+        on:click={() => {
+          showDrafts = !showDrafts;
+        }}
+      >
+        <h4>Drafts</h4>
+        <Disclosure collapsed={!showDrafts} />
+      </div>
       <button type="button" on:click={onNewDraft}>
         <Icon iconName="plus-with-circle" />
       </button>
     </div>
-    <DraftList />
+    {#if showDrafts}
+      <DraftList />
+    {/if}
   </div>
 </div>
 
@@ -212,11 +252,20 @@
     border-bottom: 1px solid var(--background-modifier-border);
   }
 
+  .longform-project-details-section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    cursor: pointer;
+  }
+
   h4 {
     font-weight: bold;
     margin: 0;
     padding: 0;
     font-size: 1rem;
+    margin-right: 4px;
   }
 
   input {
@@ -234,7 +283,7 @@
   p.longform-project-warning {
     color: var(--text-muted);
     font-size: 70%;
-    margin: 0;
+    margin: 2px 0 0 0;
     line-height: normal;
   }
 
