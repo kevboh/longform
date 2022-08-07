@@ -84,7 +84,7 @@
   </div>
   <div bind:this={checkboxContainer} hidden={!showSceneToggle} />
   <div>
-    {#if valid}
+    {#if valid && $selectedDraft}
       <p>
         You are creating a new draft{#if copyScenes}
           <b>&nbsp;with copied scenes</b>{/if} from your current draft
