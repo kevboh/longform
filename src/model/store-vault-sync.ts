@@ -1,6 +1,5 @@
 import {
   normalizePath,
-  parseYaml,
   stringifyYaml,
   type App,
   type CachedMetadata,
