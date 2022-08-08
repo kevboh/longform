@@ -1,4 +1,5 @@
 import { type App, normalizePath } from "obsidian";
+import { numberScenes } from "src/model/draft-utils";
 import {
   projectFolderPath,
   sceneFolderPath,
@@ -80,7 +81,7 @@ export async function compile(
     currentInput = [];
 
     // Build initial inputs
-    for (const scene of draft.scenes) {
+    for (const scene of numberScenes(draft.scenes)) {
       const path = scenePathForFolder(scene.title, folderPath);
       const contents = await app.vault.adapter.read(path);
       const metadata = app.metadataCache.getCache(path);
@@ -91,6 +92,7 @@ export async function compile(
         contents,
         metadata,
         indentationLevel: scene.indent,
+        numbering: scene.numbering,
       });
     }
   }

@@ -90,6 +90,7 @@ export interface LongformPluginSettings {
   notifyOnGoal: boolean;
   countDeletionsForGoal: boolean;
   keepSessionCount: number;
+  numberScenes: boolean;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
     [path: string]: {
@@ -112,6 +113,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   notifyOnGoal: true,
   countDeletionsForGoal: false,
   keepSessionCount: 30,
+  numberScenes: false,
   projects: {},
 };
 
@@ -128,4 +130,5 @@ export const TRACKED_SETTINGS_PATHS = [
   "notifyOnGoal",
   "countDeletionsForGoal",
   "keepSessionCount",
+  "numberScenes",
 ];

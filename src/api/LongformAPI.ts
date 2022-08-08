@@ -1,6 +1,9 @@
 import {
   arraysToIndentedScenes,
   indentedScenesToArrays,
+  numberScenes,
+  formatSceneNumber,
+  type NumberedScene,
 } from "src/model/draft-utils";
 import type { IndentedScene } from "src/model/types";
 
@@ -73,5 +76,26 @@ export class LongformAPI {
    */
   public nestedArraysToIndentedScenes(yamlArray: any[]): IndentedScene[] {
     return arraysToIndentedScenes(yamlArray);
+  }
+
+  /**
+   * Annotates an array of indented scenes with a `numbering` property, an array of `number`s.
+   * This property corresponds to each scene’s “number,” where a scene with no indent is numbered `[1]` or `[2]` or `[3]`, etc.
+   * while an indented scene might be numbered `[1, 1, 2]` to indicate scene 1.1.2, the second scene at a third indent under the first scene and first subscene.
+   * @param scenes Array of `IndentedScene`s to annotate.
+   * @returns Array of `NumberedScene`s, which are `IndentedScene`s with an added `numbering` property of type `number[]`.
+   */
+  public scenesWithNumberings(scenes: IndentedScene[]): NumberedScene[] {
+    return numberScenes(scenes);
+  }
+
+  /**
+   * Given an array of numbers, returns the string corresponding to those numbers formatted as scene/subscene “numbering.”
+   * For example, `[1, 1, 2]` becomes `"1.1.2"`.
+   * @param numbering Array of numbers corresponding a scene’s “number.”
+   * @returns Formatted numbering for display.
+   */
+  public formatSceneNumbering(numbering: number[]): string {
+    return formatSceneNumber(numbering);
   }
 }

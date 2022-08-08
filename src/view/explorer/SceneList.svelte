@@ -8,11 +8,12 @@
 
   import { activeFile } from "../stores";
 
-  import { drafts, selectedDraft } from "src/model/stores";
+  import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
 
   import SortableList from "../sortable/SortableList.svelte";
   import type { IndentedScene, MultipleSceneDraft } from "src/model/types";
   import Disclosure from "../components/Disclosure.svelte";
+  import { formatSceneNumber, numberScenes } from "src/model/draft-utils";
 
   let currentDraftIndex: number;
   $: {
@@ -32,6 +33,7 @@
     path: string;
     indent: number;
     collapsible: boolean;
+    numbering: number[];
   };
   let items: SceneItem[];
   $: {
@@ -48,13 +50,14 @@
   let collapsedItems: string[] = [];
 
   function itemsFromScenes(
-    scenes: IndentedScene[],
+    indentedScenes: IndentedScene[],
     _collapsedItems: string[]
   ): SceneItem[] {
+    const scenes = numberScenes(indentedScenes);
     const itemsToReturn: SceneItem[] = [];
     let ignoringUntilIndent = Infinity;
 
-    scenes.forEach(({ title, indent }, index) => {
+    scenes.forEach(({ title, indent, numbering }, index) => {
       if (indent <= ignoringUntilIndent) {
         ignoringUntilIndent = Infinity;
 
@@ -70,6 +73,7 @@
           indent: indent,
           path: makeScenePath($selectedDraft as MultipleSceneDraft, title),
           collapsible: nextScene && nextScene.indent > indent,
+          numbering,
         };
         itemsToReturn.push(item);
       }
@@ -174,6 +178,10 @@
       });
     }
   }
+
+  function numberLabel(item: any): string {
+    return formatSceneNumber(item.numbering as number[]);
+  }
 </script>
 
 <div>
@@ -204,7 +212,12 @@
         {#if item.collapsible}
           <Disclosure collapsed={collapsedItems.contains(item.id)} />
         {/if}
-        <span style="pointer-events: none;">{item.name}</span>
+        <span style="pointer-events: none;">
+          {#if $pluginSettings.numberScenes}
+            <span class="longform-scene-number">{numberLabel(item)}</span>
+          {/if}
+          {item.name}
+        </span>
       </div>
     </SortableList>
   </div>
@@ -284,6 +297,16 @@
   .scene-container:active {
     background-color: inherit;
     color: var(--text-muted);
+  }
+
+  .longform-scene-number {
+    color: var(--text-muted);
+    margin-right: 4px;
+    font-weight: bold;
+  }
+
+  .longform-scene-number::after {
+    content: ":";
   }
 
   #longform-unknown-files-wizard {

@@ -24,6 +24,22 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     containerEl.empty();
 
+    new Setting(containerEl).setName("Composition").setHeading();
+    new Setting(containerEl)
+      .setName("Show scene numbers in Scenes tab")
+      .setDesc(
+        "If on, shows numbers for scenes with subscenes separated by periods, e.g. 1.1.2."
+      )
+      .addToggle((cb) => {
+        cb.setValue(settings.numberScenes);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            numberScenes: value,
+          }));
+        });
+      });
+
     new Setting(containerEl).setName("Compile").setHeading();
 
     new Setting(containerEl)

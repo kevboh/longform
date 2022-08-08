@@ -118,6 +118,7 @@ export default class LongformPlugin extends Plugin {
           "notifyOnGoal",
           "countDeletionsForGoal",
           "keepSessionCount",
+          "numberScenes",
         ])
       ) {
         shouldSave = true;

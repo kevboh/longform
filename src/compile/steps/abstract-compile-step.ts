@@ -89,6 +89,8 @@ export type CompileSceneInput = {
   metadata: CachedMetadata;
   /** The 0-based indentation of the scene, if this scene belongs to a multi-scene project. */
   indentationLevel?: number;
+  /** The array of numbers corresponding to this scene’s “number,” e.g. `1.1.2`, if this scene belongs to a multi-scene project. */
+  numbering?: number[];
 };
 
 /** The per-manuscript payload used for Manuscript steps at compile-time. */

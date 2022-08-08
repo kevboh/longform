@@ -137,6 +137,41 @@ export function arraysToIndentedScenes(
   }
 }
 
+export type NumberedScene = IndentedScene & {
+  numbering: number[];
+};
+
+export function numberScenes(scenes: IndentedScene[]): NumberedScene[] {
+  let numbering = [0];
+  let lastNumberedIndent = 0;
+
+  return scenes.map((scene) => {
+    const { indent } = scene;
+    if (indent > lastNumberedIndent) {
+      let fill = lastNumberedIndent + 1;
+      while (fill <= indent) {
+        numbering[fill] = 1;
+        fill = fill + 1;
+      }
+      numbering[indent] = 0;
+    } else if (indent < lastNumberedIndent) {
+      const start = indent + 1;
+      numbering.splice(start, numbering.length - start);
+    }
+    lastNumberedIndent = indent;
+
+    numbering[indent] = numbering[indent] + 1;
+    return {
+      ...scene,
+      numbering: [...numbering],
+    };
+  });
+}
+
+export function formatSceneNumber(numbering: number[]): string {
+  return numbering.join(".");
+}
+
 export async function manuallyParseFrontmatter(
   path: string,
   vault: Vault
