@@ -1,4 +1,4 @@
-import { FuzzySuggestModal, TFile, type App } from "obsidian";
+import { FuzzySuggestModal, type App, type Instruction } from "obsidian";
 import { get } from "svelte/store";
 import { fromPairs, identity, repeat, reverse } from "lodash";
 
@@ -93,7 +93,7 @@ export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
 
 export const focusCurrentDraft: CommandBuilder = () => ({
   id: "longform-focus-current-draft",
-  name: "Show Current Project in Longform",
+  name: "Open Current Note’s Project",
   editorCheckCallback(checking) {
     const path = get(activeFile).path;
     const drafts = get(draftsStore);
@@ -139,33 +139,45 @@ export const showLongform: CommandBuilder = (plugin) => ({
 });
 
 class JumpModal<T> extends FuzzySuggestModal<string> {
-  items: Record<string, T>;
-  sort: (items: string[]) => string[];
-  onSelect: (value: T) => void;
+  items: Map<string, T>;
+  onSelect: (value: T, metaKey: boolean) => void;
 
   constructor(
     app: App,
-    items: Record<string, T>,
-    sort: (items: string[]) => string[],
-    onSelect: (value: T) => void
+    items: Map<string, T>,
+    instructions: Instruction[] = [],
+    onSelect: (value: T, metaKey: boolean) => void
   ) {
     super(app);
 
     this.items = items;
-    this.sort = sort;
     this.onSelect = onSelect;
+
+    this.scope.register(["Meta"], "Enter", (evt) => {
+      const result = this.containerEl.getElementsByClassName(
+        "suggestion-item is-selected"
+      );
+      if (result.length > 0) {
+        const selected = result[0].innerHTML;
+        this.onChooseItem(selected, evt);
+      }
+      this.close();
+      return false;
+    });
+
+    this.setInstructions(instructions);
   }
 
   getItems(): string[] {
-    return this.sort(Object.keys(this.items));
+    return Array.from(this.items.keys());
   }
 
   getItemText(item: string): string {
     return item;
   }
 
-  onChooseItem(item: string, _evt: MouseEvent | KeyboardEvent): void {
-    this.onSelect(this.items[item]);
+  onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
+    this.onSelect(this.items.get(item), evt.metaKey);
   }
 }
 
@@ -181,13 +193,28 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
           showLeaf(plugin);
           plugin.app.workspace.openLinkText(draft.vaultPath, "/", false);
         } else {
-          const items = fromPairs(
-            project.map((d) => [draftTitle(d), d.vaultPath])
-          );
+          const items = new Map<string, string>();
+
+          [...project].reverse().forEach((d) => {
+            items.set(draftTitle(d), d.vaultPath);
+          });
           new JumpModal(
             plugin.app,
             items,
-            (items) => reverse(items),
+            [
+              {
+                command: "↑↓",
+                purpose: "to navigate",
+              },
+              {
+                command: "↵",
+                purpose: "to open in Longform",
+              },
+              {
+                command: "esc",
+                purpose: "to dismiss",
+              },
+            ],
             (vaultPath) => {
               const draft = project.find((d) => d.vaultPath === vaultPath);
               if (draft) {
@@ -199,10 +226,28 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
         }
       }
     };
+
+    const projects: Map<string, Draft[]> = new Map(
+      Object.entries(get(projectsStore))
+    );
+
     new JumpModal(
       plugin.app,
-      get(projectsStore),
-      identity,
+      projects,
+      [
+        {
+          command: "↑↓",
+          purpose: "to navigate",
+        },
+        {
+          command: "↵",
+          purpose: "to open in Longform",
+        },
+        {
+          command: "esc",
+          purpose: "to dismiss",
+        },
+      ],
       projectCallback
     ).open();
   },
@@ -224,22 +269,38 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
       return true;
     }
 
-    const scenesToTitles: Record<string, string> = {};
-    const sortedLabels: string[] = [];
+    const scenesToTitles: Map<string, string> = new Map();
     currentDraft.scenes.forEach((s) => {
-      const label = `${repeat("\t", s.indent)}${s.title}`;
-      scenesToTitles[label] = s.title;
-      sortedLabels.push(label);
+      scenesToTitles.set(`${repeat("\t", s.indent)}${s.title}`, s.title);
     });
 
-    // lol
-    const sortLabels = (_items: string[]) => sortedLabels;
-
-    new JumpModal(plugin.app, scenesToTitles, sortLabels, (scene: string) => {
-      const path = scenePath(scene, currentDraft, plugin.app.vault);
-      if (path) {
-        plugin.app.workspace.openLinkText(path, "/", false);
+    new JumpModal(
+      plugin.app,
+      scenesToTitles,
+      [
+        {
+          command: "↑↓",
+          purpose: "to navigate",
+        },
+        {
+          command: "↵",
+          purpose: "to open",
+        },
+        {
+          command: "cmd ↵",
+          purpose: "to open in a new pane",
+        },
+        {
+          command: "esc",
+          purpose: "to dismiss",
+        },
+      ],
+      (scene: string, metaKey: boolean) => {
+        const path = scenePath(scene, currentDraft, plugin.app.vault);
+        if (path) {
+          plugin.app.workspace.openLinkText(path, "/", metaKey);
+        }
       }
-    }).open();
+    ).open();
   },
 });
