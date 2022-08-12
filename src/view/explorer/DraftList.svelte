@@ -24,15 +24,12 @@
     sel.addRange(range);
   }
 
-  const showRenameDraftMenu: (
-    x: number,
-    y: number,
-    action: () => void
-  ) => void = getContext("showRenameDraftMenu");
+  const showDraftMenu: (x: number, y: number, action: () => void) => void =
+    getContext("showDraftMenu");
   function onContext(event: MouseEvent) {
     const { x, y } = event;
     const element = document.elementFromPoint(x, y);
-    showRenameDraftMenu(x, y, () => {
+    showDraftMenu(x, y, () => {
       if (element && element instanceof HTMLElement) {
         const draftPath = element.dataset.draftPath;
         editingPath = draftPath;

@@ -20,7 +20,7 @@ scenes:
   - fourth
 ```
 
-Reordering the list in the Scenes tab with drag-and-drop will reorder this frontmatter array (see [The Index File](./INDEX_FILE.md) for more details on how this works).
+Reordering the list in the Scenes tab with drag-and-drop will reorder this frontmatter array (see [The Index File](./INDEX_FILE.md) for more details on how this works). You also have access to undo/redo when focused on the Longform pane: cmd (crtl on Windows)-z and cmd-shift-z will undo or redo your scene reorderings to a depth of 20 changes.
 
 ## Scene Indentation & Nesting
 

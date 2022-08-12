@@ -142,7 +142,7 @@ export type NumberedScene = IndentedScene & {
 };
 
 export function numberScenes(scenes: IndentedScene[]): NumberedScene[] {
-  let numbering = [0];
+  const numbering = [0];
   let lastNumberedIndent = 0;
 
   return scenes.map((scene) => {

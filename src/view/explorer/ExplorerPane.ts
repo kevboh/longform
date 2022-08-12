@@ -1,4 +1,10 @@
-import { ItemView, Menu, TAbstractFile, WorkspaceLeaf } from "obsidian";
+import {
+  ItemView,
+  type KeymapContext,
+  Menu,
+  TAbstractFile,
+  WorkspaceLeaf,
+} from "obsidian";
 import type { CompileStatus, Workflow } from "src/compile";
 import { compile, CompileStepKind } from "src/compile";
 import type { Draft, MultipleSceneDraft } from "src/model/types";
@@ -12,11 +18,13 @@ import { get } from "svelte/store";
 import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
 import { insertScene } from "src/model/draft-utils";
 import NewDraftModal from "src/view/project-lifecycle/new-draft-modal";
+import { UndoManager } from "../undo/undo-manager";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
 export class ExplorerPane extends ItemView {
   private explorerView: ExplorerView;
+  private undoManager = new UndoManager();
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -35,7 +43,39 @@ export class ExplorerPane extends ItemView {
   }
 
   async onOpen(): Promise<void> {
+    this.registerScopeEvent(
+      this.app.scope.register(
+        ["Mod"],
+        "z",
+        (evt: KeyboardEvent, ctx: KeymapContext) => {
+          const activePane = app.workspace.getActiveViewOfType(ExplorerPane);
+          if (activePane === this) {
+            this.undoManager.send("undo", evt, ctx);
+            return false;
+          }
+          return true;
+        }
+      )
+    );
+
+    this.registerScopeEvent(
+      this.app.scope.register(
+        ["Mod", "Shift"],
+        "z",
+        (evt: KeyboardEvent, ctx: KeymapContext) => {
+          const activePane = app.workspace.getActiveViewOfType(ExplorerPane);
+          if (activePane === this) {
+            this.undoManager.send("redo", evt, ctx);
+            return false;
+          }
+          return true;
+        }
+      )
+    );
+
     const context = new Map();
+
+    context.set("undoManager", this.undoManager);
 
     // Context function for showing a generic confirmation modal
     context.set(
@@ -138,7 +178,7 @@ export class ExplorerPane extends ItemView {
       if (!file) {
         return;
       }
-      const menu = new Menu(this.app);
+      const menu = new Menu();
       menu.addItem((item) => {
         item.setTitle("Delete");
         item.setIcon("trash");
@@ -168,18 +208,15 @@ export class ExplorerPane extends ItemView {
       this.app.workspace.trigger("file-menu", menu, file, "longform");
       menu.showAtPosition({ x, y });
     });
-    context.set(
-      "showRenameDraftMenu",
-      (x: number, y: number, action: () => void) => {
-        const menu = new Menu(this.app);
-        menu.addItem((item) => {
-          item.setTitle("Rename");
-          item.setIcon("pencil");
-          item.onClick(action);
-        });
-        menu.showAtPosition({ x, y });
-      }
-    );
+    context.set("showDraftMenu", (x: number, y: number, action: () => void) => {
+      const menu = new Menu();
+      menu.addItem((item) => {
+        item.setTitle("Rename");
+        item.setIcon("pencil");
+        item.onClick(action);
+      });
+      menu.showAtPosition({ x, y });
+    });
     context.set("renameFolder", (oldPath: string, newPath: string) => {
       this.app.vault.adapter.rename(oldPath, newPath);
     });
@@ -205,7 +242,7 @@ export class ExplorerPane extends ItemView {
         currentWorkflowName: string,
         action: (type: "new" | "rename" | "delete") => void
       ) => {
-        const menu = new Menu(this.app);
+        const menu = new Menu();
         menu.addItem((item) => {
           item.setTitle("Add new workflow");
           item.setIcon("plus-with-circle");
@@ -242,6 +279,7 @@ export class ExplorerPane extends ItemView {
   }
 
   async onClose(): Promise<void> {
+    this.undoManager.destroy();
     if (this.explorerView) {
       this.explorerView.$destroy();
     }

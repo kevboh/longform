@@ -4,16 +4,17 @@
      it's valid svelte and doesn't typeerror on compile.
   */
   import type Sortable from "sortablejs";
-  import { getContext } from "svelte";
+  import { getContext, onDestroy } from "svelte";
+  import { Notice, Platform } from "obsidian";
 
   import { activeFile } from "../stores";
-
   import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
-
   import SortableList from "../sortable/SortableList.svelte";
   import type { IndentedScene, MultipleSceneDraft } from "src/model/types";
   import Disclosure from "../components/Disclosure.svelte";
   import { formatSceneNumber, numberScenes } from "src/model/draft-utils";
+  import type { UndoManager } from "src/view/undo/undo-manager";
+  import { cloneDeep } from "lodash";
 
   let currentDraftIndex: number;
   $: {
@@ -97,11 +98,20 @@
 
   function itemOrderChanged(event: CustomEvent<SceneItem[]>) {
     if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
-      const scenes = event.detail.map((d) => ({
+      const scenes: IndentedScene[] = event.detail.map((d) => ({
         title: d.name,
         indent: d.name === draggingID ? draggingIndent : d.indent,
       }));
       ($drafts[currentDraftIndex] as MultipleSceneDraft).scenes = scenes;
+
+      sceneHistory = [
+        {
+          draftVaultPath: $drafts[currentDraftIndex].vaultPath,
+          scenes: cloneDeep(scenes),
+        },
+        ...sceneHistory,
+      ].slice(0, 20);
+      undoIndex = 0;
 
       if ($activeFile) {
         onSceneClick($activeFile.path, false);
@@ -118,7 +128,7 @@
     }>
   ) {
     draggingID = event.detail.itemID;
-    draggingIndent = event.detail.newIndent;
+    draggingIndent = event.detail.newIndent || 0;
     ghostIndent = draggingIndent * event.detail.indentWidth;
   }
 
@@ -145,6 +155,10 @@
   const onContextClick: (path: string, x: number, y: number) => void =
     getContext("onContextClick");
   function onContext(event: MouseEvent) {
+    // Don't show context menu on mobile, as it blocks scene drag-and-drop.
+    if (Platform.isMobileApp) {
+      return;
+    }
     const { x, y } = event;
     const element = document.elementFromPoint(x, y);
     const scenePath =
@@ -182,6 +196,61 @@
   function numberLabel(item: any): string {
     return formatSceneNumber(item.numbering as number[]);
   }
+
+  // Undo/Redo
+  const undoManager = getContext("undoManager") as UndoManager;
+  // Stack of scenes plus their associated draft.
+  let sceneHistory: { draftVaultPath: string; scenes: IndentedScene[] }[] = [];
+  // Pointer into that stack.
+  let undoIndex = 0;
+  undoManager.on((type, _evt, _ctx) => {
+    const oldIndex = undoIndex;
+    if (type === "undo") {
+      // Move pointer up 1 to max of final index
+      undoIndex = Math.max(Math.min(undoIndex + 1, sceneHistory.length - 1), 0);
+    } else {
+      // Move pointer down 1 to min of 0
+      undoIndex = Math.max(undoIndex - 1, 0);
+    }
+    const newValue = sceneHistory[undoIndex];
+    // Some final sanity checks
+    if (
+      oldIndex !== undoIndex &&
+      newValue &&
+      newValue.draftVaultPath === $drafts[currentDraftIndex].vaultPath &&
+      $drafts[currentDraftIndex].format === "scenes"
+    ) {
+      const newScenes = sceneHistory[undoIndex].scenes;
+      ($drafts[currentDraftIndex] as MultipleSceneDraft).scenes = newScenes;
+
+      new Notice(`${type === "undo" ? "Undid" : "Redid"} scene reordering`);
+    }
+    return false;
+  });
+
+  const unsubscribe = selectedDraft.subscribe((draft) => {
+    if (!draft) {
+      return;
+    }
+    sceneHistory = sceneHistory.filter(
+      (s) => s.draftVaultPath === draft.vaultPath
+    );
+    if (
+      draft.format === "scenes" &&
+      (sceneHistory.length === 0 ||
+        sceneHistory[0].draftVaultPath !== draft.vaultPath)
+    ) {
+      sceneHistory = [
+        {
+          draftVaultPath: draft.vaultPath,
+          scenes: cloneDeep((draft as MultipleSceneDraft).scenes),
+        },
+      ];
+      undoIndex = 0;
+    }
+  });
+
+  onDestroy(unsubscribe);
 </script>
 
 <div>

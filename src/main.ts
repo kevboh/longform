@@ -217,7 +217,9 @@ export default class LongformPlugin extends Plugin {
 
     const deserializedWorkflows: Record<string, Workflow> = {};
     Object.entries(_workflows).forEach(([key, value]) => {
-      deserializedWorkflows[key as string] = deserializeWorkflow(value);
+      deserializedWorkflows[key as string] = deserializeWorkflow(
+        value as SerializedWorkflow
+      );
     });
     workflows.set(deserializedWorkflows);
 

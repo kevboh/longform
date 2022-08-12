@@ -7,8 +7,6 @@
     let initialX = 0;
     let dragID: string = null;
 
-    // will probably need to preserve initial indent via dataset and then add/subtract indent delta
-
     function Indent() {
       this.defaults = {
         indentWidth: 32,
@@ -109,6 +107,8 @@
             });
           }
         },
+        delayOnTouchOnly: true,
+        delay: 400,
       },
       sortableOptions
     );

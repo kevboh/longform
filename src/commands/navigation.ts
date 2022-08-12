@@ -1,6 +1,6 @@
 import { FuzzySuggestModal, type App, type Instruction } from "obsidian";
 import { get } from "svelte/store";
-import { fromPairs, identity, repeat, reverse } from "lodash";
+import { repeat } from "lodash";
 
 import type { CommandBuilder } from "./types";
 import { activeFile } from "src/view/stores";
