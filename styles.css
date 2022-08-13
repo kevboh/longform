@@ -14,3 +14,11 @@
   color: var(--text-muted);
   font-size: 0.8rem;
 }
+
+/* Label vertical text label in Minimal theme, see
+ * https://github.com/kepano/obsidian-minimal/blob/master/translations/nav-labels.css
+ * and https://github.com/kevboh/longform/issues/55
+ */
+.labeled-nav .mod-left-split > .workspace-tabs:nth-child(3) .workspace-tab-header[data-type="VIEW_TYPE_LONGFORM_EXPLORER"] .workspace-tab-header-inner-icon:after {
+  content: "Longform";
+}
