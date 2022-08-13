@@ -1,4 +1,9 @@
-import { FuzzySuggestModal, type App, type Instruction } from "obsidian";
+import {
+  FuzzySuggestModal,
+  Keymap,
+  type App,
+  type Instruction,
+} from "obsidian";
 import { get } from "svelte/store";
 import { repeat } from "lodash";
 
@@ -140,13 +145,13 @@ export const showLongform: CommandBuilder = (plugin) => ({
 
 class JumpModal<T> extends FuzzySuggestModal<string> {
   items: Map<string, T>;
-  onSelect: (value: T, metaKey: boolean) => void;
+  onSelect: (value: T, isModEvent: boolean) => void;
 
   constructor(
     app: App,
     items: Map<string, T>,
     instructions: Instruction[] = [],
-    onSelect: (value: T, metaKey: boolean) => void
+    onSelect: (value: T, isModEvent: boolean) => void
   ) {
     super(app);
 
@@ -177,7 +182,7 @@ class JumpModal<T> extends FuzzySuggestModal<string> {
   }
 
   onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
-    this.onSelect(this.items.get(item), evt.metaKey);
+    this.onSelect(this.items.get(item), Keymap.isModEvent(evt));
   }
 }
 
@@ -295,10 +300,10 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
           purpose: "to dismiss",
         },
       ],
-      (scene: string, metaKey: boolean) => {
+      (scene: string, isModEvent: boolean) => {
         const path = scenePath(scene, currentDraft, plugin.app.vault);
         if (path) {
-          plugin.app.workspace.openLinkText(path, "/", metaKey);
+          plugin.app.workspace.openLinkText(path, "/", isModEvent);
         }
       }
     ).open();

@@ -9,6 +9,7 @@
   import { last } from "lodash";
   import { getContext } from "svelte";
   import { draftTitle } from "src/model/draft-utils";
+  import { Keymap } from "obsidian";
 
   const openFileAtPath: (path: string, newLeaf: boolean) => void =
     getContext("onSceneClick");
@@ -52,7 +53,7 @@
   }
 
   function onDraftClick(e: MouseEvent) {
-    openFileAtPath($selectedDraft.vaultPath, e.metaKey);
+    openFileAtPath($selectedDraft.vaultPath, Keymap.isModEvent(e));
   }
 </script>
 

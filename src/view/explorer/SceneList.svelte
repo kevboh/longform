@@ -5,7 +5,7 @@
   */
   import type Sortable from "sortablejs";
   import { getContext, onDestroy } from "svelte";
-  import { Notice, Platform } from "obsidian";
+  import { Keymap, Notice, Platform } from "obsidian";
 
   import { activeFile } from "../stores";
   import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
@@ -147,7 +147,7 @@
           collapsedItems = collapsedItems.filter((i) => i !== sceneItem.id);
         }
       } else {
-        onSceneClick(sceneItem.path, event.metaKey);
+        onSceneClick(sceneItem.path, Keymap.isModEvent(event));
       }
     }
   }
