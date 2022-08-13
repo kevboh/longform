@@ -15,6 +15,8 @@
   import { formatSceneNumber, numberScenes } from "src/model/draft-utils";
   import type { UndoManager } from "src/view/undo/undo-manager";
   import { cloneDeep } from "lodash";
+  import { scenePath } from "src/model/scene-navigation";
+  import { selectElementContents } from "../utils";
 
   let currentDraftIndex: number;
   $: {
@@ -150,10 +152,15 @@
     }
   }
 
-  // Grab the right-click context function and call it if the right-click
-  // happened on a scene element with a valid path.
-  const onContextClick: (path: string, x: number, y: number) => void =
-    getContext("onContextClick");
+  // Context click and inline editing
+  let editingName: string | null = null;
+
+  const onContextClick: (
+    path: string,
+    x: number,
+    y: number,
+    onRename: () => void
+  ) => void = getContext("onContextClick");
   function onContext(event: MouseEvent) {
     // Don't show context menu on mobile, as it blocks scene drag-and-drop.
     if (Platform.isMobileApp) {
@@ -164,8 +171,46 @@
     const scenePath =
       element && element instanceof HTMLElement && element.dataset.scenePath;
     if (scenePath) {
-      onContextClick(scenePath, x, y);
+      onContextClick(scenePath, x, y, () => {
+        if (element && element instanceof HTMLElement) {
+          const name = element.dataset.sceneName;
+          editingName = name;
+          const innerElement = activeDocument.getElementById(
+            `longform-scene-${editingName}`
+          );
+          setTimeout(() => selectElementContents(innerElement), 0);
+        }
+      });
     }
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    if (
+      editingName &&
+      event.target instanceof HTMLElement &&
+      $selectedDraft.format === "scenes"
+    ) {
+      const newName = event.target.innerText;
+      if (event.key === "Enter") {
+        // Rename file
+        const oldPath = scenePath(editingName, $selectedDraft, app.vault);
+        const newPath = scenePath(newName, $selectedDraft, app.vault);
+        app.vault.adapter.rename(oldPath, newPath);
+        editingName = null;
+        return false;
+      } else if (event.key === "Escape") {
+        event.target.blur();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function onBlur(event: FocusEvent) {
+    if (event.target instanceof HTMLElement) {
+      event.target.innerText = editingName;
+    }
+    editingName = null;
   }
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
@@ -277,6 +322,7 @@
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
         data-scene-indent={item.indent}
+        data-scene-name={item.name}
       >
         {#if item.collapsible}
           <Disclosure collapsed={collapsedItems.contains(item.id)} />
@@ -285,7 +331,15 @@
           {#if $pluginSettings.numberScenes}
             <span class="longform-scene-number">{numberLabel(item)}</span>
           {/if}
-          {item.name}
+          <div
+            id={`longform-scene-${item.name}`}
+            style="display: inline;"
+            on:keydown={item.name === editingName ? onKeydown : null}
+            on:blur={item.name === editingName ? onBlur : null}
+            contenteditable={item.name === editingName}
+          >
+            {item.name}
+          </div>
         </span>
       </div>
     </SortableList>

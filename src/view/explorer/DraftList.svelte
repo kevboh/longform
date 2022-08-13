@@ -9,20 +9,13 @@
   } from "src/model/stores";
   import { draftTitle } from "src/model/draft-utils";
   import type { Draft } from "src/model/types";
+  import { selectElementContents } from "../utils";
 
   function onDraftClick(draft: Draft) {
     $selectedDraftVaultPath = draft.vaultPath;
   }
 
   let editingPath: string | null = null;
-
-  function selectElementContents(el: HTMLElement) {
-    var range = document.createRange();
-    range.selectNodeContents(el);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
 
   const showDraftMenu: (x: number, y: number, action: () => void) => void =
     getContext("showDraftMenu");
@@ -38,12 +31,12 @@
     });
   }
 
-  // TODO: aliases
-  // const renameFolder: (oldPath: string, newPath: string) => void =
-  //   getContext("renameFolder");
-  // const makeDraftPath: (name: string) => string = getContext("makeDraftPath");
   function onKeydown(event: KeyboardEvent) {
     if (editingPath && event.target instanceof HTMLElement) {
+      const newTitle =
+        event.target.innerText && event.target.innerText.length > 0
+          ? event.target.innerText
+          : null;
       if (event.key === "Enter") {
         const currentDraftIndex = $drafts.findIndex(
           (d) => d.vaultPath === editingPath
@@ -51,8 +44,13 @@
         const d = $drafts[currentDraftIndex];
         $drafts[currentDraftIndex] = {
           ...d,
-          draftTitle: event.target.innerText,
+          draftTitle: newTitle,
         };
+
+        if (!newTitle) {
+          event.target.innerText = editingPath;
+        }
+
         editingPath = null;
         return false;
       } else if (event.key === "Escape") {

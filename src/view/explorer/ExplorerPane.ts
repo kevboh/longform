@@ -173,41 +173,49 @@ export class ExplorerPane extends ItemView {
     };
 
     // Context function for showing a right-click menu
-    context.set("onContextClick", (path: string, x: number, y: number) => {
-      const file = this.app.vault.getAbstractFileByPath(path);
-      if (!file) {
-        return;
-      }
-      const menu = new Menu();
-      menu.addItem((item) => {
-        item.setTitle("Delete");
-        item.setIcon("trash");
-        item.onClick(async () => {
-          if (file) {
-            await this.app.vault.trash(file, true);
-          }
+    context.set(
+      "onContextClick",
+      (path: string, x: number, y: number, onRename: () => void) => {
+        const file = this.app.vault.getAbstractFileByPath(path);
+        if (!file) {
+          return;
+        }
+        const menu = new Menu();
+        menu.addItem((item) => {
+          item.setTitle("Rename");
+          item.setIcon("pencil");
+          item.onClick(onRename);
         });
-      });
-      menu.addItem((item) => {
-        item.setTitle("Open in new pane");
-        item.setIcon("vertical-split");
-        item.onClick(() => this.app.workspace.openLinkText(path, "/", true));
-      });
-      menu.addItem((item) => {
-        item.setTitle("Add new scene above");
-        item.setIcon("document");
-        item.onClick(() => addRelativeScene("before", file));
-      });
-      menu.addItem((item) => {
-        item.setTitle("Add new scene below");
-        item.setIcon("document");
-        item.onClick(() => addRelativeScene("after", file));
-      });
-      // Triggering this event lets other apps insert menu items
-      // including Obsidian, giving us lots of stuff for free.
-      this.app.workspace.trigger("file-menu", menu, file, "longform");
-      menu.showAtPosition({ x, y });
-    });
+        menu.addItem((item) => {
+          item.setTitle("Delete");
+          item.setIcon("trash");
+          item.onClick(async () => {
+            if (file) {
+              await this.app.vault.trash(file, true);
+            }
+          });
+        });
+        menu.addItem((item) => {
+          item.setTitle("Open in new pane");
+          item.setIcon("vertical-split");
+          item.onClick(() => this.app.workspace.openLinkText(path, "/", true));
+        });
+        menu.addItem((item) => {
+          item.setTitle("Add new scene above");
+          item.setIcon("document");
+          item.onClick(() => addRelativeScene("before", file));
+        });
+        menu.addItem((item) => {
+          item.setTitle("Add new scene below");
+          item.setIcon("document");
+          item.onClick(() => addRelativeScene("after", file));
+        });
+        // Triggering this event lets other apps insert menu items
+        // including Obsidian, giving us lots of stuff for free.
+        this.app.workspace.trigger("file-menu", menu, file, "longform");
+        menu.showAtPosition({ x, y });
+      }
+    );
     context.set("showDraftMenu", (x: number, y: number, action: () => void) => {
       const menu = new Menu();
       menu.addItem((item) => {
