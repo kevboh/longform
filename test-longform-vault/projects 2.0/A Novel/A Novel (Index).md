@@ -3,10 +3,10 @@ longform:
   format: scenes
   title: A Novel; or, What Projects Look Like Now
   workflow: test
-  folder: /
+  sceneFolder: /
   scenes:
     - first scene
-    - fourth
+    - - fourth
   ignoredFiles:
     - "*-scratch"
     - manuscript
