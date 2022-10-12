@@ -504,9 +504,9 @@
 
 <style>
   .longform-workflow-picker-container {
-    margin-bottom: 2rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: var(--size-4-8);
+    padding: var(--size-4-2) 0;
+    border-bottom: var(--border-width) solid var(--background-modifier-border);
     display: flex;
     flex-direction: column;
   }
@@ -517,23 +517,24 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--size-4-2);
   }
 
   .longform-workflow-picker .longform-hint {
-    font-size: 1rem;
+    font-size: 1em;
   }
 
   select {
     background-color: transparent;
     border: none;
-    padding: 5px 0;
+    padding: var(--size-4-1) 0;
     margin: 0;
     font-family: inherit;
     font-size: inherit;
     cursor: inherit;
     line-height: inherit;
     outline: none;
+    box-shadow: none;
   }
 
   .select {
@@ -551,8 +552,8 @@
 
   .longform-compile-container :global(.longform-sortable-step-list) {
     list-style-type: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
   }
 
   .options-button {
@@ -603,7 +604,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-top: 2rem;
+    margin-top: var(--size-4-8);
   }
 
   .longform-compile-run-container .compile-status {

@@ -101,21 +101,21 @@
 
 <style>
   .draft-title-container {
-    margin-bottom: 16px;
+    margin-bottom: var(--size-4-4);
   }
 
   label {
     font-weight: bold;
     color: var(--text-muted);
     display: block;
-    font-size: 0.8rem;
+    font-size: var(--font-smallest);
   }
 
   input[type="text"] {
     width: 100%;
-    font-size: 1.5rem;
-    height: 3rem;
-    padding: 8px;
+    font-size: var(--h2-size);
+    height: var(--size-4-12);
+    padding: var(--size-4-2);
   }
 
   .source-path {

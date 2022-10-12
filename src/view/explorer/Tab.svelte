@@ -18,12 +18,14 @@
     border: none;
     border-bottom: none;
     border-radius: 0;
+    box-shadow: none;
     margin: 0;
     color: var(--interactive-accent);
+    font-size: 1em;
   }
 
   .tab-button.selected {
-    border-bottom: 2px solid var(--text-muted);
+    border-bottom: var(--size-2-1) solid var(--text-muted);
     color: var(--text-accent);
   }
 </style>

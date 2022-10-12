@@ -29,7 +29,7 @@
 </script>
 
 {#if $needsMigration}
-  <div>
+  <div class="longform-explorer">
     <p>
       Longform has been upgraded and requires a migration to a new format.
       Deprecated index files will be deleted, and some scene files may move.
@@ -46,53 +46,59 @@
     >
   </div>
 {:else}
-  <ProjectPicker />
-  {#if $selectedDraft && $selectedDraft.format === "scenes"}
-    <div>
-      <div class="tabs">
-        <div class="tab-list">
-          <Tab tab="Scenes" />
-          <Tab tab="Project" />
-          <Tab tab="Compile" />
+  <div class="longform-explorer">
+    <ProjectPicker />
+    {#if $selectedDraft && $selectedDraft.format === "scenes"}
+      <div>
+        <div class="tabs">
+          <div class="tab-list">
+            <Tab tab="Scenes" />
+            <Tab tab="Project" />
+            <Tab tab="Compile" />
+          </div>
         </div>
+        {#if $selectedTab === "Scenes"}
+          <div class="tab-panel-container">
+            <SceneList />
+            <NewSceneField />
+          </div>
+        {:else if $selectedTab === "Project"}
+          <div class="tab-panel-container">
+            <ProjectDetails />
+          </div>
+        {:else}
+          <div class="tab-panel-container">
+            <CompileView />
+          </div>
+        {/if}
       </div>
-      {#if $selectedTab === "Scenes"}
-        <div class="tab-panel-container">
-          <SceneList />
-          <NewSceneField />
+    {:else}
+      <div>
+        <div class="tabs">
+          <div class="tab-list">
+            <Tab tab="Project" />
+            <Tab tab="Compile" />
+          </div>
         </div>
-      {:else if $selectedTab === "Project"}
-        <div class="tab-panel-container">
-          <ProjectDetails />
-        </div>
-      {:else}
-        <div class="tab-panel-container">
-          <CompileView />
-        </div>
-      {/if}
-    </div>
-  {:else}
-    <div>
-      <div class="tabs">
-        <div class="tab-list">
-          <Tab tab="Project" />
-          <Tab tab="Compile" />
-        </div>
+        {#if $selectedTab === "Project"}
+          <div class="tab-panel-container">
+            <ProjectDetails />
+          </div>
+        {:else}
+          <div class="tab-panel-container">
+            <CompileView />
+          </div>
+        {/if}
       </div>
-      {#if $selectedTab === "Project"}
-        <div class="tab-panel-container">
-          <ProjectDetails />
-        </div>
-      {:else}
-        <div class="tab-panel-container">
-          <CompileView />
-        </div>
-      {/if}
-    </div>
-  {/if}
+    {/if}
+  </div>
 {/if}
 
 <style>
+  .longform-explorer {
+    font-size: var(--longform-explorer-font-size);
+  }
+
   .longform-migrate-button {
     background-color: var(--interactive-accent);
     color: var(--text-on-accent);
@@ -103,11 +109,11 @@
   }
 
   .tab-list {
-    margin: 4px 8px;
-    border-bottom: 1px solid var(--text-muted);
+    margin: var(--size-4-1) 0;
+    border-bottom: var(--border-width) solid var(--text-muted);
   }
 
   .tab-panel-container {
-    padding: 0 8px;
+    padding: 0;
   }
 </style>

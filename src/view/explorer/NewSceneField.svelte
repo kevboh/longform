@@ -57,16 +57,16 @@
 <style>
   .new-scene-container {
     margin: 0;
-    border-top: 1px solid var(--text-muted);
-    padding: 4px 0;
+    border-top: var(--border-width) solid var(--text-muted);
+    padding: var(--size-4-1) 0;
   }
 
   #new-scene {
     padding: 0;
     border: 0;
     background: inherit;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 1em;
+    line-height: var(--h3-line-height);
     width: 100%;
   }
 

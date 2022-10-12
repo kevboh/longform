@@ -99,7 +99,7 @@
 
 <style>
   #project-picker-container {
-    margin-bottom: 8px;
+    margin-bottom: var(--size-4-2);
   }
 
   select {
@@ -109,10 +109,11 @@
     margin: 0;
     width: 100%;
     font-family: inherit;
-    font-size: inherit;
+    font-size: 1em;
     cursor: inherit;
     line-height: inherit;
     outline: none;
+    box-shadow: none;
   }
 
   .select {
@@ -141,17 +142,16 @@
 
   .right-arrow::after {
     content: "";
-    width: 0.8em;
-    height: 0.5em;
+    width: var(--font-smallest);
+    height: var(--size-4-2);
     background-color: var(--text-muted);
     clip-path: polygon(50% 0%, 50% 100%, 100% 50%);
   }
 
   .current-draft-path {
     color: var(--text-muted);
-    font-size: 10px;
-    padding: 0 4px;
-    line-height: 12px;
+    font-size: var(--font-smallest);
+    padding: 0 0 var(--size-4-1) 0;
   }
 
   .current-draft-path:hover {

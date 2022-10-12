@@ -160,7 +160,7 @@
             on:change={titleChanged}
           />
           {#if $selectedDraft.format === "scenes"}
-            <div style="margin-top: 8px;" />
+            <div style="margin-top: var(--size-4-2);" />
             <label for="longform-project-scene-folder">Scene Folder</label>
             <input
               id="longform-project-scene-folder"
@@ -247,9 +247,9 @@
 
 <style>
   .longform-project-section {
-    margin-top: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--background-modifier-border);
+    margin-top: var(--size-4-4);
+    padding-bottom: var(--size-4-4);
+    border-bottom: var(--border-width) solid var(--background-modifier-border);
   }
 
   .longform-project-details-section-header {
@@ -264,8 +264,8 @@
     font-weight: bold;
     margin: 0;
     padding: 0;
-    font-size: 1rem;
-    margin-right: 4px;
+    font-size: 1em;
+    margin-right: var(--size-4-1);
   }
 
   input {
@@ -275,41 +275,46 @@
 
   label {
     font-weight: bold;
-    font-size: 85%;
+    font-size: var(--font-smaller);
     color: var(--text-muted);
-    margin-top: 8px;
+    margin-top: var(--size-4-2);
   }
 
   p.longform-project-warning {
     color: var(--text-muted);
-    font-size: 70%;
-    margin: 2px 0 0 0;
+    font-size: var(--font-smallest);
+    margin: var(--size-2-1) 0 0 0;
     line-height: normal;
   }
 
   .word-counts p {
-    margin: 8px 0;
+    margin: var(--size-4-2) 0;
   }
 
   .progress {
-    height: 1.5rem;
+    height: var(--size-4-6);
     width: 100%;
     background-color: var(--background-secondary-alt);
-    border-radius: 3px;
+    border-radius: var(--radius-s);
     position: relative;
     overflow: hidden;
   }
 
   .progress:before {
     content: attr(data-label);
-    font-size: 0.8rem;
+    font-size: var(--font-smallest);
     color: var(--progress-text-color);
     font-weight: bold;
     position: absolute;
     text-align: center;
-    top: 0px;
+    top: 0;
     left: 0;
     right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    height: 100%;
   }
 
   .progress .value {
@@ -325,12 +330,12 @@
   }
 
   .drafts-title-container h4 {
-    margin-right: 8px;
+    margin-right: var(--size-4-2);
   }
 
   .drafts-title-container button {
     margin: 0;
-    padding: 0 0 0 8px;
+    padding: 0 0 0 var(--size-4-2);
     color: var(--interactive-accent);
     background-color: inherit;
   }

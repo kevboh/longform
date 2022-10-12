@@ -95,25 +95,25 @@
 
 <style>
   #draft-list {
-    margin: 4px 0px;
+    margin: var(--size-4-1) 0;
   }
 
   #draft-list ol {
     list-style-type: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
   }
 
   .draft-container {
     display: flex;
-    border: 1px solid transparent;
-    border-radius: 3px;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-s);
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 14px;
-    line-height: 20px;
+    font-size: var(--font-small);
+    line-height: var(--h3-line-height);
     white-space: nowrap;
-    padding: 2px 0px;
+    padding: var(--size-2-1) 0;
   }
 
   .selected,

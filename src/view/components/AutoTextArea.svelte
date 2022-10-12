@@ -30,7 +30,7 @@
   pre,
   textarea {
     font-family: inherit;
-    padding: 0.5rem;
+    padding: var(--size-4-2);
     box-sizing: border-box;
     border: none;
     line-height: 1.2;

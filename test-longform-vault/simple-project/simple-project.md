@@ -7,18 +7,18 @@ longform:
     - "5"
     - "1"
     - "4"
+    - "20"
     - "2"
     - "3"
     - "19"
-    - "20"
     - fourth
     - third scene unlisted
     - "13"
     - second scene
+    - "12"
     - first scene
     - "8"
     - fifth
-    - "12"
     - "6"
     - "7"
     - "10"

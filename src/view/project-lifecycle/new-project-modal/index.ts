@@ -21,7 +21,7 @@ export default class NewProjectModalContainer extends Modal {
     const { contentEl } = this;
 
     contentEl.createEl("h1", { text: "Create Project" }, (el) => {
-      el.style.margin = "0 0 16px 0";
+      el.style.margin = "0 0 var(--size-4-4) 0";
     });
     const entrypoint = contentEl.createDiv("longform-add-create-project-root");
 

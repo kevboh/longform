@@ -59,33 +59,37 @@
     <p class="longform-compile-step-description">
       {step.description.description}
     </p>
-    <div class="longform-compile-step-options">
-      {#each step.description.options as option}
-        <div class="longform-compile-step-option">
-          {#if option.type === CompileStepOptionType.Text}
-            <label for={step.id + "-" + option.id}>{option.name}</label>
-            <input
-              id={step.id + "-" + option.id}
-              type="text"
-              placeholder={option.default.replace(/\n/g, "\\n")}
-              bind:value={step.optionValues[option.id]}
-            />
-          {:else}
-            <div class="longform-compile-step-checkbox-container">
-              <input
-                id={step.id + "-" + option.id}
-                type="checkbox"
-                bind:checked={step.optionValues[option.id]}
-              />
-              <label for={step.id + "-" + option.id}>{option.name}</label>
+    {#if step.description.options.length > 0}
+      <div class="longform-compile-step-options">
+        <div>
+          {#each step.description.options as option}
+            <div class="longform-compile-step-option">
+              {#if option.type === CompileStepOptionType.Text}
+                <label for={step.id + "-" + option.id}>{option.name}</label>
+                <input
+                  id={step.id + "-" + option.id}
+                  type="text"
+                  placeholder={option.default.replace(/\n/g, "\\n")}
+                  bind:value={step.optionValues[option.id]}
+                />
+              {:else}
+                <div class="longform-compile-step-checkbox-container">
+                  <input
+                    id={step.id + "-" + option.id}
+                    type="checkbox"
+                    bind:checked={step.optionValues[option.id]}
+                  />
+                  <label for={step.id + "-" + option.id}>{option.name}</label>
+                </div>
+              {/if}
+              <p class="longform-compile-step-option-description">
+                {option.description}
+              </p>
             </div>
-          {/if}
-          <p class="longform-compile-step-option-description">
-            {option.description}
-          </p>
+          {/each}
         </div>
-      {/each}
-    </div>
+      </div>
+    {/if}
     {#if error}
       <div class="longform-compile-step-error-container">
         <p class="longform-compile-step-error">{error}</p>
@@ -97,9 +101,9 @@
 <style>
   .longform-compile-step {
     background-color: var(--background-modifier-form-field);
-    border-radius: 5px;
-    padding: 0.25rem 0.25rem 0.75rem 0.25rem;
-    margin-bottom: 1rem;
+    border-radius: var(--radius-s);
+    padding: var(--size-4-1) var(--size-4-1) var(--size-4-3) var(--size-4-1);
+    margin-bottom: var(--size-4-4);
   }
 
   .longform-compile-step-title-outer {
@@ -118,7 +122,7 @@
 
   .longform-compile-step-title-container h4 {
     display: inline-block;
-    margin: 0 0.5rem 0 0;
+    margin: 0 var(--size-4-2) 0 0;
     padding: 0;
   }
 
@@ -128,17 +132,17 @@
     align-items: center;
     background-color: var(--text-accent);
     color: var(--text-on-accent);
-    border-radius: 10px;
-    font-size: 0.7rem;
+    border-radius: var(--radius-l);
+    font-size: var(--font-smallest);
     font-weight: bold;
-    padding: 0.25rem;
-    margin-right: 0.25rem;
-    height: 1.2rem;
+    padding: var(--size-4-1);
+    margin-right: var(--size-4-1);
+    height: var(--h1-line-height);
   }
 
   .longform-remove-step-button {
     display: flex;
-    width: 20px;
+    width: var(--size-4-5);
     margin: 0;
     align-items: center;
     justify-content: center;
@@ -151,24 +155,28 @@
   }
 
   .longform-compile-step-description {
-    font-size: 80%;
+    font-size: var(--font-smallest);
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: var(--size-2-1);
   }
 
   .longform-compile-step-options {
-    padding: 0.5rem;
-    border-left: 1px solid var(--interactive-accent);
+    padding: var(--size-4-2) 0;
+  }
+
+  .longform-compile-step-options > div {
+    border-left: var(--border-width) solid var(--interactive-accent);
+    padding: 0 var(--size-4-2);
   }
 
   .longform-compile-step-option {
-    margin-top: 0.5rem;
+    margin-top: var(--size-4-2);
   }
 
   .longform-compile-step-option label {
     display: block;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: var(--font-smallest);
   }
 
   .longform-compile-step-option input {
@@ -184,13 +192,13 @@
 
   .longform-compile-step-option input[type="text"] {
     color: var(--text-accent);
-    margin: 0 0 4px 0;
+    margin: 0 0 var(--size-4-1) 0;
     width: 100%;
   }
 
   .longform-compile-step-option input[type="checkbox"] {
     color: var(--text-accent);
-    margin: 0 0.5rem 2px 0;
+    margin: 0 var(--size-4-2) var(--size-2-1) 0;
   }
 
   .longform-compile-step-option input:focus {
@@ -198,18 +206,18 @@
   }
 
   .longform-compile-step-option-description {
-    font-size: 0.8rem;
-    line-height: 0.9rem;
+    font-size: var(--font-smallest);
+    line-height: 90%;
     color: var(--text-faint);
   }
 
   .longform-compile-step-error-container {
-    margin-top: 0.5rem;
+    margin-top: var(--size-4-2);
   }
 
   .longform-compile-step-error {
     color: var(--text-error);
-    font-size: 0.8rem;
-    line-height: 0.9rem;
+    font-size: var(--font-smallest);
+    line-height: 90%;
   }
 </style>

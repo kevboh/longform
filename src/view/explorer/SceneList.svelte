@@ -380,35 +380,35 @@
 
 <style>
   :global(.group) {
-    margin-left: 8px;
+    margin-left: var(--size-4-2);
   }
 
   #scene-list {
-    margin: 4px 0px;
+    margin: var(--size-4-1) 0;
   }
 
   #scene-list :global(.sortable-scene-list) {
     list-style-type: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
   }
 
   .scene-container {
     display: flex;
     flex-direction: row;
     align-items: center;
-    border: 1px solid transparent;
-    border-radius: 3px;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-s);
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 1em;
+    line-height: 1.1em;
     white-space: nowrap;
-    padding: 2px 0px;
+    padding: var(--size-2-1) 0;
   }
 
   .scene-container *:nth-child(2) {
-    margin-left: 8px;
+    margin-left: var(--size-4-2);
   }
 
   .selected,
@@ -424,7 +424,7 @@
 
   .longform-scene-number {
     color: var(--text-muted);
-    margin-right: 4px;
+    margin-right: var(--size-4-1);
     font-weight: bold;
   }
 
@@ -433,23 +433,23 @@
   }
 
   #longform-unknown-files-wizard {
-    border-top: 1px solid var(--text-muted);
-    padding: 8px 0px;
+    border-top: var(--border-width) solid var(--text-muted);
+    padding: var(--size-4-2) 0;
   }
 
   .longform-unknown-inner {
-    border-left: 2px solid var(--text-accent);
-    padding: 0px 0px 0px 4px;
+    border-left: var(--size-2-1) solid var(--text-accent);
+    padding: 0 0 0 var(--size-4-1);
   }
 
   .longform-unknown-explanation {
     color: var(--text-muted);
-    font-size: 1rem;
+    font-size: 1em;
   }
 
   #longform-unknown-files-wizard ul {
     list-style-type: none;
-    padding: 0px 0px 0px 8px;
+    padding: 0 0 0 var(--size-4-2);
   }
 
   .longform-unknown-file {
