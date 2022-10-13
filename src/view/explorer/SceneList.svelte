@@ -36,9 +36,11 @@
     path: string;
     indent: number;
     collapsible: boolean;
+    hidden: boolean;
     numbering: number[];
   };
   let items: SceneItem[];
+  let collapsedItems: string[] = [];
   $: {
     items =
       $selectedDraft && $selectedDraft.format === "scenes"
@@ -50,7 +52,6 @@
   let ghostIndent = 0;
   let draggingIndent = 0;
   let draggingID: string = null;
-  let collapsedItems: string[] = [];
 
   function itemsFromScenes(
     indentedScenes: IndentedScene[],
@@ -61,25 +62,27 @@
     let ignoringUntilIndent = Infinity;
 
     scenes.forEach(({ title, indent, numbering }, index) => {
-      if (indent <= ignoringUntilIndent) {
+      const hidden = indent > ignoringUntilIndent;
+      if (!hidden) {
         ignoringUntilIndent = Infinity;
-
-        const collapsed = _collapsedItems.contains(title);
-        if (collapsed) {
-          ignoringUntilIndent = indent;
-        }
-
-        const nextScene = index < scenes.length - 1 ? scenes[index + 1] : false;
-        const item = {
-          id: title,
-          name: title,
-          indent: indent,
-          path: makeScenePath($selectedDraft as MultipleSceneDraft, title),
-          collapsible: nextScene && nextScene.indent > indent,
-          numbering,
-        };
-        itemsToReturn.push(item);
       }
+
+      const collapsed = _collapsedItems.contains(title);
+      if (collapsed) {
+        ignoringUntilIndent = Math.min(ignoringUntilIndent, indent);
+      }
+
+      const nextScene = index < scenes.length - 1 ? scenes[index + 1] : false;
+      const item = {
+        id: title,
+        name: title,
+        indent: indent,
+        path: makeScenePath($selectedDraft as MultipleSceneDraft, title),
+        collapsible: nextScene && nextScene.indent > indent,
+        hidden,
+        numbering,
+      };
+      itemsToReturn.push(item);
     });
 
     return itemsToReturn;
@@ -315,7 +318,8 @@
     >
       <div
         class="scene-container"
-        style="margin-left: {item.indent * 32}px"
+        style="margin-left: {item.indent * 32}px; {item.hidden &&
+          'display: none;'}"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:click={(e) =>
           typeof item.path === "string" ? onItemClick(item, e) : {}}
