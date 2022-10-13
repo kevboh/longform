@@ -347,6 +347,7 @@
         {/if}
         <div
           style="width: 100%;"
+          data-scene-path={item.path}
           on:click={(e) =>
             typeof item.path === "string" ? onItemClick(item, e) : {}}
         >
