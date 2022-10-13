@@ -177,7 +177,7 @@ export async function manuallyParseFrontmatter(
   vault: Vault
 ): Promise<any | null> {
   const contents = await vault.adapter.read(path);
-  const regex = /^---\n(?<yaml>(?:.*?\n)*)---/m;
+  const regex = /^---\n(?<yaml>(?:.*?\n)*?)---/m;
   const result = contents.match(regex);
   if (!result || !result.groups || !result.groups["yaml"]) {
     return null;
