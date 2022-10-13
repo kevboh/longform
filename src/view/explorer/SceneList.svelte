@@ -137,18 +137,28 @@
     ghostIndent = draggingIndent * event.detail.indentWidth;
   }
 
+  function collapseItem(item: SceneItem) {
+    if (!collapsedItems.contains(item.id)) {
+      collapsedItems = [...collapsedItems, item.id];
+    } else {
+      collapsedItems = collapsedItems.filter((i) => i !== item.id);
+    }
+  }
+
   // Grab the click context function and call it when a valid scene is clicked.
   const onSceneClick: (path: string, newLeaf: boolean) => void =
     getContext("onSceneClick");
   function onItemClick(item: any, event: MouseEvent) {
     const sceneItem = item as SceneItem;
     if (sceneItem.path) {
-      if (sceneItem.collapsible && sceneItem.path === $activeFile.path) {
-        if (!collapsedItems.contains(sceneItem.id)) {
-          collapsedItems = [...collapsedItems, sceneItem.id];
-        } else {
-          collapsedItems = collapsedItems.filter((i) => i !== sceneItem.id);
-        }
+      // If on mobile, treat a tap on the active file as a collapse action
+      // this is because the disclosure target is way too small to tap.
+      if (
+        Platform.isMobile &&
+        sceneItem.collapsible &&
+        sceneItem.path === $activeFile.path
+      ) {
+        collapseItem(item);
       } else {
         onSceneClick(sceneItem.path, Keymap.isModEvent(event));
       }
@@ -321,17 +331,25 @@
         style="margin-left: {item.indent * 32}px; {item.hidden &&
           'display: none;'}"
         class:selected={$activeFile && $activeFile.path === item.path}
-        on:click={(e) =>
-          typeof item.path === "string" ? onItemClick(item, e) : {}}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
         data-scene-indent={item.indent}
         data-scene-name={item.name}
       >
         {#if item.collapsible}
-          <Disclosure collapsed={collapsedItems.contains(item.id)} />
+          <Disclosure
+            collapsed={collapsedItems.contains(item.id)}
+            on:click={() => {
+              collapseItem(item);
+              return false;
+            }}
+          />
         {/if}
-        <span style="pointer-events: none;">
+        <div
+          style="width: 100%;"
+          on:click={(e) =>
+            typeof item.path === "string" ? onItemClick(item, e) : {}}
+        >
           {#if $pluginSettings.numberScenes}
             <span class="longform-scene-number">{numberLabel(item)}</span>
           {/if}
@@ -344,7 +362,7 @@
           >
             {item.name}
           </div>
-        </span>
+        </div>
       </div>
     </SortableList>
   </div>

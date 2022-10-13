@@ -4,7 +4,7 @@
   export { className as class };
 </script>
 
-<span class:collapsed class={className}>
+<span class:collapsed class={className} on:click>
   <svg viewBox="0 0 100 100" class="right-triangle" width="8" height="8"
     ><path
       fill="currentColor"
