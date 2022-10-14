@@ -137,11 +137,11 @@
     ghostIndent = draggingIndent * event.detail.indentWidth;
   }
 
-  function collapseItem(item: SceneItem) {
-    if (!collapsedItems.contains(item.id)) {
-      collapsedItems = [...collapsedItems, item.id];
+  function collapseItem(itemID: string) {
+    if (!collapsedItems.contains(itemID)) {
+      collapsedItems = [...collapsedItems, itemID];
     } else {
-      collapsedItems = collapsedItems.filter((i) => i !== item.id);
+      collapsedItems = collapsedItems.filter((i) => i !== itemID);
     }
   }
 
@@ -158,7 +158,7 @@
         sceneItem.collapsible &&
         sceneItem.path === $activeFile.path
       ) {
-        collapseItem(item);
+        collapseItem(item.id);
       } else {
         onSceneClick(sceneItem.path, Keymap.isModEvent(event));
       }
@@ -340,7 +340,7 @@
           <Disclosure
             collapsed={collapsedItems.contains(item.id)}
             on:click={() => {
-              collapseItem(item);
+              collapseItem(item.id);
               return false;
             }}
           />
