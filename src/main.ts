@@ -264,8 +264,7 @@ export default class LongformPlugin extends Plugin {
 
     await this.saveData({
       ...this.cachedSettings,
-      workflows: serializedWorkflows,
-      test: new Date(),
+      workflows: serializedWorkflows
     });
   }
 
