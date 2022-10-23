@@ -1,14 +1,16 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, debounce, normalizePath, PluginSettingTab, Setting } from "obsidian";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
 import type LongformPlugin from "../../main";
 import { pluginSettings, userScriptSteps } from "src/model/stores";
 import { FolderSuggest } from "./folder-suggest";
+import { DEFAULT_SESSION_FILE } from "src/model/types";
 
 export class LongformSettingsTab extends PluginSettingTab {
   plugin: LongformPlugin;
   private unsubscribeUserScripts: Unsubscriber;
+  private unsubscribeSettings: Unsubscriber;
   private stepsSummary: HTMLElement;
   private stepsList: HTMLUListElement;
 
@@ -65,9 +67,8 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
     this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
       if (steps && steps.length > 0) {
-        this.stepsSummary.innerText = `Loaded ${steps.length} step${
-          steps.length !== 1 ? "s" : ""
-        }:`;
+        this.stepsSummary.innerText = `Loaded ${steps.length} step${steps.length !== 1 ? "s" : ""
+          }:`;
       } else {
         this.stepsSummary.innerText = "No steps loaded.";
       }
@@ -183,6 +184,47 @@ export class LongformSettingsTab extends PluginSettingTab {
           }
         });
       });
+    new Setting(containerEl)
+      .setName("Store session data")
+      .setDesc(
+        "Where your writing session data is stored. By default, data is stored alongside other Longform settings in the plugin’s data.json file. You may instead store it in a separate .json file in the plugin folder, or in a file in your vault. You may want to do this for selective sync or git reasons."
+      )
+      .addDropdown((cb) => {
+        cb.addOption("data", "with Longform settings");
+        cb.addOption("plugin-folder", "as a .json file in the longform/ plugin folder");
+        cb.addOption("file", "as a file in your vault");
+        cb.setValue(settings.sessionStorage);
+        cb.onChange((value: "data" | "plugin-folder" | "file") => {
+          pluginSettings.update((s) => ({ ...s, sessionStorage: value }));
+        });
+      });
+
+    const updateSessionFile = debounce((value: string) => {
+      // Normalize file to end in .json
+      let fileName = value;
+      if (!fileName || fileName.length === 0) {
+        fileName = DEFAULT_SESSION_FILE;
+      }
+      fileName = normalizePath(fileName);
+      if (!fileName.endsWith(".json")) {
+        fileName = `${fileName}.json`;
+      }
+      pluginSettings.update((s) => ({ ...s, sessionFile: fileName }));
+    }, 1000)
+
+    const sessionFileStorageSettings = new Setting(containerEl)
+      .setName("Session storage file")
+      .setDesc("Location in your vault to store session JSON. Created if does not exist, overwritten if it does.")
+      .addText((cb) => {
+        cb.setPlaceholder(DEFAULT_SESSION_FILE);
+        cb.setValue(settings.sessionFile ?? DEFAULT_SESSION_FILE);
+        cb.onChange(updateSessionFile);
+      });
+    sessionFileStorageSettings.settingEl.style.display = "none";
+
+    this.unsubscribeSettings = pluginSettings.subscribe(settings => {
+      sessionFileStorageSettings.settingEl.style.display = settings.sessionStorage === "file" ? "flex" : "none";
+    });
 
     new Setting(containerEl).setName("Credits").setHeading();
 
@@ -202,5 +244,6 @@ export class LongformSettingsTab extends PluginSettingTab {
 
   hide(): void {
     this.unsubscribeUserScripts();
+    this.unsubscribeSettings();
   }
 }

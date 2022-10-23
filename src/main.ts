@@ -6,6 +6,7 @@ import {
   Notice,
   TAbstractFile,
   TFolder,
+  normalizePath,
 } from "obsidian";
 import debounce from "lodash/debounce";
 import pick from "lodash/pick";
@@ -15,11 +16,12 @@ import {
   VIEW_TYPE_LONGFORM_EXPLORER,
   ExplorerPane,
 } from "./view/explorer/ExplorerPane";
-import type {
-  Draft,
-  LongformPluginSettings,
-  SerializedWorkflow,
-  WordCountSession,
+import {
+  PASSTHROUGH_SAVE_SETTINGS_PATHS,
+  type Draft,
+  type LongformPluginSettings,
+  type SerializedWorkflow,
+  type WordCountSession,
 } from "./model/types";
 import { DEFAULT_SETTINGS, TRACKED_SETTINGS_PATHS } from "./model/types";
 import { activeFile, goalProgress, selectedTab } from "./view/stores";
@@ -109,17 +111,7 @@ export default class LongformPlugin extends Plugin {
 
       if (
         this.cachedSettings &&
-        changeInKeys(this.cachedSettings, value, [
-          "userScriptFolder",
-          "showWordCountInStatusBar",
-          "startNewSessionEachDay",
-          "sessionGoal",
-          "applyGoalTo",
-          "notifyOnGoal",
-          "countDeletionsForGoal",
-          "keepSessionCount",
-          "numberScenes",
-        ])
+        changeInKeys(this.cachedSettings, value, PASSTHROUGH_SAVE_SETTINGS_PATHS)
       ) {
         shouldSave = true;
       }
@@ -298,15 +290,50 @@ export default class LongformPlugin extends Plugin {
 
     // Sessions
     const saveSessions = debounce(async (toSave: WordCountSession[]) => {
-      pluginSettings.update((s) => {
-        const toReturn = {
-          ...s,
-          sessions: toSave,
-        };
-        this.cachedSettings = toReturn;
-        return toReturn;
-      });
-      await this.saveSettings();
+      if (this.cachedSettings.sessionStorage === "data") {
+        pluginSettings.update((s) => {
+          const toReturn = {
+            ...s,
+            sessions: toSave,
+          };
+          this.cachedSettings = toReturn;
+          return toReturn;
+        });
+        await this.saveSettings();
+      }
+      else {
+        // Save to either plugin or vault
+        let file: string | null = null;
+        if (this.cachedSettings.sessionStorage === "plugin-folder") {
+          if (!this.manifest.dir) {
+            console.error(`[Longform] No manifest.dir for saving sessions.`)
+            return;
+          }
+          file = normalizePath(`${this.manifest.dir}/sessions.json`);
+        }
+        else {
+          file = this.cachedSettings.sessionFile;
+        }
+        if (!file) {
+          return;
+        }
+        const data = JSON.stringify(toSave);
+        await this.app.vault.adapter.write(file, data);
+
+        // If we have lingering session data in settings, clear it
+        if (this.cachedSettings.sessions.length !== 0) {
+          const emptySessions: WordCountSession[] = [];
+          pluginSettings.update((s) => {
+            const toReturn = {
+              ...s,
+              sessions: emptySessions,
+            };
+            this.cachedSettings = toReturn;
+            return toReturn;
+          });
+          await this.saveSettings();
+        }
+      }
     }, 3000);
     this.unsubscribeSessions = sessions.subscribe((s) => {
       if (!get(initialized)) {

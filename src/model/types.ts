@@ -82,6 +82,7 @@ export interface LongformPluginSettings {
   selectedDraftVaultPath: string | null;
   workflows: Record<string, SerializedWorkflow> | null;
   userScriptFolder: string | null;
+  sessionStorage: "data" | "plugin-folder" | "file";
   sessions: WordCountSession[];
   showWordCountInStatusBar: boolean;
   startNewSessionEachDay: boolean;
@@ -90,6 +91,7 @@ export interface LongformPluginSettings {
   notifyOnGoal: boolean;
   countDeletionsForGoal: boolean;
   keepSessionCount: number;
+  sessionFile: string;
   numberScenes: boolean;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
@@ -100,11 +102,14 @@ export interface LongformPluginSettings {
   };
 }
 
+export const DEFAULT_SESSION_FILE = "longform-sessions.json";
+
 export const DEFAULT_SETTINGS: LongformPluginSettings = {
   version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
   selectedDraftVaultPath: null,
   workflows: null,
   userScriptFolder: null,
+  sessionStorage: "data",
   sessions: [],
   showWordCountInStatusBar: true,
   startNewSessionEachDay: true,
@@ -113,6 +118,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   notifyOnGoal: true,
   countDeletionsForGoal: false,
   keepSessionCount: 30,
+  sessionFile: DEFAULT_SESSION_FILE,
   numberScenes: false,
   projects: {},
 };
@@ -122,6 +128,7 @@ export const TRACKED_SETTINGS_PATHS = [
   "projects",
   "selectedDraftVaultPath",
   "userScriptFolder",
+  "sessionStorage",
   "sessions",
   "showWordCountInStatusBar",
   "startNewSessionEachDay",
@@ -130,5 +137,20 @@ export const TRACKED_SETTINGS_PATHS = [
   "notifyOnGoal",
   "countDeletionsForGoal",
   "keepSessionCount",
+  "sessionFile",
+  "numberScenes",
+];
+
+export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
+  "sessionStorage",
+  "userScriptFolder",
+  "showWordCountInStatusBar",
+  "startNewSessionEachDay",
+  "sessionGoal",
+  "applyGoalTo",
+  "notifyOnGoal",
+  "countDeletionsForGoal",
+  "keepSessionCount",
+  "sessionFile",
   "numberScenes",
 ];
