@@ -3,7 +3,7 @@ import type { TFile } from "obsidian";
 
 import type { Draft, DraftWordCounts } from "./types";
 
-const FRONTMATTER_REGEX = /^---(.*?\n)*---\n*/gm;
+export const FRONTMATTER_REGEX = /^---\n(?<yaml>(?:.*?\n)*?)---/m;
 
 export function stripFrontmatter(contents: string): string {
   return contents.replace(FRONTMATTER_REGEX, "");

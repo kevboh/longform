@@ -83,9 +83,8 @@ export class StoreVaultSync {
     );
     draftsStore.set(draftsToWrite);
 
-    const message = `[Longform] Loaded and watching projects. Found ${
-      draftFiles.length
-    } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
+    const message = `[Longform] Loaded and watching projects. Found ${draftFiles.length
+      } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
 
     console.log(message);
 
@@ -410,7 +409,7 @@ export class StoreVaultSync {
     const formatted =
       Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
 
-    const newFm = `---\n${draftToYAML(draft)}\n${formatted}---\n\n`;
+    const newFm = `---\n${draftToYAML(draft)}\n${formatted}---`;
 
     const contents = await this.vault.adapter.read(draft.vaultPath);
     const newContents = replaceFrontmatter(contents, newFm);

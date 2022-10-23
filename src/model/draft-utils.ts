@@ -3,7 +3,7 @@ import { omit } from "lodash";
 import type { Writable } from "svelte/store";
 
 import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
-import { stripFrontmatter } from "./note-utils";
+import { FRONTMATTER_REGEX, stripFrontmatter } from "./note-utils";
 import { scenePath } from "src/model/scene-navigation";
 
 export function draftTitle(draft: Draft): string {
@@ -177,8 +177,7 @@ export async function manuallyParseFrontmatter(
   vault: Vault
 ): Promise<any | null> {
   const contents = await vault.adapter.read(path);
-  const regex = /^---\n(?<yaml>(?:.*?\n)*?)---/m;
-  const result = contents.match(regex);
+  const result = contents.match(FRONTMATTER_REGEX);
   if (!result || !result.groups || !result.groups["yaml"]) {
     return null;
   }
@@ -195,7 +194,7 @@ export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
       Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
   }
 
-  const newFm = `---\n${draftToYAML(draft)}\n${formatted}---\n\n`;
+  const newFm = `---\n${draftToYAML(draft)}\n${formatted}---`;
 
   const exists = await app.vault.adapter.exists(path);
   let contents = "";
