@@ -12,3 +12,11 @@
 {#if iconName.length > 0}
   <span use:icon={iconName} />
 {/if}
+
+<style>
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>

@@ -327,6 +327,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: var(--size-4-2);
   }
 
   .drafts-title-container h4 {
@@ -335,7 +336,7 @@
 
   .drafts-title-container button {
     margin: 0;
-    padding: 0 0 0 var(--size-4-2);
+    padding: var(--size-4-2);
     color: var(--interactive-accent);
     background-color: inherit;
   }
