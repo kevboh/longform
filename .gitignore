@@ -20,3 +20,4 @@ test-longform-vault/.obsidian/plugins/longform/*.css
 test-longform-vault/.obsidian/plugins/longform/*.js
 test-longform-vault/.obsidian/plugins/longform/*.json
 /test-longform-vault/.obsidian/workspace.json
+/test-longform-vault/longform-sessions.json
