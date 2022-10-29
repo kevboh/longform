@@ -1,5 +1,3 @@
-**WARNING**: This branch of Longform is in beta. It may not be stable. The docs and this README have been updated to reflect how the beta works, and may not apply to the current published version.
-
 ## Longform
 
 Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects. It lets you organize a series of notes, or _scenes_, into an ordered manuscript. It also supports single-note projects for shorter works. Major features include:
@@ -9,6 +7,7 @@ Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write an
 - Scene/draft/project [word counts](./docs/WORD_COUNTS.md#word-counts-for-projects-drafts-and-scenes);
 - Daily [writing session goals](./docs/WORD_COUNTS.md#writing-sessions-and-word-count-goals) with lots of options to help fit your writing style;
 - A [workflow-based compilation tool](./docs/COMPILE.md) that can create manuscripts from your projects;
+- Support for [single-scene projects](/docs/SINGLE_SCENE_PROJECTS.md) so that your shorter works can use the same workflows and tooling as your longer ones;
 - Plus lots of commands, modals, and menu items to help you manage your work.
 
 A Getting Started guide follows; there is also reasonably-complete [documentation](./docs/).
@@ -20,10 +19,6 @@ Longform is in the Community Plugins section of Obsidian’s settings. You may a
 ## Getting Started
 
 Longform works by searching your vault for any note that contains a frontmatter entry named `longform` (don’t worry if you don’t know what that means; Longform includes tools to help you generate these files). You can think of these notes as the “spines” or tables of contents of your projects. Let‘s walk through creating two different Longform projects: a novel and a short story.
-
-> **Note**
->
-> A [video version of this walkthrough](#) is also available.
 
 ### Creating a Novel
 
@@ -41,7 +36,7 @@ Longform works by searching your vault for any note that contains a frontmatter 
 >
 > You don’t have to use this menu item and modal to create Longform projects. As you will see shortly, Longform projects are one or more notes organized around some YAML frontmatter. You can always create a note yourself somewhere in your vault and use the `Insert Multi-Scene Frontmatter` and `Insert Single-Scene Frontmatter` commands to populate the note—Longform will recognize it automatically. Although not recommended, you can also author the YAML frontmatter manually, too.
 
-4. Click `Create`. Longform has created the promised file. If we switch to the [Longform pane](./docs/THE_LONGFORM_PANE.md) in the sidebar, the project is already selected. You should see three tabs: Scenes, Project, and Compile, and Scenes should be selected.
+4. Click `Create`. Longform has created the promised file. If we switch to the [Longform pane](./docs/THE_LONGFORM_PANE.md) in the sidebar the project is already selected. You should see three tabs: Scenes, Project, and Compile, and Scenes should be selected.
 
 ![The newly-created project in the Longform pane](./docs/res/walkthrough-multi-fresh-pane.png)
 
