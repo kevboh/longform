@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2.0.0
+
+Total rewrite.
+
+- Change index file format and make index file tracking discovery-based rather than the mark/unmark context menu pattern.
+- Add support for nesting scenes, ignoring files and patterns, and single-scene projects.
+- Add Project tab for editing index metadata.
+- Add word counts and writing session count tracking to Project tab.
+- Version all deps.
+- Support compile for single-scene projects.
+
 ## 1.0.3
 
 - Update the way metadata is patched, fixes [#15](https://github.com/kevboh/longform/issues/15) and possibly [#9](https://github.com/kevboh/longform/issues/9).
