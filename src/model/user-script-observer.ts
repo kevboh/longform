@@ -51,7 +51,7 @@ export class UserScriptObserver {
 
 
       if (s.userScriptFolder == null) {
-        return
+        return;
       }
 
       const valid = await this.vault.adapter.exists(s.userScriptFolder);
