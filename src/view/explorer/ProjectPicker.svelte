@@ -60,7 +60,6 @@
 <div id="project-picker-container">
   {#if projectOptions.length > 0}
     <div id="project-picker">
-    <label for="select-projects">Project:&nbsp;</label>
       <div class="select" id="select-projects">
         <select
           name="projects"
