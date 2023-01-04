@@ -1,4 +1,4 @@
-import type { Editor, MarkdownView } from "obsidian";
+import type { Editor, MarkdownFileInfo, MarkdownView } from "obsidian";
 
 import { draftForPath } from "src/model/scene-navigation";
 import { drafts, selectedDraftVaultPath } from "src/model/stores";
@@ -16,7 +16,7 @@ const callbackForFormat = (
   format: "scenes" | "single",
   checking: boolean,
   _editor: Editor,
-  view: MarkdownView
+  view: MarkdownView | MarkdownFileInfo
 ): boolean | void => {
   const file = view.file;
 

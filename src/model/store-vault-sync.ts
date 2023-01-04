@@ -425,7 +425,7 @@ export class StoreVaultSync {
   }
 
   private async writeDraftFrontmatter(draft: Draft) {
-    const file = await app.vault.getAbstractFileByPath(draft.vaultPath);
+    const file = app.vault.getAbstractFileByPath(draft.vaultPath);
     if (!file || !(file instanceof TFile)) {
       return;
     }
