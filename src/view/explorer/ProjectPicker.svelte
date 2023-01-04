@@ -9,9 +9,9 @@
   import { last } from "lodash";
   import { getContext } from "svelte";
   import { draftTitle } from "src/model/draft-utils";
-  import { Keymap } from "obsidian";
+  import { Keymap, type PaneType } from "obsidian";
 
-  const openFileAtPath: (path: string, newLeaf: boolean) => void =
+  const openFileAtPath: (path: string, paneType: PaneType | boolean) => void =
     getContext("onSceneClick");
 
   // Map current projects to options for select element

@@ -129,6 +129,36 @@ export class StoreVaultSync {
     }
   }
 
+  async fileCreated(file: TFile) {
+    const drafts = get(draftsStore);
+
+    // check if a new scene has been moved into this folder
+    const scenePath = file.parent.path;
+    const memberOfDraft = drafts.find((d) => {
+      if (d.format !== "scenes") {
+        return false;
+      }
+      const parentPath = this.vault.getAbstractFileByPath(d.vaultPath).parent
+        .path;
+      const targetPath = normalizePath(`${parentPath}/${d.sceneFolder}`);
+      return targetPath === scenePath;
+    });
+    if (memberOfDraft) {
+      draftsStore.update((allDrafts) => {
+        return allDrafts.map((d) => {
+          if (
+            d.vaultPath === memberOfDraft.vaultPath &&
+            d.format === "scenes" &&
+            !d.unknownFiles.contains(file.basename)
+          ) {
+            d.unknownFiles.push(file.basename);
+          }
+          return d;
+        });
+      });
+    }
+  }
+
   async fileDeleted(file: TFile) {
     const drafts = get(draftsStore);
     const draftIndex = drafts.findIndex((d) => d.vaultPath === file.path);

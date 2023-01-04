@@ -5,7 +5,7 @@
   */
   import type Sortable from "sortablejs";
   import { getContext, onDestroy } from "svelte";
-  import { Keymap, Notice, Platform } from "obsidian";
+  import { Keymap, Notice, Platform, type PaneType } from "obsidian";
 
   import { activeFile } from "../stores";
   import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
@@ -146,7 +146,7 @@
   }
 
   // Grab the click context function and call it when a valid scene is clicked.
-  const onSceneClick: (path: string, newLeaf: boolean) => void =
+  const onSceneClick: (path: string, paneType: boolean | PaneType) => void =
     getContext("onSceneClick");
   function onItemClick(item: any, event: MouseEvent) {
     const sceneItem = item as SceneItem;
@@ -246,6 +246,30 @@
         }
         (d[currentDraftIndex] as MultipleSceneDraft).unknownFiles =
           targetDraft.unknownFiles.filter((f) => f !== fileName);
+        return d;
+      });
+    }
+  }
+
+  function doWithAll(action: "add" | "ignore") {
+    const currentDraftIndex = $drafts.findIndex(
+      (d) => d.vaultPath === $selectedDraft.vaultPath
+    );
+    if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
+      drafts.update((d) => {
+        const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
+        if (action === "add") {
+          (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
+            ...targetDraft.scenes,
+            ...targetDraft.unknownFiles.map((f) => ({ title: f, indent: 0 })),
+          ];
+        } else {
+          (d[currentDraftIndex] as MultipleSceneDraft).ignoredFiles = [
+            ...targetDraft.ignoredFiles,
+            ...targetDraft.unknownFiles,
+          ];
+        }
+        (d[currentDraftIndex] as MultipleSceneDraft).unknownFiles = [];
         return d;
       });
     }
@@ -376,6 +400,15 @@
             ? ""
             : "s"} in your scenes folder.
         </p>
+        <div>
+          <button class="longform-unknown-add" on:click={() => doWithAll("add")}
+            >Add all</button
+          >
+          <button
+            class="longform-unknown-ignore"
+            on:click={() => doWithAll("ignore")}>Ignore all</button
+          >
+        </div>
         <ul>
           {#each $selectedDraft.unknownFiles as fileName}
             <li>

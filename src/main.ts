@@ -111,7 +111,11 @@ export default class LongformPlugin extends Plugin {
 
       if (
         this.cachedSettings &&
-        changeInKeys(this.cachedSettings, value, PASSTHROUGH_SAVE_SETTINGS_PATHS)
+        changeInKeys(
+          this.cachedSettings,
+          value,
+          PASSTHROUGH_SAVE_SETTINGS_PATHS
+        )
       ) {
         shouldSave = true;
       }
@@ -256,7 +260,7 @@ export default class LongformPlugin extends Plugin {
 
     await this.saveData({
       ...this.cachedSettings,
-      workflows: serializedWorkflows
+      workflows: serializedWorkflows,
     });
   }
 
@@ -300,18 +304,16 @@ export default class LongformPlugin extends Plugin {
           return toReturn;
         });
         await this.saveSettings();
-      }
-      else {
+      } else {
         // Save to either plugin or vault
         let file: string | null = null;
         if (this.cachedSettings.sessionStorage === "plugin-folder") {
           if (!this.manifest.dir) {
-            console.error(`[Longform] No manifest.dir for saving sessions.`)
+            console.error(`[Longform] No manifest.dir for saving sessions.`);
             return;
           }
           file = normalizePath(`${this.manifest.dir}/sessions.json`);
-        }
-        else {
+        } else {
           file = this.cachedSettings.sessionFile;
         }
         if (!file) {
@@ -436,6 +438,13 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on(
+        "create",
+        this.storeVaultSync.fileCreated.bind(this.storeVaultSync)
+      )
+    );
+
+    this.registerEvent(
+      this.app.vault.on(
         "delete",
         this.storeVaultSync.fileDeleted.bind(this.storeVaultSync)
       )
@@ -458,6 +467,7 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on("create", (file) => {
+        console.log(file);
         this.writingSessionTracker.debouncedCountDraftContaining.bind(
           this.writingSessionTracker
         )(file);
