@@ -4,6 +4,7 @@ import {
   Menu,
   TAbstractFile,
   WorkspaceLeaf,
+  type PaneType,
 } from "obsidian";
 import type { CompileStatus, Workflow } from "src/compile";
 import { compile, CompileStepKind } from "src/compile";
@@ -108,9 +109,12 @@ export class ExplorerPane extends ItemView {
     );
 
     // Context function for opening scene notes on click
-    context.set("onSceneClick", (path: string, newLeaf: boolean) => {
-      this.app.workspace.openLinkText(path, "/", newLeaf);
-    });
+    context.set(
+      "onSceneClick",
+      (path: string, paneType: PaneType | boolean) => {
+        this.app.workspace.openLinkText(path, "/", paneType);
+      }
+    );
 
     // Context function for creating new scene notes given a path
     context.set("onNewScene", async (name: string) => {

@@ -3,19 +3,6 @@ import type { TFile } from "obsidian";
 
 import type { Draft, DraftWordCounts } from "./types";
 
-export const FRONTMATTER_REGEX = /^---\n(?<yaml>(?:.*?\n)*?)---/m;
-
-export function stripFrontmatter(contents: string): string {
-  return contents.replace(FRONTMATTER_REGEX, "");
-}
-
-export function replaceFrontmatter(
-  contents: string,
-  newFrontmatter: string
-): string {
-  return contents.replace(FRONTMATTER_REGEX, newFrontmatter);
-}
-
 export function fileNameFromPath(path: string): string {
   return last(path.split("/")).split(".md")[0];
 }

@@ -72,7 +72,7 @@ export class WritingSessionTracker {
   private unsubscribeActiveWordCount: Unsubscriber;
   private unsubscribeSettings: Unsubscriber;
   private unsubscribeSessions: Unsubscriber;
-  private debouncedCountDraft: Debouncer<unknown[]>;
+  private debouncedCountDraft: Debouncer<unknown[], void>;
   private statusBarItem: HTMLSpanElement;
   private hideStatusBarSetting = false;
   private cachedLatestSession: WordCountSession | null = null;

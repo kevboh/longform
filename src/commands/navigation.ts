@@ -3,6 +3,7 @@ import {
   Keymap,
   type App,
   type Instruction,
+  type PaneType,
 } from "obsidian";
 import { get } from "svelte/store";
 import { repeat } from "lodash";
@@ -145,13 +146,13 @@ export const showLongform: CommandBuilder = (plugin) => ({
 
 class JumpModal<T> extends FuzzySuggestModal<string> {
   items: Map<string, T>;
-  onSelect: (value: T, isModEvent: boolean) => void;
+  onSelect: (value: T, modEvent: boolean | PaneType) => void;
 
   constructor(
     app: App,
     items: Map<string, T>,
     instructions: Instruction[] = [],
-    onSelect: (value: T, isModEvent: boolean) => void
+    onSelect: (value: T, modEvent: boolean | PaneType) => void
   ) {
     super(app);
 
@@ -300,10 +301,10 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
           purpose: "to dismiss",
         },
       ],
-      (scene: string, isModEvent: boolean) => {
+      (scene: string, modEvent: boolean | PaneType) => {
         const path = scenePath(scene, currentDraft, plugin.app.vault);
         if (path) {
-          plugin.app.workspace.openLinkText(path, "/", isModEvent);
+          plugin.app.workspace.openLinkText(path, "/", modEvent);
         }
       }
     ).open();

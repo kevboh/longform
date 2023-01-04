@@ -22,7 +22,7 @@
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "eslint": "^8.14.0",
-    "obsidian": "^0.15.2",
+    "obsidian": "latest",
     "rollup": "^2.70.2",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-svelte": "^7.1.0",
