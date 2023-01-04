@@ -467,7 +467,6 @@ export default class LongformPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on("create", (file) => {
-        console.log(file);
         this.writingSessionTracker.debouncedCountDraftContaining.bind(
           this.writingSessionTracker
         )(file);
