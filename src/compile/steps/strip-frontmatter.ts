@@ -1,4 +1,3 @@
-import { stripFrontmatter } from "src/model/note-utils";
 import type {
   CompileContext,
   CompileInput,
@@ -6,6 +5,12 @@ import type {
   CompileSceneInput,
 } from "..";
 import { CompileStepKind, makeBuiltinStep } from "./abstract-compile-step";
+
+const FRONTMATTER_REGEX = /^---\n(?<yaml>(?:.*?\n)*?)---/m;
+
+function stripFrontmatter(contents: string): string {
+  return contents.replace(FRONTMATTER_REGEX, "");
+}
 
 export const StripFrontmatterStep = makeBuiltinStep({
   id: "strip-frontmatter",

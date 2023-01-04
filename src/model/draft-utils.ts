@@ -1,9 +1,7 @@
-import { parseYaml, stringifyYaml, Vault } from "obsidian";
-import { omit } from "lodash";
+import { TFile, Vault } from "obsidian";
 import type { Writable } from "svelte/store";
 
 import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
-import { FRONTMATTER_REGEX, stripFrontmatter } from "./note-utils";
 import { scenePath } from "src/model/scene-navigation";
 
 export function draftTitle(draft: Draft): string {
@@ -52,32 +50,27 @@ export async function insertScene(
   });
 }
 
-export function draftToYAML(draft: Draft): string {
-  let longformEntry: Record<string, any> = {};
-  longformEntry["format"] = draft.format;
+export function setDraftOnFrontmatterObject(
+  obj: Record<string, any>,
+  draft: Draft
+) {
+  obj["longform"] = {};
+  obj["longform"]["format"] = draft.format;
   if (draft.titleInFrontmatter) {
-    longformEntry["title"] = draft.title;
+    obj["longform"]["title"] = draft.title;
   }
   if (draft.draftTitle) {
-    longformEntry["draftTitle"] = draft.draftTitle;
+    obj["longform"]["draftTitle"] = draft.draftTitle;
   }
   if (draft.workflow) {
-    longformEntry["workflow"] = draft.workflow;
+    obj["longform"]["workflow"] = draft.workflow;
   }
 
   if (draft.format === "scenes") {
-    longformEntry = Object.assign(longformEntry, {
-      sceneFolder: draft.sceneFolder,
-      scenes: indentedScenesToArrays(draft.scenes),
-      ignoredFiles: draft.ignoredFiles,
-    });
+    obj["longform"]["sceneFolder"] = draft.sceneFolder;
+    obj["longform"]["scenes"] = indentedScenesToArrays(draft.scenes);
+    obj["longform"]["ignoredFiles"] = draft.ignoredFiles;
   }
-
-  const obj = {
-    longform: longformEntry,
-  };
-
-  return stringifyYaml(obj).trim();
 }
 
 export function indentedScenesToArrays(indented: IndentedScene[]) {
@@ -172,39 +165,25 @@ export function formatSceneNumber(numbering: number[]): string {
   return numbering.join(".");
 }
 
-export async function manuallyParseFrontmatter(
-  path: string,
-  vault: Vault
-): Promise<any | null> {
-  const contents = await vault.adapter.read(path);
-  const result = contents.match(FRONTMATTER_REGEX);
-  if (!result || !result.groups || !result.groups["yaml"]) {
-    return null;
-  }
-  const yaml = result.groups["yaml"];
-  return parseYaml(yaml);
-}
-
 export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
-  const metadata = app.metadataCache.getCache(path);
-  let formatted = "";
-  if (metadata) {
-    const fm = omit(metadata.frontmatter, ["position", "longform"]);
-    formatted =
-      Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
-  }
-
-  const newFm = `---\n${draftToYAML(draft)}\n${formatted}---`;
-
   const exists = await app.vault.adapter.exists(path);
-  let contents = "";
-  if (exists) {
-    const fileContents = await app.vault.adapter.read(path);
-    contents = stripFrontmatter(fileContents);
-    contents = newFm + contents;
-  } else {
-    contents = newFm;
+  if (!exists) {
+    await app.vault.create(path, "");
   }
 
-  await app.vault.adapter.write(path, contents);
+  const file = app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) {
+    // TODO: error?
+    return;
+  }
+  try {
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      setDraftOnFrontmatterObject(fm, draft);
+    });
+  } catch (error) {
+    console.error(
+      "[Longform] insertDraftIntoFrontmatter: processFrontMatter error:",
+      error
+    );
+  }
 }

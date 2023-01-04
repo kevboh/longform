@@ -1,23 +1,21 @@
 import {
   normalizePath,
-  stringifyYaml,
+  TFile,
   type App,
   type CachedMetadata,
   type MetadataCache,
-  type TFile,
   type Vault,
 } from "obsidian";
-import { cloneDeep, isEqual, omit } from "lodash";
+import { cloneDeep, isEqual } from "lodash";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
 import { drafts as draftsStore, selectedDraftVaultPath } from "./stores";
 import {
   arraysToIndentedScenes,
-  draftToYAML,
-  manuallyParseFrontmatter,
+  setDraftOnFrontmatterObject,
 } from "src/model/draft-utils";
-import { fileNameFromPath, replaceFrontmatter } from "./note-utils";
+import { fileNameFromPath } from "./note-utils";
 import { findScene } from "./scene-navigation";
 
 type FileWithMetadata = {
@@ -83,8 +81,9 @@ export class StoreVaultSync {
     );
     draftsStore.set(draftsToWrite);
 
-    const message = `[Longform] Loaded and watching projects. Found ${draftFiles.length
-      } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
+    const message = `[Longform] Loaded and watching projects. Found ${
+      draftFiles.length
+    } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
 
     console.log(message);
 
@@ -305,10 +304,24 @@ export class StoreVaultSync {
         // so we will parse out the yaml directly from the file contents, just in case.
         // discord discussion: https://discord.com/channels/686053708261228577/840286264964022302/994589562082951219
 
-        const fm = await manuallyParseFrontmatter(
-          fileWithMetadata.file.path,
-          this.vault
-        );
+        // 2023-01-03: Confirmed this issue is still present; using new processFrontMatter function
+        // seems to read correctly, though!
+
+        let fm = null;
+        try {
+          await app.fileManager.processFrontMatter(
+            fileWithMetadata.file,
+            (_fm) => {
+              fm = _fm;
+            }
+          );
+        } catch (error) {
+          console.error(
+            "[Longform] error manually loading frontmatter:",
+            error
+          );
+        }
+
         if (fm) {
           rawScenes = fm["longform"]["scenes"];
         }
@@ -382,38 +395,14 @@ export class StoreVaultSync {
   }
 
   private async writeDraftFrontmatter(draft: Draft) {
-    // Get index file frontmatter
-    const metadata = this.metadataCache.getCache(draft.vaultPath);
-    if (!metadata) {
-      return;
-    }
-    const exists = await this.vault.adapter.exists(draft.vaultPath);
-    if (!exists) {
+    const file = await app.vault.getAbstractFileByPath(draft.vaultPath);
+    if (!file || !(file instanceof TFile)) {
       return;
     }
 
-    let frontmatter = metadata.frontmatter;
-    if (frontmatter && draft.format === "scenes") {
-      // WORKAROUND: See https://github.com/kevboh/longform/issues/86 for details
-      // In the case where this draft is multi-scene, manually fetch and parse frontmatter
-      // to prevent possible data loss, similar to initial load above.
-      frontmatter = await manuallyParseFrontmatter(draft.vaultPath, this.vault);
-    }
-    if (!frontmatter) {
-      console.error(
-        `[Longform] Error parsing frontmatter for draft sync at ${draft.vaultPath}, aborting edit.`
-      );
-      return;
-    }
-    const fm = frontmatter ? omit(frontmatter, ["position", "longform"]) : {};
-    const formatted =
-      Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
-
-    const newFm = `---\n${draftToYAML(draft)}\n${formatted}---`;
-
-    const contents = await this.vault.adapter.read(draft.vaultPath);
-    const newContents = replaceFrontmatter(contents, newFm);
-    await this.vault.adapter.write(draft.vaultPath, newContents);
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      setDraftOnFrontmatterObject(fm, draft);
+    });
   }
 }
 
