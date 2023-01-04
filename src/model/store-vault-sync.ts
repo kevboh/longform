@@ -16,7 +16,7 @@ import {
   setDraftOnFrontmatterObject,
 } from "src/model/draft-utils";
 import { fileNameFromPath } from "./note-utils";
-import { findScene } from "./scene-navigation";
+import { findScene, sceneFolderPath } from "./scene-navigation";
 
 type FileWithMetadata = {
   file: TFile;
@@ -233,39 +233,64 @@ export class StoreVaultSync {
     } else {
       // scene renamed
       const newTitle = fileNameFromPath(file.path);
-      const found = findScene(oldPath, drafts);
-      if (found) {
+      const foundOld = findScene(oldPath, drafts);
+
+      // possibilities here:
+      // 1. note was renamed in-place: rename the scene in the associated draft
+      // 2. note was moved out of a draft: remove it from the old draft
+      // 3. note was moved into a draft: add it to the new draft
+      // (2) and (3) can occur for the same note.
+
+      // in-place
+      const oldParent = oldPath.split("/").slice(0, -1).join("/");
+      if (foundOld && oldParent === file.parent.path) {
         draftsStore.update((_drafts) => {
           return _drafts.map((d) => {
             if (
-              d.vaultPath === found.draft.vaultPath &&
+              d.vaultPath === foundOld.draft.vaultPath &&
               d.format === "scenes"
             ) {
-              d.scenes[found.index].title = newTitle;
+              d.scenes[foundOld.index].title = newTitle;
             }
             return d;
           });
         });
       } else {
-        // check if a new scene has been moved into this folder
-        const scenePath = file.parent.path;
-        const memberOfDraft = drafts.find((d) => {
-          if (d.format !== "scenes") {
-            return false;
-          }
-          const parentPath = this.vault.getAbstractFileByPath(d.vaultPath)
-            .parent.path;
-          const targetPath = normalizePath(`${parentPath}/${d.sceneFolder}`);
-          return targetPath === scenePath;
+        //in and/or out
+
+        // moved out of a draft
+        const oldDraft = drafts.find((d) => {
+          return (
+            d.format === "scenes" &&
+            sceneFolderPath(d, this.vault) === oldParent
+          );
         });
-        if (memberOfDraft) {
-          draftsStore.update((allDrafts) => {
-            return allDrafts.map((d) => {
-              if (
-                d.vaultPath === memberOfDraft.vaultPath &&
-                d.format === "scenes"
-              ) {
-                d.unknownFiles.push(newTitle);
+        if (oldDraft) {
+          draftsStore.update((_drafts) => {
+            return _drafts.map((d) => {
+              if (d.vaultPath === oldDraft.vaultPath && d.format === "scenes") {
+                d.scenes = d.scenes.filter((s) => s.title !== file.basename);
+                d.unknownFiles = d.unknownFiles.filter(
+                  (f) => f !== file.basename
+                );
+              }
+              return d;
+            });
+          });
+        }
+
+        // moved into a draft
+        const newDraft = drafts.find((d) => {
+          return (
+            d.format === "scenes" &&
+            sceneFolderPath(d, this.vault) === file.parent.path
+          );
+        });
+        if (newDraft) {
+          draftsStore.update((_drafts) => {
+            return _drafts.map((d) => {
+              if (d.vaultPath === newDraft.vaultPath && d.format === "scenes") {
+                d.unknownFiles.push(file.basename);
               }
               return d;
             });
