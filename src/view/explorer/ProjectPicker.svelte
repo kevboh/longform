@@ -63,7 +63,7 @@
       <div class="select" id="select-projects">
         <select
           name="projects"
-          value={$selectedDraft && $selectedDraft.title}
+          value={$selectedDraft ? $selectedDraft.title : projectOptions[0]}
           on:change={projectSelected}
         >
           {#each projectOptions as projectOption}
