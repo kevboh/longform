@@ -27,7 +27,6 @@ export async function insertScene(
     return;
   }
 
-  await createNoteCallback(newScenePath);
   draftsStore.update((allDrafts) => {
     return allDrafts.map((d) => {
       if (d.vaultPath === draft.vaultPath && d.format === "scenes") {
@@ -48,6 +47,7 @@ export async function insertScene(
       return d;
     });
   });
+  await createNoteCallback(newScenePath);
 }
 
 export function setDraftOnFrontmatterObject(

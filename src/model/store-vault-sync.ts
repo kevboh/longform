@@ -141,7 +141,12 @@ export class StoreVaultSync {
       const parentPath = this.vault.getAbstractFileByPath(d.vaultPath).parent
         .path;
       const targetPath = normalizePath(`${parentPath}/${d.sceneFolder}`);
-      return targetPath === scenePath;
+      return (
+        // file is in the scene folder
+        targetPath === scenePath &&
+        // file isn't already a scene
+        !d.scenes.map((s) => s.title).contains(file.basename)
+      );
     });
     if (memberOfDraft) {
       draftsStore.update((allDrafts) => {
