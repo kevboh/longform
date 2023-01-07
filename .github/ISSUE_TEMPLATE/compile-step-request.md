@@ -1,7 +1,7 @@
 ---
 name: Compile step request
 about: Suggest a new built-in compile step
-title: "[Compile Step Request] Your step name here"
+title: 'Compile Step: Your step name here'
 labels: compile, enhancement
 assignees: ''
 
