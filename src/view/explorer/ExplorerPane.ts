@@ -123,11 +123,7 @@ export class ExplorerPane extends ItemView {
         get(selectedDraft) as MultipleSceneDraft,
         name,
         this.app.vault,
-        { at: "end", relativeTo: null },
-        async (path) => {
-          await this.app.vault.create(path, "");
-          this.app.workspace.openLinkText(path, "/", false);
-        }
+        { at: "end", relativeTo: null }
       );
     });
 
@@ -162,17 +158,10 @@ export class ExplorerPane extends ItemView {
         .indexOf(file.name.split(".md")[0]);
 
       if (relativeTo >= 0) {
-        insertScene(
-          drafts,
-          draft,
-          sceneName,
-          this.app.vault,
-          { at, relativeTo },
-          async (path) => {
-            await this.app.vault.create(path, "");
-            this.app.workspace.openLinkText(path, "/", false);
-          }
-        );
+        insertScene(drafts, draft, sceneName, this.app.vault, {
+          at,
+          relativeTo,
+        });
       }
     };
 

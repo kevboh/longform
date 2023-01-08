@@ -15,11 +15,12 @@ The `longform` frontmatter entry is how Longform discovers, tracks, and reasons 
 
 In addition to the above, multi-scene projects have some additional frontmatter in the `longform` entry:
 
-| Name         | Type                          | Required? | Description                                                                                                                                            |
-| ------------ | ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| sceneFolder  | `string`                      | true      | The path—relative to the index file—where your scenes live.                                                                                            |
-| scenes       | `string[]` (array of strings) | true      | Nested arrays of scene file names (without .md extensions).                                                                                            |
-| ignoredFiles | `string[]` (array of strings) | false     | If present, a list of scene names (without .md extensions, wildcards are allowed) to ignore when prompting to add newly-created files to your project. |
+| Name          | Type                          | Required? | Description                                                                                                                                            |
+| ------------- | ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| sceneFolder   | `string`                      | true      | The path—relative to the index file—where your scenes live.                                                                                            |
+| scenes        | `string[]` (array of strings) | true      | Nested arrays of scene file names (without .md extensions).                                                                                            |
+| sceneTemplate | `string`                      | false     | Path to file to use as a template for newly-created scenes in this project.                                                                            |
+| ignoredFiles  | `string[]` (array of strings) | false     | If present, a list of scene names (without .md extensions, wildcards are allowed) to ignore when prompting to add newly-created files to your project. |
 
 ## Other Frontmatter
 

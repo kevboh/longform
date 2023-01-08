@@ -1,0 +1,5 @@
+core template
+
+{{date}}
+
+test

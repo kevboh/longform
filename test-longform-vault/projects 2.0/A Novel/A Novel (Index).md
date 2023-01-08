@@ -6,7 +6,7 @@ longform:
   sceneFolder: /
   scenes:
     - first scene
-    - - fourth
+    - fourth
   ignoredFiles:
     - "*-scratch"
     - manuscript

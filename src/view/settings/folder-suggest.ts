@@ -26,7 +26,8 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
         folder instanceof TFolder &&
         folder.path.toLowerCase().contains(lowerCaseInputStr) &&
         (this.relativeRoot === null ||
-          folder.path.startsWith(this.relativeRoot))
+          folder.path === this.relativeRoot ||
+          folder.path.startsWith(this.relativeRoot + "/"))
       ) {
         folders.push(folder);
       }
@@ -44,6 +45,7 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
     this.inputEl.value = value;
     this.inputEl.trigger("input");
     this.close();
+    this.inputEl.blur();
   }
 
   private withRelativePath(path: string): string {

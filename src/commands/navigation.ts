@@ -9,7 +9,7 @@ import { get } from "svelte/store";
 import { repeat } from "lodash";
 
 import type { CommandBuilder } from "./types";
-import { activeFile } from "src/view/stores";
+import { activeFile, selectedTab } from "src/view/stores";
 import {
   drafts as draftsStore,
   projects as projectsStore,
@@ -339,6 +339,22 @@ export const revealProjectFolder: CommandBuilder = (plugin) => ({
   },
 });
 
-// reveal project folder in file explorer
-// internal plugin file explorer insnace:
-// temp3.revealInFolder(app.vault.getAbstractFileByPath("test/dsfsdfsdf"))
+export const focusNewSceneField: CommandBuilder = (plugin) => ({
+  id: "longform-focus-new-scene-field",
+  name: "Focus new scene field",
+  checkCallback(checking) {
+    const draft = get(selectedDraft);
+    if (checking) {
+      return draft.format === "scenes";
+    }
+    if (draft.format !== "scenes") {
+      return;
+    }
+
+    showLeaf(plugin);
+    selectedTab.set("Scenes");
+    setTimeout(() => {
+      activeDocument.getElementById("new-scene").focus();
+    }, 0);
+  },
+});

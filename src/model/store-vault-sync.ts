@@ -390,6 +390,7 @@ export class StoreVaultSync {
       // Convert to indented scenes
       const scenes = arraysToIndentedScenes(rawScenes);
       const sceneFolder = longformEntry["sceneFolder"] ?? "/";
+      const sceneTemplate = longformEntry["sceneTemplate"] ?? null;
       const ignoredFiles: string[] = longformEntry["ignoredFiles"] ?? [];
       const normalizedSceneFolder = normalizePath(
         `${fileWithMetadata.file.parent.path}/${sceneFolder}`
@@ -430,6 +431,7 @@ export class StoreVaultSync {
           scenes: knownScenes,
           ignoredFiles,
           unknownFiles,
+          sceneTemplate,
           workflow,
         },
         dirty,

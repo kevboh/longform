@@ -11,6 +11,7 @@
   import { getContext, onMount } from "svelte";
   import Disclosure from "../components/Disclosure.svelte";
   import Icon from "../components/Icon.svelte";
+  import { FileSuggest } from "../settings/file-suggest";
   import { FolderSuggest } from "../settings/folder-suggest";
   import {
     selectedDraftWordCountStatus,
@@ -78,6 +79,39 @@
             d.format === "scenes"
           ) {
             d.sceneFolder = newFolder;
+          }
+          return d;
+        })
+      );
+    }
+  }
+
+  let sceneTemplateInput: HTMLInputElement;
+  onMount(() => {
+    if (sceneTemplateInput && $selectedDraft.format === "scenes") {
+      new FileSuggest(app, sceneTemplateInput);
+    }
+  });
+  async function sceneTemplateChanged(event: Event) {
+    let newTemplate = (event.target as any).value;
+    if (!$selectedDraft) {
+      return;
+    }
+    let exists = true;
+    if (newTemplate.length <= 0) {
+      newTemplate = null;
+    } else {
+      exists = await app.vault.adapter.exists(newTemplate);
+    }
+
+    if (exists) {
+      drafts.update((allDrafts) =>
+        allDrafts.map((d) => {
+          if (
+            d.vaultPath === $selectedDraftVaultPath &&
+            d.format === "scenes"
+          ) {
+            d.sceneTemplate = newTemplate;
           }
           return d;
         })
@@ -160,20 +194,38 @@
             on:change={titleChanged}
           />
           {#if $selectedDraft.format === "scenes"}
-            <div style="margin-top: var(--size-4-2);" />
-            <label for="longform-project-scene-folder">Scene Folder</label>
-            <input
-              id="longform-project-scene-folder"
-              type="text"
-              value={$selectedDraft.sceneFolder}
-              bind:this={sceneFolderInput}
-              on:input={sceneFolderChanged}
-            />
-            <p class="longform-project-warning">
-              Changing scene folder does not move scenes. If you’re moving
-              scenes to a new folder, move them in your vault first, then change
-              this setting.
-            </p>
+            <div style="margin-top: var(--size-4-2);">
+              <label for="longform-project-scene-folder">Scene Folder</label>
+              <input
+                id="longform-project-scene-folder"
+                type="text"
+                value={$selectedDraft.sceneFolder}
+                bind:this={sceneFolderInput}
+                on:blur={sceneFolderChanged}
+              />
+              <p class="longform-project-warning">
+                Changing scene folder does not move scenes. If you’re moving
+                scenes to a new folder, move them in your vault first, then
+                change this setting.
+              </p>
+            </div>
+            <div style="margin-top: var(--size-4-2);">
+              <label for="longform-project-scene-template">Scene Template</label
+              >
+              <input
+                id="longform-project-scene-template"
+                type="text"
+                value={$selectedDraft.sceneTemplate}
+                bind:this={sceneTemplateInput}
+                on:blur={sceneTemplateChanged}
+              />
+              <p class="longform-project-warning">
+                This file will be used as a template when creating new scenes
+                via the New Scene… field. If you use a templating plugin
+                (Templater or the core plugin) it will be used to process this
+                template.
+              </p>
+            </div>
           {/if}
         </div>
       {/if}

@@ -7,6 +7,90 @@ export function fileNameFromPath(path: string): string {
   return last(path.split("/")).split(".md")[0];
 }
 
+/**
+ * Creates a note at `path` with a given `template` if a templating plugin is enabled.
+ * Prefers Templater, then the core Templates plugin, then a plain note without using the template.
+ * @param path Path to note to create.
+ * @param template Path to template to use.
+ */
+export async function createNoteWithPotentialTemplate(
+  path: string,
+  template: string | null
+): Promise<void> {
+  const file = await app.vault.create(path, "");
+  if (template) {
+    let contents = "";
+    let pluginUsed = "";
+    try {
+      if (isTemplaterEnabled()) {
+        pluginUsed = "Templater";
+        contents = await createWithTemplater(file, template);
+      } else if (isTemplatesEnabled()) {
+        pluginUsed = "Core Templates";
+        contents = await createWithTemplates(template);
+      }
+    } catch (error) {
+      console.error(`[Longform] Error using plugin [${pluginUsed}]:`, error);
+    }
+    if (contents !== "") {
+      await app.vault.adapter.write(path, contents);
+    }
+  }
+}
+
+function isTemplaterEnabled(): boolean {
+  return !!(app as any).plugins.getPlugin("templater-obsidian");
+}
+
+function isTemplatesEnabled(): boolean {
+  return !!(app as any).internalPlugins.getEnabledPluginById("templates");
+}
+
+async function createWithTemplater(
+  file: TFile,
+  templatePath: string
+): Promise<string> {
+  const templaterPlugin = (app as any).plugins.getPlugin("templater-obsidian");
+  if (!templaterPlugin) {
+    console.error(
+      "[Longform] Attempted to use Templater plugin while disabled."
+    );
+    return;
+  }
+  const template = app.vault.getAbstractFileByPath(templatePath);
+
+  const runningConfig = templaterPlugin.templater.create_running_config(
+    template,
+    file,
+    0
+  );
+  return await templaterPlugin.templater.read_and_parse_template(runningConfig);
+}
+
+async function createWithTemplates(templatePath: string): Promise<string> {
+  console.log(templatePath);
+  const corePlugin = (app as any).internalPlugins.getEnabledPluginById(
+    "templates"
+  );
+  if (!corePlugin) {
+    console.error(
+      "[Longform] Attempted to use core template plugin while disabled."
+    );
+    return;
+  }
+  // Get template body
+  let contents = await app.vault.adapter.read(templatePath);
+
+  // Replace {{date}} and {{time}}
+  const dateFormat = corePlugin.options["dateFormat"] || "YYYY-MM-DD";
+  const timeFormat = corePlugin.options["timeFormat"] || "HH:mm";
+
+  contents = contents.replace(`{{date}}`, window.moment().format(dateFormat));
+  contents = contents.replace(`{{time}}`, window.moment().format(timeFormat));
+
+  return contents;
+}
+
 export type SceneWordStats = {
   scene: number;
   draft: number;

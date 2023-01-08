@@ -17,6 +17,7 @@ export type MultipleSceneDraft = {
   scenes: IndentedScene[];
   ignoredFiles: string[] | null;
   unknownFiles: string[];
+  sceneTemplate: string | null;
 };
 
 export type SingleSceneDraft = {
@@ -93,6 +94,7 @@ export interface LongformPluginSettings {
   keepSessionCount: number;
   sessionFile: string;
   numberScenes: boolean;
+  sceneTemplate: string | null;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
     [path: string]: {
@@ -120,6 +122,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   keepSessionCount: 30,
   sessionFile: DEFAULT_SESSION_FILE,
   numberScenes: false,
+  sceneTemplate: null,
   projects: {},
 };
 
@@ -139,6 +142,7 @@ export const TRACKED_SETTINGS_PATHS = [
   "keepSessionCount",
   "sessionFile",
   "numberScenes",
+  "sceneTemplate",
 ];
 
 export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
@@ -153,4 +157,5 @@ export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
   "keepSessionCount",
   "sessionFile",
   "numberScenes",
+  "sceneTemplate",
 ];

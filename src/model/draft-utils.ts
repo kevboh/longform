@@ -1,8 +1,10 @@
 import { TFile, Vault } from "obsidian";
-import type { Writable } from "svelte/store";
+import { get, type Writable } from "svelte/store";
 
 import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
 import { scenePath } from "src/model/scene-navigation";
+import { createNoteWithPotentialTemplate } from "./note-utils";
+import { pluginSettings } from "./stores";
 
 export function draftTitle(draft: Draft): string {
   return draft.draftTitle ?? draft.vaultPath;
@@ -13,13 +15,21 @@ type SceneInsertionLocation = {
   relativeTo: number | null;
 };
 
+export async function createScene(
+  path: string,
+  draft: MultipleSceneDraft
+): Promise<void> {
+  const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
+  createNoteWithPotentialTemplate(path, template);
+  app.workspace.openLinkText(path, "/", false);
+}
+
 export async function insertScene(
   draftsStore: Writable<Draft[]>,
   draft: MultipleSceneDraft,
   sceneName: string,
   vault: Vault,
-  location: SceneInsertionLocation,
-  createNoteCallback: (path: string) => Promise<void>
+  location: SceneInsertionLocation
 ) {
   const newScenePath = scenePath(sceneName, draft, vault);
 
@@ -47,7 +57,7 @@ export async function insertScene(
       return d;
     });
   });
-  await createNoteCallback(newScenePath);
+  await createScene(newScenePath, draft);
 }
 
 export function setDraftOnFrontmatterObject(
@@ -69,6 +79,9 @@ export function setDraftOnFrontmatterObject(
   if (draft.format === "scenes") {
     obj["longform"]["sceneFolder"] = draft.sceneFolder;
     obj["longform"]["scenes"] = indentedScenesToArrays(draft.scenes);
+    if (draft.sceneTemplate) {
+      obj["longform"]["sceneTemplate"] = draft.sceneTemplate;
+    }
     obj["longform"]["ignoredFiles"] = draft.ignoredFiles;
   }
 }

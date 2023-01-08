@@ -1,4 +1,10 @@
-import { App, debounce, normalizePath, PluginSettingTab, Setting } from "obsidian";
+import {
+  App,
+  debounce,
+  normalizePath,
+  PluginSettingTab,
+  Setting,
+} from "obsidian";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
@@ -6,6 +12,7 @@ import type LongformPlugin from "../../main";
 import { pluginSettings, userScriptSteps } from "src/model/stores";
 import { FolderSuggest } from "./folder-suggest";
 import { DEFAULT_SESSION_FILE } from "src/model/types";
+import { FileSuggest } from "./file-suggest";
 
 export class LongformSettingsTab extends PluginSettingTab {
   plugin: LongformPlugin;
@@ -27,6 +34,22 @@ export class LongformSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl).setName("Composition").setHeading();
+    new Setting(containerEl).setName("New scene template").addSearch((cb) => {
+      new FileSuggest(this.app, cb.inputEl);
+      cb.setPlaceholder("templates/Scene.md")
+        .setValue(settings.sceneTemplate)
+        .onChange((v) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            sceneTemplate: v,
+          }));
+        });
+    });
+    containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
+      el.innerHTML =
+        "This file will be used as a template when creating new scenes via the New Scene… field. If you use a templating plugin (Templater or the core plugin) it will be used to process this template. This setting applies to all projects and can be overridden per-project in the Project > Project Metadata settings in the Longform pane.";
+    });
+
     new Setting(containerEl)
       .setName("Show scene numbers in Scenes tab")
       .setDesc(
@@ -67,8 +90,9 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
     this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
       if (steps && steps.length > 0) {
-        this.stepsSummary.innerText = `Loaded ${steps.length} step${steps.length !== 1 ? "s" : ""
-          }:`;
+        this.stepsSummary.innerText = `Loaded ${steps.length} step${
+          steps.length !== 1 ? "s" : ""
+        }:`;
       } else {
         this.stepsSummary.innerText = "No steps loaded.";
       }
@@ -191,7 +215,10 @@ export class LongformSettingsTab extends PluginSettingTab {
       )
       .addDropdown((cb) => {
         cb.addOption("data", "with Longform settings");
-        cb.addOption("plugin-folder", "as a .json file in the longform/ plugin folder");
+        cb.addOption(
+          "plugin-folder",
+          "as a .json file in the longform/ plugin folder"
+        );
         cb.addOption("file", "as a file in your vault");
         cb.setValue(settings.sessionStorage);
         cb.onChange((value: "data" | "plugin-folder" | "file") => {
@@ -210,11 +237,13 @@ export class LongformSettingsTab extends PluginSettingTab {
         fileName = `${fileName}.json`;
       }
       pluginSettings.update((s) => ({ ...s, sessionFile: fileName }));
-    }, 1000)
+    }, 1000);
 
     const sessionFileStorageSettings = new Setting(containerEl)
       .setName("Session storage file")
-      .setDesc("Location in your vault to store session JSON. Created if does not exist, overwritten if it does.")
+      .setDesc(
+        "Location in your vault to store session JSON. Created if does not exist, overwritten if it does."
+      )
       .addText((cb) => {
         cb.setPlaceholder(DEFAULT_SESSION_FILE);
         cb.setValue(settings.sessionFile ?? DEFAULT_SESSION_FILE);
@@ -222,8 +251,9 @@ export class LongformSettingsTab extends PluginSettingTab {
       });
     sessionFileStorageSettings.settingEl.style.display = "none";
 
-    this.unsubscribeSettings = pluginSettings.subscribe(settings => {
-      sessionFileStorageSettings.settingEl.style.display = settings.sessionStorage === "file" ? "flex" : "none";
+    this.unsubscribeSettings = pluginSettings.subscribe((settings) => {
+      sessionFileStorageSettings.settingEl.style.display =
+        settings.sessionStorage === "file" ? "flex" : "none";
     });
 
     new Setting(containerEl).setName("Credits").setHeading();
