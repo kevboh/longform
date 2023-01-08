@@ -43,7 +43,7 @@ const checkForLocation = (
 
 export const previousScene: CommandBuilder = (plugin) => ({
   id: "longform-previous-scene",
-  name: "Previous Scene",
+  name: "Previous scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -57,7 +57,7 @@ export const previousScene: CommandBuilder = (plugin) => ({
 
 export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
   id: "longform-previous-scene-at-level",
-  name: "Previous Scene at Indent Level",
+  name: "Previous scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -71,7 +71,7 @@ export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
 
 export const nextScene: CommandBuilder = (plugin) => ({
   id: "longform-next-scene",
-  name: "Next Scene",
+  name: "Next scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -85,7 +85,7 @@ export const nextScene: CommandBuilder = (plugin) => ({
 
 export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
   id: "longform-next-scene-at-level",
-  name: "Next Scene at Indent Level",
+  name: "Next scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -99,7 +99,7 @@ export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
 
 export const focusCurrentDraft: CommandBuilder = () => ({
   id: "longform-focus-current-draft",
-  name: "Open Current Note’s Project",
+  name: "Open current note’s project",
   editorCheckCallback(checking) {
     const path = get(activeFile).path;
     const drafts = get(draftsStore);
@@ -138,7 +138,7 @@ const showLeaf = (plugin: LongformPlugin) => {
 
 export const showLongform: CommandBuilder = (plugin) => ({
   id: "longform-show-view",
-  name: "Open Longform Pane",
+  name: "Open Longform pane",
   callback: () => {
     showLeaf(plugin);
   },
@@ -189,7 +189,7 @@ class JumpModal<T> extends FuzzySuggestModal<string> {
 
 export const jumpToProject: CommandBuilder = (plugin) => ({
   id: "longform-jump-to-project",
-  name: "Jump to Project",
+  name: "Jump to project",
   callback: () => {
     const projectCallback = (project: Draft[]) => {
       if (project && project.length > 0) {
@@ -261,7 +261,7 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
 
 export const jumpToScene: CommandBuilder = (plugin) => ({
   id: "longform-jump-to-scene",
-  name: "Jump to Scene in Current Project",
+  name: "Jump to scene in current project",
   checkCallback(checking) {
     const currentDraft = get(selectedDraft);
     if (

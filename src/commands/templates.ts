@@ -69,7 +69,7 @@ const callbackForFormat = (
 
 export const insertMultiSceneTemplate: CommandBuilder = (_plugin) => ({
   id: "longform-insert-multi-scene",
-  name: "Insert Multi-Scene Frontmatter",
+  name: "Insert multi-scene frontmatter",
   editorCheckCallback(checking, editor, view) {
     const result = callbackForFormat("scenes", checking, editor, view);
     return result;
@@ -78,7 +78,7 @@ export const insertMultiSceneTemplate: CommandBuilder = (_plugin) => ({
 
 export const insertSingleSceneTemplate: CommandBuilder = (_plugin) => ({
   id: "longform-insert-single-scene",
-  name: "Insert Single-Scene Frontmatter",
+  name: "Insert single-scene frontmatter",
   editorCheckCallback(checking, editor, view) {
     return callbackForFormat("single", checking, editor, view);
   },
