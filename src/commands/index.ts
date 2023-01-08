@@ -7,6 +7,7 @@ import {
   jumpToProject,
   showLongform,
   jumpToScene,
+  revealProjectFolder,
 } from "./navigation";
 import { indentScene, unindentScene } from "./indentation";
 import type LongformPlugin from "src/main";
@@ -27,6 +28,7 @@ const commandBuilders = [
   jumpToProject,
   jumpToScene,
   showLongform,
+  revealProjectFolder,
   insertMultiSceneTemplate,
   insertSingleSceneTemplate,
   startNewSession,

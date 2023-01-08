@@ -310,3 +310,35 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
     ).open();
   },
 });
+
+export const revealProjectFolder: CommandBuilder = (plugin) => ({
+  id: "longform-reveal-project-folder",
+  name: "Reveal current project in navigation",
+  checkCallback(checking) {
+    const path = get(selectedDraftVaultPath);
+    if (checking) {
+      return path !== null;
+    }
+
+    if (!path) {
+      return;
+    }
+
+    // NOTE: This is private Obsidian API, and may fail or change at any time.
+    try {
+      const parent = app.vault.getAbstractFileByPath(path).parent;
+      (app as any).internalPlugins.plugins[
+        "file-explorer"
+      ].instance.revealInFolder(parent);
+    } catch (error) {
+      console.error(
+        "[Longform] Error calling file-explorer.revealInFolder:",
+        error
+      );
+    }
+  },
+});
+
+// reveal project folder in file explorer
+// internal plugin file explorer insnace:
+// temp3.revealInFolder(app.vault.getAbstractFileByPath("test/dsfsdfsdf"))
