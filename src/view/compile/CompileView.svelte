@@ -8,7 +8,9 @@
     CompileStepKind,
     formatStepKind,
     type Workflow,
-    PLACEHOLDER_MISSING_STEP,
+    WorkflowError,
+    type WorkflowValidationResult,
+    calculateWorkflow,
   } from "src/compile";
   import { getContext } from "svelte";
   import {
@@ -143,132 +145,6 @@
   const openCompileStepMenu: () => Vault = getContext("openCompileStepMenu");
   function addStep() {
     openCompileStepMenu();
-  }
-
-  enum WorkflowError {
-    Valid = "",
-    BadFirstStep = "The first step must be of Scene or Join type; compilation begins with all scenes as input.",
-    MissingJoinStep = "A Manuscript step must occur after a Join step; Manuscript steps run on a single file, not all scenes.",
-    ScenesStepPostJoin = "A Scene or Join step cannot occur after a Join step; at this point in the workflow, steps must operate on a single file.",
-    UnloadedStep = "This workflow contains a step that could not be loaded. Please delete or replace it.",
-    JoinForSingle = "Single-scene projects do not support Join steps.",
-  }
-
-  type WorkflowValidationResult = {
-    error: WorkflowError;
-    stepPosition: number;
-  };
-
-  function calculateWorkflow(
-    workflow: Workflow,
-    isMultiScene: boolean
-  ): [WorkflowValidationResult, CompileStepKind[]] {
-    if (!workflow) {
-      return;
-    }
-
-    let currentKind = null;
-    let calculatedKinds: CompileStepKind[] = [];
-    for (
-      let stepPosition = 0;
-      stepPosition < workflow.steps.length;
-      stepPosition++
-    ) {
-      const step = workflow.steps[stepPosition];
-      const kinds = step.description.availableKinds;
-
-      const hasSceneKind = kinds.includes(CompileStepKind.Scene);
-      const hasJoinKind = kinds.includes(CompileStepKind.Join);
-      const hasManuscriptKind = kinds.includes(CompileStepKind.Manuscript);
-
-      if (
-        step.description.canonicalID ===
-        PLACEHOLDER_MISSING_STEP.description.canonicalID
-      ) {
-        return [
-          {
-            error: WorkflowError.UnloadedStep,
-            stepPosition,
-          },
-          calculatedKinds,
-        ];
-      }
-
-      if (!isMultiScene) {
-        if (hasSceneKind) {
-          currentKind = CompileStepKind.Scene;
-        } else if (hasManuscriptKind) {
-          currentKind = CompileStepKind.Manuscript;
-        } else {
-          return [
-            {
-              error: WorkflowError.JoinForSingle,
-              stepPosition,
-            },
-            calculatedKinds,
-          ];
-        }
-      } else {
-        // Calculate the next step kind
-        if (!currentKind) {
-          // First step calculation
-          if (hasJoinKind) {
-            currentKind = CompileStepKind.Join;
-          } else if (hasSceneKind) {
-            currentKind = CompileStepKind.Scene;
-          } else {
-            return [
-              {
-                error: WorkflowError.BadFirstStep,
-                stepPosition,
-              },
-              calculatedKinds,
-            ];
-          }
-        } else {
-          // Subsequent step calculations
-          if (!calculatedKinds.includes(CompileStepKind.Join)) {
-            // We're pre-join, all kinds must be scene or join
-            if (hasJoinKind) {
-              currentKind = CompileStepKind.Join;
-            } else if (hasSceneKind) {
-              currentKind = CompileStepKind.Scene;
-            } else {
-              return [
-                {
-                  error: WorkflowError.MissingJoinStep,
-                  stepPosition,
-                },
-                calculatedKinds,
-              ];
-            }
-          } else {
-            // We're post-join, all kinds must be of type manuscript
-            if (kinds.includes(CompileStepKind.Manuscript)) {
-              currentKind = CompileStepKind.Manuscript;
-            } else {
-              return [
-                {
-                  error: WorkflowError.ScenesStepPostJoin,
-                  stepPosition,
-                },
-                calculatedKinds,
-              ];
-            }
-          }
-        }
-      }
-
-      calculatedKinds.push(currentKind);
-    }
-
-    return [
-      {
-        error: WorkflowError.Valid,
-        stepPosition: 0,
-      },
-      calculatedKinds,
-    ];
   }
 
   const VALID = {
