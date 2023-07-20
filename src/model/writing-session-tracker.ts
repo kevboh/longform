@@ -341,7 +341,7 @@ export class WritingSessionTracker {
             typeof startCount === "object" ? startCount[scene] ?? null : null;
           const diff = startSceneCount
             ? Math.max(sceneCount - startSceneCount, 0)
-            : 0;
+            : sceneCount;
           const startDiffScene = startDiff?.scenes[scene] ?? 0;
           const sceneTotal = withDeletions(
             startDiffScene + diff,
