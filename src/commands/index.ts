@@ -1,3 +1,4 @@
+import { compileCurrent, compileSelection } from "./compile";
 import {
   focusCurrentDraft,
   previousScene,
@@ -19,6 +20,8 @@ import {
 import { startNewSession } from "./word-counts";
 
 const commandBuilders = [
+  compileCurrent,
+  compileSelection,
   focusCurrentDraft,
   previousScene,
   previousSceneAtIndent,

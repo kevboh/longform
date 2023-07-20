@@ -2,7 +2,7 @@
 longform:
   format: scenes
   title: A Novel; or, What Projects Look Like Now
-  workflow: test
+  workflow: Default Workflow
   sceneFolder: /
   scenes:
     - first scene
