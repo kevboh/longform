@@ -91,8 +91,9 @@
     {/if}
   {:else}
     <p>
-      To use Longform, start by marking a folder as a Longform project by
-      right-clicking it and selecting "Mark as Longform project."
+      To begin, find or create a folder somewhere in your vault in which 
+      you would like to create your novel. Right-click it and select 
+      <code>Create Longform Project.</code>
     </p>
   {/if}
 </div>
