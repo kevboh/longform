@@ -1,10 +1,73 @@
-import { normalizePath } from "obsidian";
+import { Notice, normalizePath } from "obsidian";
 import type { CompileContext, CompileManuscriptInput } from "..";
 import {
   CompileStepKind,
   CompileStepOptionType,
   makeBuiltinStep,
 } from "./abstract-compile-step";
+
+function resolvePath(
+  projectPath: string,
+  relativeFilePath: string,
+): string {
+  relativeFilePath = relativeFilePath.endsWith(".md") ? relativeFilePath : relativeFilePath + ".md";
+
+  if (! relativeFilePath.startsWith(".")) {
+    return normalizePath(`${projectPath}/${relativeFilePath}`);
+  }
+
+  /*
+  Possible paths:
+    ./filename.md
+    ../filename.md
+    ../../../filename.md
+
+    obsidian won't let you open these file, but we can write to them.  Should give a warning.
+    ./.filename.md
+    ../.filename.md
+    .blah.md
+
+    illegal paths
+    ...md
+    .../filename.md
+    ./.../filename.md
+    .md -> impossible due to blank check in WriteToNoteStep
+  */
+ 
+  const filePathComponents = relativeFilePath.split('/');
+  if (filePathComponents.length === 1) {
+    // dealing with .filename.md path
+    new Notice("Obsidian cannot open files that begin with a dot.  Consider a different name.");
+    return normalizePath(`${projectPath}/${relativeFilePath}`);
+  }
+
+  const projectPathComponents = projectPath.split("/");
+  let filePathComponent: string;
+  let atStartOfPath = true;
+  do {
+    filePathComponent = filePathComponents.shift();
+    if (filePathComponent !== "..") {
+      if (atStartOfPath && filePathComponent === ".") {
+        continue;
+      }
+      throw new Error("Invalid path for Save as Note.")
+    }
+    if (projectPathComponents.length === 0) {
+      throw new Error('Invalid path for Save as Note.');
+    }
+    projectPathComponents.pop();
+    if (filePathComponents[0] === '..') {
+      filePathComponent = filePathComponents.shift();
+    } else {
+      break;
+    }
+    atStartOfPath = false;
+  } while (filePathComponents.length > 1)
+
+  return normalizePath(projectPathComponents.concat(filePathComponents).join("/"));
+
+
+}
 
 export const WriteToNoteStep = makeBuiltinStep({
   id: "write-to-note",
@@ -44,22 +107,30 @@ export const WriteToNoteStep = makeBuiltinStep({
       if (!target || target.length == 0) {
         throw new Error("Invalid path for Save as Note.");
       }
-      const file = target.endsWith(".md") ? target : target + ".md";
-      const path = normalizePath(`${context.projectPath}/${file}`);
 
-      const pathComponents = path.split("/");
-      pathComponents.pop();
+      const filePath = resolvePath(context.projectPath, target);
+      const conatiningFolderParts = filePath.split("/");
+      conatiningFolderParts.pop();
+      const containingFolderPath = conatiningFolderParts.join("/");
 
       try {
-        await context.app.vault.createFolder(pathComponents.join("/"));
+        await context.app.vault.createFolder(containingFolderPath);
       } catch (e) {
         // do nothing, folder already existed
       }
 
-      await context.app.vault.adapter.write(path, input.contents);
+      console.log('Writing to:', filePath);
+
+      await context.app.vault.adapter.write(filePath, input.contents);
 
       if (openAfter) {
-        context.app.workspace.openLinkText(path, "/", true);
+        console.log('Attempting to open:', filePath);
+
+        context.app.workspace.openLinkText(filePath, "/", true)
+          .catch(err => {
+            console.error('Could not open', filePath);
+            console.error(err);
+          })
       }
 
       return input;
