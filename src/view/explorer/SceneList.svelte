@@ -351,9 +351,8 @@
       class="sortable-scene-list"
     >
       <div
-        class="scene-container"
-        style="margin-left: {item.indent * 32}px; {item.hidden &&
-          'display: none;'}"
+        class="scene-container{item.hidden ? ' hidden' : ''}"
+        style="margin-left: {item.indent * 32}px;"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
@@ -461,6 +460,10 @@
     line-height: 1.1em;
     white-space: nowrap;
     padding: var(--size-2-1) 0;
+  }
+
+  .scene-container.hidden {
+    display: none;
   }
 
   .scene-container *:nth-child(2) {
