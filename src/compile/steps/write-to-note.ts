@@ -62,7 +62,7 @@ export const WriteToNoteStep = makeBuiltinStep({
   },
 });
 
-async function writeToFile(app: App, filePath: string, contents: string) {
+async function writeToFile(app: App, filePath: string, contents: string): Promise<void> {
   await ensureContainingFolderExists(app, filePath);
 
   console.log('[Longform] Writing to:', filePath);
@@ -70,7 +70,7 @@ async function writeToFile(app: App, filePath: string, contents: string) {
   await app.vault.adapter.write(filePath, contents);
 }
 
-async function ensureContainingFolderExists(app: App, filePath: string) {
+async function ensureContainingFolderExists(app: App, filePath: string): Promise<void> {
   const conatiningFolderParts = filePath.split("/");
   const containingFolderPath = conatiningFolderParts.slice(0, -1).join("/");
 
@@ -118,19 +118,20 @@ function resolvePath(
   return resolveRelativeFilePath(
     projectPath.split("/"),
     filePath.split("/"),
+    true,
   )
 }
 
 function resolveRelativeFilePath(
   projectPathComponents: string[],
   filePathComponents: string[],
-  atStartOfFilePath: boolean = true,
-) {
+  atStartOfFilePath: boolean,
+): string {
   // should never be empty due to blank check in WriteToNoteStep
   // and String.split() will return an array of at least one element
   const filePathComponent = filePathComponents.first();
   switch (filePathComponent) {
-    case "..":
+    case "..": {
       // move up one folder
       if (projectPathComponents.length === 0) {
         // we moved up too many folders and ran out.
@@ -139,7 +140,8 @@ function resolveRelativeFilePath(
       // remove the lowest-level folder from the project path to move up, 
       // and take this first component off the top of the filePathComponents
       return resolveRelativeFilePath(projectPathComponents.slice(0, -1), filePathComponents.slice(1), false)
-    case ".":
+    }
+    case ".": {
       // relative to current folder
       if (! atStartOfFilePath) {
         // illegal path like: ././filename.md
@@ -147,12 +149,14 @@ function resolveRelativeFilePath(
       }
       // stay here, but remove the first filepath component
       return resolveRelativeFilePath(projectPathComponents, filePathComponents.slice(1), false)
-    default:
+    }
+    default: {
       const filename = filePathComponents.last()
       if (filename.startsWith(".")) {
         new Notice("Obsidian cannot open files that begin with a dot. Consider a different name.");
       }
       // assume there are no more ".." in the rest of the filePathComponents
       return normalizePath(projectPathComponents.concat(filePathComponents).join("/"));
+    }
   }
 }
