@@ -1,4 +1,4 @@
-import { Notice, normalizePath } from "obsidian";
+import { App, Notice, normalizePath } from "obsidian";
 import type { CompileContext, CompileManuscriptInput } from "..";
 import {
   CompileStepKind,
@@ -46,19 +46,7 @@ export const WriteToNoteStep = makeBuiltinStep({
       }
 
       const filePath = resolvePath(context.projectPath, target);
-      const conatiningFolderParts = filePath.split("/");
-      conatiningFolderParts.pop();
-      const containingFolderPath = conatiningFolderParts.join("/");
-
-      try {
-        await context.app.vault.createFolder(containingFolderPath);
-      } catch (e) {
-        // do nothing, folder already existed
-      }
-
-      console.log('[Longform] Writing to:', filePath);
-
-      await context.app.vault.adapter.write(filePath, input.contents);
+      await writeToFile(context.app, filePath, input.contents);
 
       if (openAfter) {
         console.log('[Longform] Attempting to open:', filePath);
@@ -73,6 +61,25 @@ export const WriteToNoteStep = makeBuiltinStep({
     }
   },
 });
+
+async function writeToFile(app: App, filePath: string, contents: string) {
+  await ensureContainingFolderExists(app, filePath);
+
+  console.log('[Longform] Writing to:', filePath);
+
+  await app.vault.adapter.write(filePath, contents);
+}
+
+async function ensureContainingFolderExists(app: App, filePath: string) {
+  const conatiningFolderParts = filePath.split("/");
+  const containingFolderPath = conatiningFolderParts.slice(0, -1).join("/");
+
+  try {
+    await app.vault.createFolder(containingFolderPath);
+  } catch (e) {
+    // do nothing, folder already existed
+  }
+}
 
 function resolvePath(
   projectPath: string,
