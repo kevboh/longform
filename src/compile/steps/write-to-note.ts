@@ -12,7 +12,7 @@ function resolvePath(
 ): string {
   relativeFilePath = relativeFilePath.endsWith(".md") ? relativeFilePath : relativeFilePath + ".md";
 
-  if (! relativeFilePath.startsWith(".")) {
+  if (!relativeFilePath.startsWith(".")) {
     return normalizePath(`${projectPath}/${relativeFilePath}`);
   }
 
@@ -37,7 +37,7 @@ function resolvePath(
   const filePathComponents = relativeFilePath.split('/');
   if (filePathComponents.length === 1) {
     // dealing with .filename.md path
-    new Notice("Obsidian cannot open files that begin with a dot.  Consider a different name.");
+    new Notice("Obsidian cannot open files that begin with a dot. Consider a different name.");
     return normalizePath(`${projectPath}/${relativeFilePath}`);
   }
 
