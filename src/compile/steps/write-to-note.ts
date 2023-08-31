@@ -119,17 +119,16 @@ export const WriteToNoteStep = makeBuiltinStep({
         // do nothing, folder already existed
       }
 
-      console.log('Writing to:', filePath);
+      console.log('[Longform] Writing to:', filePath);
 
       await context.app.vault.adapter.write(filePath, input.contents);
 
       if (openAfter) {
-        console.log('Attempting to open:', filePath);
+        console.log('[Longform] Attempting to open:', filePath);
 
         context.app.workspace.openLinkText(filePath, "/", true)
           .catch(err => {
-            console.error('Could not open', filePath);
-            console.error(err);
+            console.error('[Longform] Could not open', filePath, err);
           })
       }
 
