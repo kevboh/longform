@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { replaceWikiLinks, replaceExternalLinks } from '../../../src/compile/steps/remove-links'
+import { replaceWikiLinks, replaceExternalLinks } from 'src/compile/steps/remove-links'
 
 describe("Removing Links", () => {
 
