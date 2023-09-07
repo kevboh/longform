@@ -143,7 +143,7 @@ function resolveRelativeFilePath(
     }
     case ".": {
       // relative to current folder
-      if (! atStartOfFilePath) {
+      if (!atStartOfFilePath) {
         // illegal path like: ././filename.md
         throw new Error("[Longform] Invalid path for Save as Note.")
       }
