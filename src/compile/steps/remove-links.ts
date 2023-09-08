@@ -11,7 +11,7 @@ import {
 } from "./abstract-compile-step";
 
 const WIKILINKS_REGEX = /\[\[([^[|]+)(|[^[]+)?\]\]/gm;
-const EXTERNAL_LINKS_REGEX = /\[([^[]+)\](\(.*\))/gm;
+const EXTERNAL_LINKS_REGEX = /\[([^[]+)\](\(.*?\))/gm;
 
 export const RemoveLinksStep = makeBuiltinStep({
   id: "remove-links",
