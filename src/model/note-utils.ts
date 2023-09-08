@@ -17,8 +17,26 @@ export async function createNoteWithPotentialTemplate(
   path: string,
   template: string | null
 ): Promise<void> {
-  const file = await app.vault.create(path, "");
-  if (template) {
+  const pathComponents = path.split("/");
+  pathComponents.pop();
+
+  if (!(await app.vault.adapter.exists(pathComponents.join("/")))) {
+    try {
+      await app.vault.createFolder(pathComponents.join("/"));
+    } catch (e) {
+      console.error(`[Longform] Failed to create new note at "${path}"`, e)
+      return;
+    }
+  }
+
+  let file: TFile | null = null;
+  try {
+    file = await app.vault.create(path, "");
+  } catch(e: unknown) {
+    console.error(`[Longform] Failed to create new note at "${path}"`, e)
+    return;
+  }
+  if (template && file) {
     let contents = "";
     let pluginUsed = "";
     try {
