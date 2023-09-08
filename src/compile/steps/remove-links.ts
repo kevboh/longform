@@ -44,16 +44,10 @@ export const RemoveLinksStep = makeBuiltinStep({
 
     const replaceLinks = (contents: string) => {
       if (removeWikilinks) {
-        contents = contents.replace(WIKILINKS_REGEX, (_match, p1, p2) => {
-          if (p2) {
-            return p2.slice(1);
-          } else {
-            return p1;
-          }
-        });
+        contents = replaceWikiLinks(contents)
       }
       if (removeExternalLinks) {
-        contents = contents.replace(EXTERNAL_LINKS_REGEX, (_match, p1) => p1);
+        contents = replaceExternalLinks(contents)
       }
 
       return contents;
@@ -75,3 +69,17 @@ export const RemoveLinksStep = makeBuiltinStep({
     }
   },
 });
+
+export function replaceWikiLinks(contents: string): string {
+  return contents.replace(WIKILINKS_REGEX, (_match, p1, p2) => {
+    if (p2) {
+      return p2.slice(1);
+    } else {
+      return p1;
+    }
+  })
+}
+
+export function replaceExternalLinks(contents: string): string {
+  return contents.replace(EXTERNAL_LINKS_REGEX, (_match, p1) => p1)
+}
