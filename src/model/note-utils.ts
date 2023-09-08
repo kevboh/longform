@@ -17,25 +17,7 @@ export async function createNoteWithPotentialTemplate(
   path: string,
   template: string | null
 ): Promise<void> {
-  const pathComponents = path.split("/");
-  pathComponents.pop();
-
-  if (!(await app.vault.adapter.exists(pathComponents.join("/")))) {
-    try {
-      await app.vault.createFolder(pathComponents.join("/"));
-    } catch (e) {
-      console.error(`[Longform] Failed to create new note at "${path}"`, e)
-      return;
-    }
-  }
-
-  let file: TFile | null = null;
-  try {
-    file = await app.vault.create(path, "");
-  } catch(e: unknown) {
-    console.error(`[Longform] Failed to create new note at "${path}"`, e)
-    return;
-  }
+  const file = await createNote(path);
   if (template && file) {
     let contents = "";
     let pluginUsed = "";
@@ -53,6 +35,37 @@ export async function createNoteWithPotentialTemplate(
     if (contents !== "") {
       await app.vault.adapter.write(path, contents);
     }
+  }
+}
+
+/**
+ * Creates a note at `path` with the given `initialContent`.
+ * @param path 
+ * @param initialContent 
+ * @returns `null` if it fails to create the note.  `TFile` for the new note, if successful.
+ */
+export async function createNote(path: string, initialContent: string = ""): Promise<TFile | null> {
+  const pathComponents = path.split("/");
+  pathComponents.pop();
+
+  if (!(await app.vault.adapter.exists(pathComponents.join("/")))) {
+    try {
+      await app.vault.createFolder(pathComponents.join("/"));
+    } catch (e) {
+      console.error(`[Longform] Failed to create new note at "${path}"`, e)
+      return null;
+    }
+  }
+
+  try {
+    // as of obsidian 1.4.4, vault.create will successfully create a file, and
+    // its parent folder, but will throw an error anyway, if the parent folder
+    // didn't initially exist.  By creating the parent folder above, we avoid 
+    // that situation.  This may change in later versions of obsidian.
+    return await app.vault.create(path, initialContent);
+  } catch(e: unknown) {
+    console.error(`[Longform] Failed to create new note at "${path}"`, e)
+    return null;
   }
 }
 
