@@ -92,7 +92,10 @@
   let isSorting = false;
   const sortableOptions: Sortable.Options = {
     animation: 150,
-    ghostClass: "scene-ghost",
+    ghostClass: "scene-drag-ghost",
+    chosenClass: "scene-drag-chosen",
+    dragClass: "scene-drag-dragging",
+    fallbackClass: "scene-drag-fallback",
     onStart: () => {
       isSorting = true;
     },
@@ -527,7 +530,7 @@
     font-weight: bold;
   }
 
-  :global(.scene-ghost) {
+  :global(.scene-drag-ghost) {
     background-color: var(--interactive-accent-hover);
     color: var(--text-on-accent);
     margin-left: var(--ghost-indent);
