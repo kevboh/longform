@@ -396,11 +396,15 @@ export class StoreVaultSync {
         `${fileWithMetadata.file.parent.path}/${sceneFolder}`
       );
 
-      const filenamesInSceneFolder = (
-        await this.vault.adapter.list(normalizedSceneFolder)
-      ).files
-        .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
-        .map((f) => this.vault.getAbstractFileByPath(f).name.slice(0, -3));
+      let filenamesInSceneFolder: string[] = [];
+      if (await this.vault.adapter.exists(normalizedSceneFolder)) {
+        filenamesInSceneFolder = (
+          await this.vault.adapter.list(normalizedSceneFolder)
+        ).files
+          .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
+          .map((f) => this.vault.getAbstractFileByPath(f)?.name.slice(0, -3))
+          .filter(maybeName => maybeName !== null && maybeName !== undefined) as string[];
+      }  
 
       // Filter removed scenes
       const knownScenes = scenes.filter(({ title }) =>
