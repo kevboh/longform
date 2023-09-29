@@ -23,6 +23,8 @@ describe("Removing Links", () => {
             .toEqual("Filename\nOther Filename")
         expect(replaceExternalLinks("[Alias](Some/Path/To/Filename.md)")).toEqual("Alias")
         expect(replaceExternalLinks("[Alias](Some/Path/To/Filename.md#^blockId)")).toEqual("Alias")
+        expect(replaceExternalLinks("[Filename] (Some/Path/To/Filename.md)")).toEqual("[Filename] (Some/Path/To/Filename.md)")
+        expect(replaceExternalLinks("[Filename Some/Path/To/Filename.md)")).toEqual("[Filename Some/Path/To/Filename.md)")
     })
 
     it("does not remove embeds", () => {
@@ -30,6 +32,9 @@ describe("Removing Links", () => {
         expect(replaceWikiLinks("![[Filename]][[Other filename]]")).toEqual("![[Filename]]Other filename")
         expect(replaceWikiLinks("[[Filename]]![[Other filename]]")).toEqual("Filename![[Other filename]]")
 
+        expect(replaceExternalLinks("![Filename](Some/Path/To/Filename.md)")).toEqual("![Filename](Some/Path/To/Filename.md)")
+        expect(replaceExternalLinks("![Filename](Some/Path/To/Filename.md)[Filename](Some/Path/To/Filename.md)")).toEqual("![Filename](Some/Path/To/Filename.md)Filename")
+        expect(replaceExternalLinks("[Filename](Some/Path/To/Filename.md)![Filename](Some/Path/To/Filename.md)")).toEqual("Filename![Filename](Some/Path/To/Filename.md)")
     })
 
 })

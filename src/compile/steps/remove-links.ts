@@ -113,7 +113,48 @@ export function replaceWikiLinks(contents: string): string {
   return contents;
 }
 
-const EXTERNAL_LINKS_REGEX = /\[([^[]+)\](\(.*?\))/gm;
 export function replaceExternalLinks(contents: string): string {
-  return contents.replace(EXTERNAL_LINKS_REGEX, (_match, p1) => p1)
+  let end = -1;
+  let aliasEnd = -1;
+
+  // moving backward allows us to replace within the loop,
+  // so no additional memory.
+  for (let i = contents.length - 1; i >= 0; i--) {
+    const char = contents.charAt(i);
+    if (end < 0) {
+      if (char === ")") {
+        end = i;
+      }
+    } else {
+      if (aliasEnd < 0) {
+        if (char === "(") {
+          if (i > 0 && contents.charAt(i - 1) === "]") {
+            aliasEnd = i - 1;
+          } else {
+            // invalid link
+            end = -1
+            aliasEnd = -1
+          }
+          // can skip the next character
+          i = i - 1;
+          continue;
+        }
+      } else {
+        if (char === "[") {
+          if (i > 0 && contents.charAt(i - 1) === "!") {
+            // embed, jump to i - 1
+            i = i - 1;
+          } else {
+            const replacement = contents.slice(i + 1, aliasEnd);
+            contents = contents.slice(0, i) + replacement + contents.slice(end + 1)
+          }
+          end = -1
+          aliasEnd = -1
+          continue;
+        }
+      }
+    }
+  }
+
+  return contents;
 }
