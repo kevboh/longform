@@ -4,11 +4,14 @@ import { replaceWikiLinks, replaceExternalLinks } from 'src/compile/steps/remove
 describe("Removing Links", () => {
 
     it("removes wiki links", () => {
+        expect(replaceWikiLinks("[[]]")).toEqual("[[]]")
+        expect(replaceWikiLinks("[[link]] followed by a single end bracket]")).toEqual("link followed by a single end bracket]")
         expect(replaceWikiLinks("[[Filename]]")).toEqual("Filename")
         expect(replaceWikiLinks("[[Filename]] and [[other filename]]")).toEqual("Filename and other filename")
         expect(replaceWikiLinks("[[Filename]]\n[[Other filename]]")).toEqual("Filename\nOther filename")
         expect(replaceWikiLinks("[[Filename|Alias]]")).toEqual("Alias")
         expect(replaceWikiLinks("[[Filename#^blockId|Alias]]")).toEqual("Alias")
+        expect(replaceWikiLinks("[[Filename#^blockId]]")).toEqual("Filename#^blockId")
         expect(replaceWikiLinks("[[Some/Path/To/Filename|Filename]]")).toEqual("Filename")
     })
 
@@ -20,6 +23,13 @@ describe("Removing Links", () => {
             .toEqual("Filename\nOther Filename")
         expect(replaceExternalLinks("[Alias](Some/Path/To/Filename.md)")).toEqual("Alias")
         expect(replaceExternalLinks("[Alias](Some/Path/To/Filename.md#^blockId)")).toEqual("Alias")
+    })
+
+    it("does not remove embeds", () => {
+        expect(replaceWikiLinks("![[Filename]]")).toEqual("![[Filename]]")
+        expect(replaceWikiLinks("![[Filename]][[Other filename]]")).toEqual("![[Filename]]Other filename")
+        expect(replaceWikiLinks("[[Filename]]![[Other filename]]")).toEqual("Filename![[Other filename]]")
+
     })
 
 })
