@@ -69,6 +69,7 @@ export const RemoveLinksStep = makeBuiltinStep({
 
 export function replaceWikiLinks(contents: string): string {
   let startOfAlias = -1;
+  let additionalAlias = false;
   let end = -1;
 
   // moving backward allows us to replace within the loop,
@@ -85,7 +86,10 @@ export function replaceWikiLinks(contents: string): string {
       }
     } else {
       if (char === "|") {
-        startOfAlias = i + 1;
+        if (startOfAlias >= 0) {
+          additionalAlias = true;
+        }
+        startOfAlias = i + 1; // update to ealiest instance of the character
         continue;
       }
       if (char === "[") {
@@ -97,12 +101,23 @@ export function replaceWikiLinks(contents: string): string {
             // brackets are empty and should just display as [[]]
             i = i - 1;
           } else {
-            const replacement = startOfAlias >= 0 ? contents.slice(startOfAlias, end - 1) : contents.slice(i + 1, end - 1)
+            let replacement: string;
+            if (startOfAlias >= 0) {
+              if (additionalAlias) {
+                // remove all instances of "|"
+                replacement = contents.slice(startOfAlias, end - 1).replace(/\|/gm, "");
+              } else {
+                replacement = contents.slice(startOfAlias, end - 1)
+              }
+            } else {
+              replacement = contents.slice(i + 1, end - 1)
+            }
             contents = contents.slice(0, i - 1) + replacement + contents.slice(end + 1)
             // can skip the next character
             i = i - 1;
           }
           end = -1
+          additionalAlias = false;;
           startOfAlias = -1
           continue;
         }

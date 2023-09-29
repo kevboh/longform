@@ -4,8 +4,6 @@ import { replaceWikiLinks, replaceExternalLinks } from 'src/compile/steps/remove
 describe("Removing Links", () => {
 
     it("removes wiki links", () => {
-        expect(replaceWikiLinks("[[]]")).toEqual("[[]]")
-        expect(replaceWikiLinks("[[link]] followed by a single end bracket]")).toEqual("link followed by a single end bracket]")
         expect(replaceWikiLinks("[[Filename]]")).toEqual("Filename")
         expect(replaceWikiLinks("[[Filename]] and [[other filename]]")).toEqual("Filename and other filename")
         expect(replaceWikiLinks("[[Filename]]\n[[Other filename]]")).toEqual("Filename\nOther filename")
@@ -13,6 +11,9 @@ describe("Removing Links", () => {
         expect(replaceWikiLinks("[[Filename#^blockId|Alias]]")).toEqual("Alias")
         expect(replaceWikiLinks("[[Filename#^blockId]]")).toEqual("Filename#^blockId")
         expect(replaceWikiLinks("[[Some/Path/To/Filename|Filename]]")).toEqual("Filename")
+        expect(replaceWikiLinks("[[]]")).toEqual("[[]]")
+        expect(replaceWikiLinks("[[link]] followed by a single end bracket]")).toEqual("link followed by a single end bracket]")
+        expect(replaceWikiLinks("[[Filename|Alias|OtherAlias|Another Alias]]")).toEqual("AliasOtherAliasAnother Alias")
     })
 
     it("removes external links", () => {
