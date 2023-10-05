@@ -264,7 +264,7 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
   },
 });
 
-export const revealProjectFolder: CommandBuilder = (plugin) => ({
+export const revealProjectFolder: CommandBuilder = (_plugin) => ({
   id: "longform-reveal-project-folder",
   name: "Reveal current project in navigation",
   checkCallback(checking) {

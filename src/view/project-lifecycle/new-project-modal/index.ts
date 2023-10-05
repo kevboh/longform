@@ -56,6 +56,7 @@ export default class NewProjectModalContainer extends Modal {
               scenes: [],
               ignoredFiles: [],
               unknownFiles: [],
+              sceneTemplate: null,
             };
             return multi;
           } else {

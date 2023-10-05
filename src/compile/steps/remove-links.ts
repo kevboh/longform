@@ -41,10 +41,10 @@ export const RemoveLinksStep = makeBuiltinStep({
 
     const replaceLinks = (contents: string) => {
       if (removeWikilinks) {
-        contents = replaceWikiLinks(contents)
+        contents = replaceWikiLinks(contents);
       }
       if (removeExternalLinks) {
-        contents = replaceExternalLinks(contents)
+        contents = replaceExternalLinks(contents);
       }
 
       return contents;
@@ -105,20 +105,23 @@ export function replaceWikiLinks(contents: string): string {
             if (startOfAlias >= 0) {
               if (additionalAlias) {
                 // remove all instances of "|"
-                replacement = contents.slice(startOfAlias, end - 1).replace(/\|/gm, "");
+                replacement = contents
+                  .slice(startOfAlias, end - 1)
+                  .replace(/\|/gm, "");
               } else {
-                replacement = contents.slice(startOfAlias, end - 1)
+                replacement = contents.slice(startOfAlias, end - 1);
               }
             } else {
-              replacement = contents.slice(i + 1, end - 1)
+              replacement = contents.slice(i + 1, end - 1);
             }
-            contents = contents.slice(0, i - 1) + replacement + contents.slice(end + 1)
+            contents =
+              contents.slice(0, i - 1) + replacement + contents.slice(end + 1);
             // can skip the next character
             i = i - 1;
           }
-          end = -1
-          additionalAlias = false;;
-          startOfAlias = -1
+          end = -1;
+          additionalAlias = false;
+          startOfAlias = -1;
           continue;
         }
       }
@@ -147,8 +150,8 @@ export function replaceExternalLinks(contents: string): string {
             aliasEnd = i - 1;
           } else {
             // invalid link
-            end = -1
-            aliasEnd = -1
+            end = -1;
+            aliasEnd = -1;
           }
           // can skip the next character
           i = i - 1;
@@ -161,10 +164,11 @@ export function replaceExternalLinks(contents: string): string {
             i = i - 1;
           } else {
             const replacement = contents.slice(i + 1, aliasEnd);
-            contents = contents.slice(0, i) + replacement + contents.slice(end + 1)
+            contents =
+              contents.slice(0, i) + replacement + contents.slice(end + 1);
           }
-          end = -1
-          aliasEnd = -1
+          end = -1;
+          aliasEnd = -1;
           continue;
         }
       }

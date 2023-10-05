@@ -77,7 +77,7 @@ export function calculateWorkflow(
   }
 
   let currentKind = null;
-  let calculatedKinds: CompileStepKind[] = [];
+  const calculatedKinds: CompileStepKind[] = [];
   for (
     let stepPosition = 0;
     stepPosition < workflow.steps.length;

@@ -47,6 +47,7 @@ const callbackForFormat = (
         scenes: [],
         ignoredFiles: [],
         unknownFiles: [],
+        sceneTemplate: null,
       };
       return multi;
     } else {
