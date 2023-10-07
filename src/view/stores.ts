@@ -20,7 +20,8 @@ import type { Draft, DraftWordCounts } from "src/model/types";
 export const activeFile = writable<TFile | null>(null);
 
 export type ExplorerTab = "Scenes" | "Project" | "Compile";
-export const selectedTab = writable<ExplorerTab>("Project");
+const tabOnOpeningSidebar: ExplorerTab = "Scenes"
+export const selectedTab = writable<ExplorerTab>(tabOnOpeningSidebar);
 
 const statsFor = (
   file: TFile,
