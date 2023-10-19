@@ -9,9 +9,11 @@ import {
   normalizePath,
 } from "obsidian";
 import debounce from "lodash/debounce";
+import once from "lodash/once";
 import pick from "lodash/pick";
 import { derived, type Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+
 import {
   VIEW_TYPE_LONGFORM_EXPLORER,
   ExplorerPane,
@@ -268,10 +270,20 @@ export default class LongformPlugin extends Plugin {
     this.userScriptObserver.beginObserving();
     this.watchProjects();
 
+    const defaultToScenes = once(function (d: Draft) {
+      if (d && d.format === "scenes") {
+        selectedTab.set("Scenes");
+      }
+    });
+
     this.unsubscribeSelectedDraft = selectedDraft.subscribe(async (d) => {
       if (!get(initialized) || !d) {
         return;
       }
+
+      // On initial load, default to Scenes tab for multi-scene projects.
+      defaultToScenes(d);
+
       pluginSettings.update((s) => ({
         ...s,
         selectedDraftVaultPath: d.vaultPath,
