@@ -17,7 +17,7 @@
     import { cloneDeep } from "lodash";
     import { scenePath } from "src/model/scene-navigation";
     import { selectElementContents } from "../utils";
-    import { addAll, addScene, ignoreAll, ignoreScene } from "./ExplorerPane";
+    import { addAll, addScene, ignoreAll, ignoreScene } from "./UseCases";
 
     let currentDraftIndex: number;
     $: {
