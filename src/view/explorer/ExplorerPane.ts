@@ -174,6 +174,7 @@ export class ExplorerPane extends ItemView {
           return;
         }
         const menu = new Menu();
+        menu.addSeparator()
         menu.addItem((item) => {
           item.setTitle("Rename");
           item.setIcon("pencil");
@@ -203,6 +204,11 @@ export class ExplorerPane extends ItemView {
           item.setIcon("document");
           item.onClick(() => addRelativeScene("after", file));
         });
+        menu.addItem((item) => {
+          item.setTitle("Ignore scene");
+          item.setIcon("document");
+          item.onClick(() => { });
+        })
         // Triggering this event lets other apps insert menu items
         // including Obsidian, giving us lots of stuff for free.
         this.app.workspace.trigger("file-menu", menu, file, "longform");
