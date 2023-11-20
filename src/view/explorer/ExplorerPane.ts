@@ -20,7 +20,7 @@ import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
 import { insertScene } from "src/model/draft-utils";
 import NewDraftModal from "src/view/project-lifecycle/new-draft-modal";
 import { UndoManager } from "../undo/undo-manager";
-import { ignoreScene } from "./UseCases";
+import { ignoreScene } from "./scene-menu-items";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
