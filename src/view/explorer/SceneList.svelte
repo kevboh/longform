@@ -20,9 +20,9 @@
 
   let currentDraftIndex: number;
   $: {
-    currentDraftIndex = $drafts.findIndex(
-      (d) => d.vaultPath === $selectedDraft.vaultPath
-    );
+    currentDraftIndex =
+      $selectedDraft &&
+      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
   }
 
   // Function to make paths from scene names
@@ -230,9 +230,9 @@
   }
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
-    const currentDraftIndex = $drafts.findIndex(
-      (d) => d.vaultPath === $selectedDraft.vaultPath
-    );
+    const currentDraftIndex =
+      $selectedDraft &&
+      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
     if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
       drafts.update((d) => {
         const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
@@ -255,9 +255,9 @@
   }
 
   function doWithAll(action: "add" | "ignore") {
-    const currentDraftIndex = $drafts.findIndex(
-      (d) => d.vaultPath === $selectedDraft.vaultPath
-    );
+    const currentDraftIndex =
+      $selectedDraft &&
+      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
     if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
       drafts.update((d) => {
         const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
@@ -393,7 +393,7 @@
       </div>
     </SortableList>
   </div>
-  {#if $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
+  {#if $selectedDraft && $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
     <div id="longform-unknown-files-wizard">
       <div class="longform-unknown-inner">
         <p class="longform-unknown-explanation">
