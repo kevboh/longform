@@ -206,9 +206,9 @@ export class ExplorerPane extends ItemView {
           item.onClick(() => addRelativeScene("after", file));
         });
         menu.addItem((item) => {
-          item.setTitle("Ignore scene");
-          item.setIcon("document");
-          item.onClick(() => ignoreScene(file.name.split(".")[0]));
+          item.setTitle("Ignore note in Longform");
+          item.setIcon("minus-circle");
+          item.onClick(() => ignoreScene(file.name.endsWith('.md') ? file.name.slice(0, -3) : file.name));
         })
         // Triggering this event lets other apps insert menu items
         // including Obsidian, giving us lots of stuff for free.
