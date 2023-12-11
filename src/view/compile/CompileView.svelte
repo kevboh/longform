@@ -63,9 +63,7 @@
         allWorkflowNames.length > 0
       ) {
         // shadowed here to prevent circular reference
-        const _currentDraftIndex =
-          $selectedDraft &&
-          $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+        const _currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
         $drafts[_currentDraftIndex].workflow = allWorkflowNames[0];
       }
     }
