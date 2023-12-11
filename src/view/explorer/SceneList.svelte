@@ -18,11 +18,9 @@
   import { scenePath } from "src/model/scene-navigation";
   import { selectElementContents } from "../utils";
 
-  let currentDraftIndex: number;
-  $: {
-    currentDraftIndex =
-      $selectedDraft &&
-      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+  let currentDraftIndex: number = -1;
+  $: if($selectedDraft) {
+    currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
   }
 
   // Function to make paths from scene names
@@ -300,6 +298,7 @@
     if (
       oldIndex !== undoIndex &&
       newValue &&
+      currentDraftIndex >= 0 &&
       newValue.draftVaultPath === $drafts[currentDraftIndex].vaultPath &&
       $drafts[currentDraftIndex].format === "scenes"
     ) {
