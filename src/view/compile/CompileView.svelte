@@ -327,7 +327,7 @@
       >
         <CompileStepView
           ordinal={item.index + 1}
-          bind:step={$workflows[currentWorkflowName].steps[item.index]}
+          step={$workflows[currentWorkflowName].steps[item.index]}
           on:removeStep={() => {
             const newWorkflow = {
               ...$currentWorkflow,
