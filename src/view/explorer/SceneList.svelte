@@ -230,9 +230,8 @@
   }
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
-    const currentDraftIndex =
-      $selectedDraft &&
-      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+    if (!$selectedDraft) return;
+    const currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
     if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
       drafts.update((d) => {
         const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
@@ -255,9 +254,8 @@
   }
 
   function doWithAll(action: "add" | "ignore") {
-    const currentDraftIndex =
-      $selectedDraft &&
-      $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+    if (!$selectedDraft) return;
+    const currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
     if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
       drafts.update((d) => {
         const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
