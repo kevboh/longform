@@ -20,6 +20,7 @@ import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
 import { insertScene } from "src/model/draft-utils";
 import NewDraftModal from "src/view/project-lifecycle/new-draft-modal";
 import { UndoManager } from "../undo/undo-manager";
+import { ignoreScene } from "./scene-menu-items";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
@@ -174,6 +175,7 @@ export class ExplorerPane extends ItemView {
           return;
         }
         const menu = new Menu();
+        menu.addSeparator()
         menu.addItem((item) => {
           item.setTitle("Rename");
           item.setIcon("pencil");
@@ -203,6 +205,11 @@ export class ExplorerPane extends ItemView {
           item.setIcon("document");
           item.onClick(() => addRelativeScene("after", file));
         });
+        menu.addItem((item) => {
+          item.setTitle("Ignore note in Longform");
+          item.setIcon("minus-circle");
+          item.onClick(() => ignoreScene(file.name.endsWith('.md') ? file.name.slice(0, -3) : file.name));
+        })
         // Triggering this event lets other apps insert menu items
         // including Obsidian, giving us lots of stuff for free.
         this.app.workspace.trigger("file-menu", menu, file, "longform");

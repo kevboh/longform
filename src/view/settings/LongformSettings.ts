@@ -53,7 +53,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Show scene numbers in Scenes tab")
       .setDesc(
-        "If on, shows numbers for scenes with subscenes separated by periods, e.g. 1.1.2."
+        "If on, shows numbers for scenes with subscenes separated by periods, e.g. 1.1.2. Create subscenes by dragging a scene to an indent under an existing scene, or us an indent command."
       )
       .addToggle((cb) => {
         cb.setValue(settings.numberScenes);

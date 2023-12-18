@@ -17,6 +17,7 @@
   import { cloneDeep } from "lodash";
   import { scenePath } from "src/model/scene-navigation";
   import { selectElementContents } from "../utils";
+  import { addAll, addScene, ignoreAll, ignoreScene } from "./scene-menu-items";
 
   let currentDraftIndex: number = -1;
   $: if($selectedDraft) {
@@ -229,48 +230,19 @@
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
     if (!$selectedDraft) return;
-    const currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
-    if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
-      drafts.update((d) => {
-        const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
-        if (action === "add") {
-          (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
-            ...targetDraft.scenes,
-            { title: fileName, indent: 0 },
-          ];
-        } else {
-          (d[currentDraftIndex] as MultipleSceneDraft).ignoredFiles = [
-            ...targetDraft.ignoredFiles,
-            fileName,
-          ];
-        }
-        (d[currentDraftIndex] as MultipleSceneDraft).unknownFiles =
-          targetDraft.unknownFiles.filter((f) => f !== fileName);
-        return d;
-      });
+    if (action === "add") {
+      addScene(fileName);
+    } else {
+      ignoreScene(fileName);
     }
   }
 
   function doWithAll(action: "add" | "ignore") {
     if (!$selectedDraft) return;
-    const currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
-    if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
-      drafts.update((d) => {
-        const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
-        if (action === "add") {
-          (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
-            ...targetDraft.scenes,
-            ...targetDraft.unknownFiles.map((f) => ({ title: f, indent: 0 })),
-          ];
-        } else {
-          (d[currentDraftIndex] as MultipleSceneDraft).ignoredFiles = [
-            ...targetDraft.ignoredFiles,
-            ...targetDraft.unknownFiles,
-          ];
-        }
-        (d[currentDraftIndex] as MultipleSceneDraft).unknownFiles = [];
-        return d;
-      });
+    if (action === "add") {
+      addAll();
+    } else {
+      ignoreAll();
     }
   }
 
