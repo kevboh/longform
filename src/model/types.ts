@@ -88,6 +88,7 @@ export interface LongformPluginSettings {
   showWordCountInStatusBar: boolean;
   startNewSessionEachDay: boolean;
   sessionGoal: number;
+  displaySessionWordsAboveGoal: boolean;
   applyGoalTo: "all" | "project" | "note";
   notifyOnGoal: boolean;
   countDeletionsForGoal: boolean;
@@ -116,6 +117,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   showWordCountInStatusBar: true,
   startNewSessionEachDay: true,
   sessionGoal: 500,
+  displaySessionWordsAboveGoal: true,
   applyGoalTo: "all",
   notifyOnGoal: true,
   countDeletionsForGoal: false,

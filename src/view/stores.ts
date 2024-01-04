@@ -63,11 +63,11 @@ export const goalProgress = derived(
     const goal = $pluginSettings.sessionGoal;
 
     if ($pluginSettings.applyGoalTo === "all") {
-      return Math.min(latestSession.total / goal, 1);
+      return latestSession.total / goal;
     } else if ($pluginSettings.applyGoalTo === "project") {
       const draftTotal = latestSession.drafts[$selectedDraft.vaultPath];
       if (draftTotal) {
-        return Math.min(draftTotal.total / goal, 1);
+        return draftTotal.total / goal;
       } else {
         return 0;
       }
@@ -88,7 +88,7 @@ export const goalProgress = derived(
         return draftTotals.total;
       } else {
         const sceneTotal = draftTotals.scenes[name] ?? 0;
-        return Math.min(sceneTotal / goal, 1);
+        return sceneTotal / goal;
       }
     }
   }

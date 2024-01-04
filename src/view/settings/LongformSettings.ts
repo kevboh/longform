@@ -158,6 +158,15 @@ export class LongformSettingsTab extends PluginSettingTab {
         });
       });
     new Setting(containerEl)
+      .setName("Display session word count above goal")
+      .setDesc("Shows the word count for that session even if it is above the goal.")
+      .addToggle((cb) => {
+        cb.setValue(settings.displaySessionWordsAboveGoal);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({ ...s, displaySessionWordsAboveGoal: value }));
+        });
+      });
+    new Setting(containerEl)
       .setName("Goal applies to")
       .setDesc(
         "You can set your word count goal to target all Longform writing, or you can make each project or scene have its own discrete goal."
