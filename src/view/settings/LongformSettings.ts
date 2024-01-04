@@ -158,8 +158,8 @@ export class LongformSettingsTab extends PluginSettingTab {
         });
       });
     new Setting(containerEl)
-      .setName("Display session word count above goal")
-      .setDesc("Shows the word count for that session even if it is above the goal.")
+      .setName("Display session word count even if greater than the goal")
+      //.setDesc("Shows the word count for that session even if it is greater than the goal.")
       .addToggle((cb) => {
         cb.setValue(settings.displaySessionWordsAboveGoal);
         cb.onChange((value) => {
