@@ -150,8 +150,7 @@
     } else {
       goalProgressValue = Math.min($goalProgress, 1);
     }
-    goalDescription = `${Math.round(goalProgressValue * $pluginSettings.sessionGoal)}
-      /${$pluginSettings.sessionGoal}`;
+    goalDescription = `${Math.round(goalProgressValue * $pluginSettings.sessionGoal)}/${$pluginSettings.sessionGoal}`;
   }
 
   function pluralize(
