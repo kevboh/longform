@@ -143,10 +143,15 @@
   let goalPercentage: number;
   let goalDescription: string;
   $: {
-    goalPercentage = Math.ceil($goalProgress * 100);
-    goalDescription = `${$goalProgress * $pluginSettings.sessionGoal}/${
-      $pluginSettings.sessionGoal
-    }`;
+    goalPercentage = Math.ceil(Math.min($goalProgress, 1) * 100);
+    let goalProgressValue: number;
+    if ($pluginSettings.displaySessionWordsAboveGoal) {
+      goalProgressValue = $goalProgress;
+    } else {
+      goalProgressValue = Math.min($goalProgress, 1);
+    }
+    goalDescription = `${Math.round(goalProgressValue * $pluginSettings.sessionGoal)}
+      /${$pluginSettings.sessionGoal}`;
   }
 
   function pluralize(
