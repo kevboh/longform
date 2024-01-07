@@ -29,7 +29,7 @@ Prepends each scene's title (its note name) before its content. Options:
 
 | Name | Type  | Default | Description |
 | --- | --- | --- | --- |
-| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for an unindented scenes become “#”. |
+| Title Format | Text | $1 | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene's ordinal (the 1-based index it appears in your draft). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for unindented scenes becomes “#”. |
 | Separator | Text | \n\n | Some text to insert between the formatted title and the rest of the scene. |
 
 #### Remove Comments
