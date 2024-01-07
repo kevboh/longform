@@ -18,7 +18,7 @@ export const PrependTitleStep = makeBuiltinStep({
         id: "format",
         name: "Title Format",
         description:
-          "Format of title. $1 will be replaced with title. $2, if present, will be replaced with scene number. Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for an unindented scenes becomes “#”.",
+          "Format of title. $1 will be replaced with title. $2, if present, will be replaced with scene number. Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for unindented scenes becomes “#”.",
         type: CompileStepOptionType.Text,
         default: "$1",
       },
