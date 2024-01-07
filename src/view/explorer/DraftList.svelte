@@ -9,6 +9,7 @@
   } from "src/model/stores";
   import { draftTitle } from "src/model/draft-utils";
   import type { Draft } from "src/model/types";
+  import { selectElementContents } from "../utils";
 
   function onDraftClick(draft: Draft) {
     $selectedDraftVaultPath = draft.vaultPath;
@@ -16,23 +17,12 @@
 
   let editingPath: string | null = null;
 
-  function selectElementContents(el: HTMLElement) {
-    var range = document.createRange();
-    range.selectNodeContents(el);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-
-  const showRenameDraftMenu: (
-    x: number,
-    y: number,
-    action: () => void
-  ) => void = getContext("showRenameDraftMenu");
+  const showDraftMenu: (x: number, y: number, action: () => void) => void =
+    getContext("showDraftMenu");
   function onContext(event: MouseEvent) {
     const { x, y } = event;
     const element = document.elementFromPoint(x, y);
-    showRenameDraftMenu(x, y, () => {
+    showDraftMenu(x, y, () => {
       if (element && element instanceof HTMLElement) {
         const draftPath = element.dataset.draftPath;
         editingPath = draftPath;
@@ -41,12 +31,12 @@
     });
   }
 
-  // TODO: aliases
-  // const renameFolder: (oldPath: string, newPath: string) => void =
-  //   getContext("renameFolder");
-  // const makeDraftPath: (name: string) => string = getContext("makeDraftPath");
   function onKeydown(event: KeyboardEvent) {
     if (editingPath && event.target instanceof HTMLElement) {
+      const newTitle =
+        event.target.innerText && event.target.innerText.length > 0
+          ? event.target.innerText
+          : null;
       if (event.key === "Enter") {
         const currentDraftIndex = $drafts.findIndex(
           (d) => d.vaultPath === editingPath
@@ -54,8 +44,13 @@
         const d = $drafts[currentDraftIndex];
         $drafts[currentDraftIndex] = {
           ...d,
-          draftTitle: event.target.innerText,
+          draftTitle: newTitle,
         };
+
+        if (!newTitle) {
+          event.target.innerText = editingPath;
+        }
+
         editingPath = null;
         return false;
       } else if (event.key === "Escape") {
@@ -100,25 +95,25 @@
 
 <style>
   #draft-list {
-    margin: 4px 0px;
+    margin: var(--size-4-1) 0;
   }
 
   #draft-list ol {
     list-style-type: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
   }
 
   .draft-container {
     display: flex;
-    border: 1px solid transparent;
-    border-radius: 3px;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-s);
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 14px;
-    line-height: 20px;
+    font-size: var(--font-small);
+    line-height: var(--h3-line-height);
     white-space: nowrap;
-    padding: 2px 0px;
+    padding: var(--size-2-1) 0;
   }
 
   .selected,

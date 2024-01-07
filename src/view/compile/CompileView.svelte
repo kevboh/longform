@@ -1,14 +1,16 @@
 <script lang="ts">
   // @ts-nocheck
   import type Sortable from "sortablejs";
-  import type { Vault } from "obsidian";
+  import { Notice, type Vault } from "obsidian";
 
   import {
     type CompileStatus,
     CompileStepKind,
     formatStepKind,
     type Workflow,
-    PLACEHOLDER_MISSING_STEP,
+    WorkflowError,
+    type WorkflowValidationResult,
+    calculateWorkflow,
   } from "src/compile";
   import { getContext } from "svelte";
   import {
@@ -145,132 +147,6 @@
     openCompileStepMenu();
   }
 
-  enum WorkflowError {
-    Valid = "",
-    BadFirstStep = "The first step must be of Scene or Join type; compilation begins with all scenes as input.",
-    MissingJoinStep = "A Manuscript step must occur after a Join step; Manuscript steps run on a single file, not all scenes.",
-    ScenesStepPostJoin = "A Scene or Join step cannot occur after a Join step; at this point in the workflow, steps must operate on a single file.",
-    UnloadedStep = "This workflow contains a step that could not be loaded. Please delete or replace it.",
-    JoinForSingle = "Single-scene projects do not support Join steps.",
-  }
-
-  type WorkflowValidationResult = {
-    error: WorkflowError;
-    stepPosition: number;
-  };
-
-  function calculateWorkflow(
-    workflow: Workflow,
-    isMultiScene: boolean
-  ): [WorkflowValidationResult, CompileStepKind[]] {
-    if (!workflow) {
-      return;
-    }
-
-    let currentKind = null;
-    let calculatedKinds: CompileStepKind[] = [];
-    for (
-      let stepPosition = 0;
-      stepPosition < workflow.steps.length;
-      stepPosition++
-    ) {
-      const step = workflow.steps[stepPosition];
-      const kinds = step.description.availableKinds;
-
-      const hasSceneKind = kinds.includes(CompileStepKind.Scene);
-      const hasJoinKind = kinds.includes(CompileStepKind.Join);
-      const hasManuscriptKind = kinds.includes(CompileStepKind.Manuscript);
-
-      if (
-        step.description.canonicalID ===
-        PLACEHOLDER_MISSING_STEP.description.canonicalID
-      ) {
-        return [
-          {
-            error: WorkflowError.UnloadedStep,
-            stepPosition,
-          },
-          calculatedKinds,
-        ];
-      }
-
-      if (!isMultiScene) {
-        if (hasSceneKind) {
-          currentKind = CompileStepKind.Scene;
-        } else if (hasManuscriptKind) {
-          currentKind = CompileStepKind.Manuscript;
-        } else {
-          return [
-            {
-              error: WorkflowError.JoinForSingle,
-              stepPosition,
-            },
-            calculatedKinds,
-          ];
-        }
-      } else {
-        // Calculate the next step kind
-        if (!currentKind) {
-          // First step calculation
-          if (hasJoinKind) {
-            currentKind = CompileStepKind.Join;
-          } else if (hasSceneKind) {
-            currentKind = CompileStepKind.Scene;
-          } else {
-            return [
-              {
-                error: WorkflowError.BadFirstStep,
-                stepPosition,
-              },
-              calculatedKinds,
-            ];
-          }
-        } else {
-          // Subsequent step calculations
-          if (!calculatedKinds.includes(CompileStepKind.Join)) {
-            // We're pre-join, all kinds must be scene or join
-            if (hasJoinKind) {
-              currentKind = CompileStepKind.Join;
-            } else if (hasSceneKind) {
-              currentKind = CompileStepKind.Scene;
-            } else {
-              return [
-                {
-                  error: WorkflowError.MissingJoinStep,
-                  stepPosition,
-                },
-                calculatedKinds,
-              ];
-            }
-          } else {
-            // We're post-join, all kinds must be of type manuscript
-            if (kinds.includes(CompileStepKind.Manuscript)) {
-              currentKind = CompileStepKind.Manuscript;
-            } else {
-              return [
-                {
-                  error: WorkflowError.ScenesStepPostJoin,
-                  stepPosition,
-                },
-                calculatedKinds,
-              ];
-            }
-          }
-        }
-      }
-
-      calculatedKinds.push(currentKind);
-    }
-
-    return [
-      {
-        error: WorkflowError.Valid,
-        stepPosition: 0,
-      },
-      calculatedKinds,
-    ];
-  }
-
   const VALID = {
     error: WorkflowError.Valid,
     stepPosition: 0,
@@ -349,6 +225,7 @@
       compileStatus.innerText = "Compiled manuscript.";
       compileStatus.classList.add("compile-status-success");
       restoreDefaultStatusAfter();
+      new Notice("Compile complete.");
     } else {
       compileStatus.innerText = "default??";
     }
@@ -503,9 +380,9 @@
 
 <style>
   .longform-workflow-picker-container {
-    margin-bottom: 2rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: var(--size-4-8);
+    padding: var(--size-4-2) 0;
+    border-bottom: var(--border-width) solid var(--background-modifier-border);
     display: flex;
     flex-direction: column;
   }
@@ -516,23 +393,24 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--size-4-2);
   }
 
   .longform-workflow-picker .longform-hint {
-    font-size: 1rem;
+    font-size: 1em;
   }
 
   select {
     background-color: transparent;
     border: none;
-    padding: 5px 0;
+    padding: var(--size-4-1) 0;
     margin: 0;
     font-family: inherit;
     font-size: inherit;
     cursor: inherit;
     line-height: inherit;
     outline: none;
+    box-shadow: none;
   }
 
   .select {
@@ -550,8 +428,8 @@
 
   .longform-compile-container :global(.longform-sortable-step-list) {
     list-style-type: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
   }
 
   .options-button {
@@ -602,7 +480,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-top: 2rem;
+    margin-top: var(--size-4-8);
   }
 
   .longform-compile-run-container .compile-status {

@@ -1,16 +1,19 @@
-import { FuzzySuggestModal, type App } from "obsidian";
+import type { App, PaneType } from "obsidian";
+
 import { get } from "svelte/store";
-import { fromPairs, identity, reverse } from "lodash";
+import { repeat } from "lodash";
 
 import type { CommandBuilder } from "./types";
-import { activeFile } from "src/view/stores";
+import { activeFile, selectedTab } from "src/view/stores";
 import {
   drafts as draftsStore,
   projects as projectsStore,
+  selectedDraft,
   selectedDraftVaultPath,
 } from "src/model/stores";
 import {
   findScene,
+  scenePath,
   scenePathForLocation,
   type SceneNavigationLocation,
 } from "src/model/scene-navigation";
@@ -18,6 +21,7 @@ import { VIEW_TYPE_LONGFORM_EXPLORER } from "src/view/explorer/ExplorerPane";
 import type LongformPlugin from "src/main";
 import type { Draft } from "src/model/types";
 import { draftTitle } from "src/model/draft-utils";
+import { JumpModal } from "./helpers";
 
 const checkForLocation = (
   checking: boolean,
@@ -35,7 +39,7 @@ const checkForLocation = (
 
 export const previousScene: CommandBuilder = (plugin) => ({
   id: "longform-previous-scene",
-  name: "Previous Scene",
+  name: "Previous scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -49,7 +53,7 @@ export const previousScene: CommandBuilder = (plugin) => ({
 
 export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
   id: "longform-previous-scene-at-level",
-  name: "Previous Scene at Indent Level",
+  name: "Previous scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -63,7 +67,7 @@ export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
 
 export const nextScene: CommandBuilder = (plugin) => ({
   id: "longform-next-scene",
-  name: "Next Scene",
+  name: "Next scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -77,7 +81,7 @@ export const nextScene: CommandBuilder = (plugin) => ({
 
 export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
   id: "longform-next-scene-at-level",
-  name: "Next Scene at Indent Level",
+  name: "Next scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
       checking,
@@ -89,9 +93,9 @@ export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
     ),
 });
 
-export const focusCurrentDraft: CommandBuilder = (plugin) => ({
+export const focusCurrentDraft: CommandBuilder = () => ({
   id: "longform-focus-current-draft",
-  name: "Show Current Project in Longform",
+  name: "Open current note’s project",
   editorCheckCallback(checking) {
     const path = get(activeFile).path;
     const drafts = get(draftsStore);
@@ -105,7 +109,7 @@ export const focusCurrentDraft: CommandBuilder = (plugin) => ({
       selectedDraftVaultPath.set(draft.vaultPath);
     } else {
       // is the current path a scene?
-      const scene = findScene(path, drafts, plugin.app.vault);
+      const scene = findScene(path, drafts);
       if (checking && scene) {
         return true;
       } else if (!checking && scene) {
@@ -130,46 +134,15 @@ const showLeaf = (plugin: LongformPlugin) => {
 
 export const showLongform: CommandBuilder = (plugin) => ({
   id: "longform-show-view",
-  name: "Open Longform Pane",
+  name: "Open Longform pane",
   callback: () => {
     showLeaf(plugin);
   },
 });
 
-class JumpModal<T> extends FuzzySuggestModal<string> {
-  items: Record<string, T>;
-  sort: (items: string[]) => string[];
-  onSelect: (value: T) => void;
-
-  constructor(
-    app: App,
-    items: Record<string, T>,
-    sort: (items: string[]) => string[],
-    onSelect: (value: T) => void
-  ) {
-    super(app);
-
-    this.items = items;
-    this.sort = sort;
-    this.onSelect = onSelect;
-  }
-
-  getItems(): string[] {
-    return this.sort(Object.keys(this.items));
-  }
-
-  getItemText(item: string): string {
-    return item;
-  }
-
-  onChooseItem(item: string, _evt: MouseEvent | KeyboardEvent): void {
-    this.onSelect(this.items[item]);
-  }
-}
-
 export const jumpToProject: CommandBuilder = (plugin) => ({
   id: "longform-jump-to-project",
-  name: "Jump to Project",
+  name: "Jump to project",
   callback: () => {
     const projectCallback = (project: Draft[]) => {
       if (project && project.length > 0) {
@@ -179,13 +152,28 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
           showLeaf(plugin);
           plugin.app.workspace.openLinkText(draft.vaultPath, "/", false);
         } else {
-          const items = fromPairs(
-            project.map((d) => [draftTitle(d), d.vaultPath])
-          );
+          const items = new Map<string, string>();
+
+          [...project].reverse().forEach((d) => {
+            items.set(draftTitle(d), d.vaultPath);
+          });
           new JumpModal(
             plugin.app,
             items,
-            (items) => reverse(items),
+            [
+              {
+                command: "↑↓",
+                purpose: "to navigate",
+              },
+              {
+                command: "↵",
+                purpose: "to open in Longform",
+              },
+              {
+                command: "esc",
+                purpose: "to dismiss",
+              },
+            ],
             (vaultPath) => {
               const draft = project.find((d) => d.vaultPath === vaultPath);
               if (draft) {
@@ -197,11 +185,129 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
         }
       }
     };
+
+    const projects: Map<string, Draft[]> = new Map(
+      Object.entries(get(projectsStore))
+    );
+
     new JumpModal(
       plugin.app,
-      get(projectsStore),
-      identity,
+      projects,
+      [
+        {
+          command: "↑↓",
+          purpose: "to navigate",
+        },
+        {
+          command: "↵",
+          purpose: "to open in Longform",
+        },
+        {
+          command: "esc",
+          purpose: "to dismiss",
+        },
+      ],
       projectCallback
     ).open();
+  },
+});
+
+export const jumpToScene: CommandBuilder = (plugin) => ({
+  id: "longform-jump-to-scene",
+  name: "Jump to scene in current project",
+  checkCallback(checking) {
+    const currentDraft = get(selectedDraft);
+    if (
+      !currentDraft ||
+      currentDraft.format === "single" ||
+      currentDraft.scenes.length === 0
+    ) {
+      return false;
+    }
+    if (checking) {
+      return true;
+    }
+
+    const scenesToTitles: Map<string, string> = new Map();
+    currentDraft.scenes.forEach((s) => {
+      scenesToTitles.set(`${repeat("\t", s.indent)}${s.title}`, s.title);
+    });
+
+    new JumpModal(
+      plugin.app,
+      scenesToTitles,
+      [
+        {
+          command: "↑↓",
+          purpose: "to navigate",
+        },
+        {
+          command: "↵",
+          purpose: "to open",
+        },
+        {
+          command: "cmd ↵",
+          purpose: "to open in a new pane",
+        },
+        {
+          command: "esc",
+          purpose: "to dismiss",
+        },
+      ],
+      (scene: string, modEvent: boolean | PaneType) => {
+        const path = scenePath(scene, currentDraft, plugin.app.vault);
+        if (path) {
+          plugin.app.workspace.openLinkText(path, "/", modEvent);
+        }
+      }
+    ).open();
+  },
+});
+
+export const revealProjectFolder: CommandBuilder = (_plugin) => ({
+  id: "longform-reveal-project-folder",
+  name: "Reveal current project in navigation",
+  checkCallback(checking) {
+    const path = get(selectedDraftVaultPath);
+    if (checking) {
+      return path !== null;
+    }
+
+    if (!path) {
+      return;
+    }
+
+    // NOTE: This is private Obsidian API, and may fail or change at any time.
+    try {
+      const parent = app.vault.getAbstractFileByPath(path).parent;
+      (app as any).internalPlugins.plugins[
+        "file-explorer"
+      ].instance.revealInFolder(parent);
+    } catch (error) {
+      console.error(
+        "[Longform] Error calling file-explorer.revealInFolder:",
+        error
+      );
+    }
+  },
+});
+
+export const focusNewSceneField: CommandBuilder = (plugin) => ({
+  id: "longform-focus-new-scene-field",
+  name: "Focus new scene field",
+  checkCallback(checking) {
+    const draft = get(selectedDraft);
+    if (checking) {
+      return draft.format === "scenes";
+    }
+    if (draft.format !== "scenes") {
+      return;
+    }
+
+    showLeaf(plugin);
+    selectedTab.set("Scenes");
+    setTimeout(() => {
+      activeDocument.getElementById("new-scene").focus();
+    }, 0);
   },
 });

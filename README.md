@@ -1,13 +1,16 @@
-TODO:
-
-- [ ] word counts?
-- [ ] new draft button + modal
-
-**WARNING**: This branch of Longform is in beta. It may not be stable. While the docs in `docs/` are up-to-date, this README is not. Please use it with caution.
-
 ## Longform
 
-Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects.
+Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects. It lets you organize a series of notes, or _scenes_, into an ordered manuscript. It also supports single-note projects for shorter works. Major features include:
+
+- A dedicated sidebar that collects your projects from across your vault;
+- A [reorderable, nestable list](./docs/MULTIPLE_SCENE_PROJECTS.md) of scenes;
+- Scene/draft/project [word counts](./docs/WORD_COUNTS.md#word-counts-for-projects-drafts-and-scenes);
+- Daily [writing session goals](./docs/WORD_COUNTS.md#writing-sessions-and-word-count-goals) with lots of options to help fit your writing style;
+- A [workflow-based compilation tool](./docs/COMPILE.md) that can create manuscripts from your projects;
+- Support for [single-scene projects](/docs/SINGLE_SCENE_PROJECTS.md) so that your shorter works can use the same workflows and tooling as your longer ones;
+- Plus lots of commands, modals, and menu items to help you manage your work.
+
+A Getting Started guide follows; there is also reasonably-complete [documentation](./docs/).
 
 ## Installing
 
@@ -15,38 +18,93 @@ Longform is in the Community Plugins section of Obsidian’s settings. You may a
 
 ## Getting Started
 
-To get started, right-click any folder you’d like to write a Longform project in and select “Mark as Longform Project.” You can always remove folders from Longform by right-clicking them and selecting “Unmark as Longform Project.” Unmarking a project does not delete anything: it just stops the plugin from tracking that folder and showing it in any UI.
+Longform works by searching your vault for any note that contains a frontmatter entry named `longform` (don’t worry if you don’t know what that means; Longform includes tools to help you generate these files). You can think of these notes as the “spines” or tables of contents of your projects. Let‘s walk through creating two different Longform projects: a novel and a short story.
 
-Once you’ve marked a folder as a Longform project, you can switch to the Longform pane and add scenes (notes in a draft folder) to start writing.
+### Creating a Novel
 
-Currently, Longform includes:
+1. To begin, find or create a folder somewhere in your vault in which you’d like to create your novel. Right-click it and select `Create Longform Project`.
 
-### The Project Explorer
+![Create Longform Project menu item](./docs/res/walkthrough-create-longform-project.png)
 
-An alternative file explorer pane that lists only your Longform projects.
+2. A `Create Project` modal will appear. This modal lets us choose between Multi- and Single-scene project types. We’re creating a novel, so we’ll stick with Multi. The text under the project type switch explains a little about how each type of project works.
 
-![A screenshot of the project explorer.](docs/res/explorer.png)
+3. In the `Title` field, enter your novel’s title. For this example we’ll use `My Great Novel`. The modal tells us the type of project we’re creating and the location of the _Index File_ it will create in our vault. We’ll get into what Index Files are in a moment.
 
-All of your projects are available via dropdown. Every project is separated into multiple drafts. Drafts just folders of notes—here called _scenes_. Scenes are reorderable in the project explorer:
+![A filled-out create multi-scene project modal](./docs/res/walkthrough-create-multi.png)
 
-![Gif of reordering scenes.](docs/res/reordering.gif)
+> **Note**
+>
+> You don’t have to use this menu item and modal to create Longform projects. As you will see shortly, Longform projects are one or more notes organized around some YAML frontmatter. You can always create a note yourself somewhere in your vault and use the `Insert Multi-Scene Frontmatter` and `Insert Single-Scene Frontmatter` commands to populate the note—Longform will recognize it automatically. Although not recommended, you can also author the YAML frontmatter manually, too.
 
-You can also quickly add new scenes by filling out the _New Scene_ field at the bottom of the explorer.
+4. Click `Create`. Longform has created the promised file. If we switch to the [Longform pane](./docs/THE_LONGFORM_PANE.md) in the sidebar the project is already selected. You should see three tabs: Scenes, Project, and Compile, and Scenes should be selected.
 
-The **Scenes** tab is where you’ll do most of your composition. There’s also a **Drafts** tab that lets you reorder and rename your drafts. One more tab, **Compile**, is detailed below.
+![The newly-created project in the Longform pane](./docs/res/walkthrough-multi-fresh-pane.png)
 
-### Compiling
+5. That _New Scene_ placeholder is a text field—click it and enter something that sounds like the first scene of a novel, maybe “The Sun Rises on Dublin,” and press enter. You should now be editing a so-named note, and your scene should appear in the Scenes tab:
+
+![the "My Great Novel" novel with a freshly-created scene](./docs/res/multi-walkthrough-2.png)
+
+6. Your editor also now has the scene open and ready to write. If you click the small `My Great Novel/Index.md` link under your project name, you’ll be taken back to the index file where you’ll see your new scene listed under the `scenes` frontmatter entry:
+
+```yaml
+scenes:
+  - The Sun Rises on Dublin
+```
+
+This is how Longform tracks your work.
+
+> **Warning**
+>
+> You should probably avoid editing the `longform` frontmatter in your index file directly unless you really know what you’re doing. Longform supports direct editing of it and will do its best to sync, but it’s easy to accidentally mess things up. You can always revert your changes, though: Longform will never delete files based on changes in the index file.
+
+7. You’re now ready to write your novel. Keep adding scenes as needed. If you’d like to add structure to your novel you can drag scenes left or right (or use the indent/Unindent commands) to create folders of scenes with parent scenes. [The full documentation for multiple-scene projects](./docs/MULTIPLE_SCENE_PROJECTS.md) might be useful.
+
+8. When you’re ready to generate a single manuscript for your readers, use the [Compile](./docs/COMPILE.md) feature. Congratulations! You’ve written a novel.
+
+### Creating a Short Story
+
+Longform also supports [single-scene projects](./docs/SINGLE_SCENE_PROJECTS.md) that live as a single note in your vault. Let’s create one.
+
+1. Right-click the enclosing folder as before and select the `Create Longform Project` menu item.
+
+2. In the Create Project modal, choose `Single`. Let’s write something noirish and call it `On the Rooftops`.
+
+![Creating a single-scene Longform project in the Create Project modal](./docs/res/walkthrough-create-single.png)
+
+3. Click Create. Because this is a single-scene project, there is only one note associated with it and Longform will open it automatically. The frontmatter at the top tells Longform how to track your project; we’ll write the story in the note itself.
+
+4. Write your story! When you’re ready, you can use the Compile tab to generate a manuscript. Single-scene projects can use scene and manuscript steps in any order.
+
+## Drafts & Projects
+
+Longform supports the creation of multiple _drafts_ for a given project. Under the hood, drafts are just different Longform projects with the same title—they are then grouped together by Longform and presented as different versions of the same project.
+
+To create a new draft of a project use the new draft (+) button in the Project tab, or create an entirely new project somewhere and set the title in the Project tab to be the same as your existing project.
+
+You can rename drafts by right-clicking them in the Project tab and selecting Rename, or by setting the `draftTitle` attribute in their `longform` frontmatter.
+
+## Compiling
 
 The Compile tab allows you to create custom workflows that turn your project into a manuscript. See [COMPILE.md](https://github.com/kevboh/longform/blob/main/docs/COMPILE.md) for more.
 
-**Heads up**: Due to [this issue in the Templater plugin](https://github.com/SilentVoid13/Templater/issues/315), if you have Templater installed and its `Trigger Templater on new file creation` setting enabled, compiling very large drafts (~200k words) can occasionally cause Obsidian to freeze. Disable that setting before compiling if you have Templater installed.
+> [!TIP]
+> You can find more compile steps for various use cases in the [community collection of compile steps](https://github.com/obsidian-community/longform-compile-steps).
 
-### Scene-only Styling
+## Scene-only Styling
 
 Longform will automatically attach a `.longform-leaf` class to the container panes of any notes that are part of a Longform project. This means you can add custom CSS snippets to Obsidian that style your writing environment and _only_ your writing environment. For example, I prefer a dark theme for Obsidian but a light theme for writing, so my writing snippet looks something like this:
 
 ```css
+/* Set some variables for the entire leaf. */
 .longform-leaf {
+  --background-primary: white;
+  --background-primary-alt: white;
+  --background-secondary: white;
+  --background-secondary-alt: white;
+}
+
+/* Style the editor. */
+.longform-leaf .markdown-source-view {
   --background-primary: white;
   --background-primary-alt: white;
   --background-secondary: white;
@@ -54,72 +112,32 @@ Longform will automatically attach a `.longform-leaf` class to the container pan
   --text-selection: #aaa;
   --text-normal: black;
   color: black;
+  background-color: white;
 }
 
+/* Style text selection. */
 .longform-leaf .suggestion-item.is-selected {
   background-color: var(--text-accent);
 }
 
+/* Style the header of the leaf. */
 .longform-leaf .view-header {
   background-color: white;
+}
+
+/* Style the text content of the leaf header. */
+.longform-leaf .view-header-title {
+  --text-normal: black;
 }
 ```
 
 Longform’s own UI will always use existing Obsidian CSS theme variables when possible, so it should always look at home in your theme.
 
-## Future Features
-
-Additionally, a few other features are planned or being considered:
-
-- [ ] Support for per-scene scratch notes, for quickly jotting down ideas about your scene or saving off text for later.
-- [ ] A research folder that both lists folder contents and can include notes that match certain search, link, or tag requirements. (This one I go back and forth one pretty much daily.)
-- [ ] Per-draft and daily/goal word counts, if [this feature request](https://github.com/lukeleppan/better-word-count/issues/22) on the Better Word Count plugin is rejected.
-
-I plan to mostly develop this plugin as I write my second novel. See below for the philosophy behind how this will work and why. While I’ll endeavor to make Longform generic enough to support other workflows, it will always be focused on solving the problems I’ve run into while writing novels.
-
-## The Index File
-
-Everything in Longform works based on a file created whenever you add a project called the _index file_. By default this file is called `Index.md` and lives in the root of a project; you can customize this when marking a folder for Longform.
-
-The index file is a special file used by Longform to store metadata about your projects. The use a file in your vault instead of something like a plugin’s settings store is deliberate: a core philosophy of Longform is that if the plugin were to disappear tomorrow, no information vital to the structure of your project is lost. In other words, form is function.
-
-The index file’s frontmatter is a, well, _index_ of your project’s contents. It’s technically editable, but doing so may have unintended effects, especially if you update the index such that it no longer matches the contents of folders in your vault.
-
-Longform will automatically keep your index file in sync with your vault, updating it whenever you make a change to your project. This means the file is frequentally overwritten; **do not manually store meaningful information in this file**.
-
-## Philosophy
-
-I wrote my first novel in a mix of Scrivener and InDesign. Reading that, your first reaction is probably: _why?_ The answer is that as I worked through successive drafts of the novel I ran into three core problems with those programs. Combining the two as I did only partly solved my problems, which were:
-
-1. The popular longform writing tools out there are great at letting you get words down, reorder scenes, and plan your work, but they tend to assume you’re writing straightforward paragraphs of text. If you want to experiment with unusual forms you’re out of luck. They’re wysiwyg, meaning you’re locked into a custom format, but lack precise styling. Or they’re markdown, which gets silly (see point 3).
-2. If you want to experiment with unusual forms _so badly_ that you pay for and draft in something like InDesign, a typesetting program built for turning complete manuscripts into printable books, the actual writing and rewriting becomes incredibly difficult. InDesign just isn’t built for composition, it’s bulky, and it’s so arcane as to be unusable for most people.
-3. In either program (or in both together!), your research probably lives outside the software. Scrivener has folders and features for collecting research documents, but it’s not a note-taking app, and it’s definitely not a knowledge base like Obsidian.
-
-I’m going to break each of these problems down a little more, but I think it’s worth saying that by the time I deemed my first novel complete (or, you know, close enough, sigh) I was maintaining two separate manuscripts, one in Scrivener and one in InDesign, copying edits between the two. Integrating line edits from readers meant scanning page-by-page through 300+ page binders, making every edit twice. This was clearly untenable in retrospect, but I felt as if I had no other way.
-
-However…there were other ways. I had backed myself into that setup because I’d started and wrote most of my book in Scrivener. But the problem I’m describing here is fairly well-known: when your text requires particular styling it means **the form is itself part of the text**. This means that form should be encoded alongside your text, as a single document that is your source of truth. There are lots of file formats that can do this, but in my case I’m most interested in LaTeX.
-
-Let’s revisit the problems above, assuming we’re writing in Obsidian with this plugin, including perhaps some features that don’t yet exist—because again, I’m building this as I go.
-
-### 1. Drafting with Form
-
-Instead of using a WYSIWYG, we can use a combination of Markdown, LaTeX, and any other format we’re interested in to draft. Ideally either this plugin or a more format-specific one can provide previews as we write. If a format isn’t supported within Obsidian, we can just write the formatting anyway, then run our files through scripts outside of the app to generate a final product. The files we create while writing in this way are the only ones that describe our project.
-
-### 2. Ease of Writing and Rewriting
-
-Obsidian already has lots of affordances for writing freely. Its plugin architecture gives me confidence that that’s not going away: if you need a specific feature you can either find a plugin that exists for it or write one yourself (or find someone else in the community who’s similarly interested and knows how to write plugins.) And if Obsidian were to disappear, you still have a bunch of readable files you can import elsewhere or write to directly.
-
-### 3. Linking Research
-
-When working in Scrivener I always struggled to link research notes to my scenes. I was using either Simplenote or Ulysses at the time (it took me a long, long time to write a novel!), and I ended up duplicating relevant notes in a scene’s scratch inspector area. It wasn’t ideal and it fell apart when research changed. Looking back, there are lots of references in my book that I now either can’t recall or would have to chase down. In Obsidian, you can just…link to the note. Or put a comment next to the text. Maybe linking here requires special formatting to not render the link on preview—I’ll figure that out when I get to it—but I can now make obscure literary references in peace, knowing that I have the citation tucked away elsewhere in a note.
-
-So that’s the idea. Treat your text and form as a unitary expression of the art, keep it all in one place, and lean on Obsidian to interlink the text with its research. I may throw this all away in a year; time will tell.
-
 ## Troubleshooting
 
 First, the most important bit: **Longform is built specifically to never alter the contents on your notes.** The only note it rewrites is a project’s index file. As such, Longform can’t delete or lose your notes.
 
-Longform does a lot of complex tracking to bridge a project’s metadata with the state of files on disk. Although it tries to cover lots of edge cases, it is possible to cause desync between what Longform thinks is happening with projects and what’s actually going on. This tends to look like projects unavailable in the picker dropdown, or no scenes appearing in the scene list despite the notes definitely being there in the folder. If this happens to you, there’s a big red button in the plugin settings called `Untrack All Projects`. Clicking this will wipe Longform’s local understanding of what are and aren’t projects. After using that button, you can manually re-mark projects as Longform ones by right-clicking the folder in the file explorer. This should hopefully re-sync everything. If that doesn’t work, please file an issue!
+Longform does a lot of complex tracking to bridge a project’s metadata with the state of files on disk. Although it tries to cover lots of edge cases, it is possible to cause desync between what Longform thinks is happening with projects and what’s actually going on. Most often this occurs when a project’s frontmatter is malformed or invalid in some way. Because projects are inferred from frontmatter, if your frontmatter is correct you can always restart Obsidian (or choose the "reload without saving" command) to force Longform to recalculate projects.
 
 ## Sponsorship
 

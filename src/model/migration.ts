@@ -9,6 +9,9 @@ import {
   type MultipleSceneDraft,
 } from "./types";
 
+const INDEX_MIGRATION_NOTICE =
+  "\n\nThis is a Longform 1.0 Index File, and the project it corresponded to has since been migrated. It has been marked as to-be-ignored in the new project and can be safely deleted.";
+
 export const needsMigration = writable<boolean>(false);
 
 export function determineMigrationStatus(settings: LongformPluginSettings) {
@@ -43,7 +46,7 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
           `${projectPath}/${project.indexFile}.md`
         );
         const metadata = app.metadataCache.getCache(indexPath);
-        if (!metadata.frontmatter) {
+        if (!metadata || !metadata.frontmatter) {
           continue;
         }
         const workflow = metadata.frontmatter["workflow"] ?? null;
@@ -61,6 +64,15 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
           }
         };
 
+        try {
+          await app.vault.adapter.append(indexPath, INDEX_MIGRATION_NOTICE);
+        } catch (error) {
+          console.log(
+            `[Longform] Error appending deprecation notice to old index file`,
+            error
+          );
+        }
+
         if (drafts.length === 1) {
           const oldDraft = drafts[0];
           const vaultPath = normalizePath(`${projectPath}/${title}.md`);
@@ -76,11 +88,11 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
               title: s,
               indent: 0,
             })),
-            ignoredFiles: [],
+            ignoredFiles: [project.indexFile],
             unknownFiles: [],
+            sceneTemplate: null,
           };
 
-          await app.vault.adapter.remove(indexPath);
           await insertDraftIntoFrontmatter(vaultPath, draft);
           await moveScenes(
             normalizePath(
@@ -90,12 +102,18 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
           );
           console.log(`[Longform] Wrote only draft to ${vaultPath}`);
         } else {
-          await app.vault.adapter.remove(indexPath);
           for (const oldDraft of drafts) {
             const vaultPathParent = normalizePath(
               `${projectPath}/${oldDraft.name}/`
             );
-            await app.vault.createFolder(vaultPathParent);
+            try {
+              await app.vault.createFolder(vaultPathParent);
+            } catch (error) {
+              console.log(
+                `[Longform] Error creating folder during migration`,
+                error
+              );
+            }
             const vaultPath = normalizePath(
               `${vaultPathParent}/${oldDraft.name}.md`
             );
@@ -113,6 +131,7 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
               })),
               ignoredFiles: [],
               unknownFiles: [],
+              sceneTemplate: null,
             };
 
             await insertDraftIntoFrontmatter(vaultPath, draft);

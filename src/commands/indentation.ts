@@ -1,4 +1,3 @@
-import type { App } from "obsidian";
 import { get } from "svelte/store";
 
 import { activeFile } from "src/view/stores";
@@ -8,12 +7,11 @@ import type { CommandBuilder } from "./types";
 
 const checkIndent = (
   checking: boolean,
-  action: "indent" | "unindent",
-  app: App
+  action: "indent" | "unindent"
 ): boolean | void => {
   const path = get(activeFile).path;
   const drafts = get(draftsStore);
-  const result = findScene(path, drafts, app.vault);
+  const result = findScene(path, drafts);
   if (checking && result) {
     return action === "indent" || result.currentIndent > 0;
   }
@@ -34,16 +32,14 @@ const checkIndent = (
   }
 };
 
-export const indentScene: CommandBuilder = (plugin) => ({
+export const indentScene: CommandBuilder = (_plugin) => ({
   id: "longform-indent-scene",
-  name: "Indent Scene",
-  editorCheckCallback: (checking: boolean) =>
-    checkIndent(checking, "indent", plugin.app),
+  name: "Indent scene",
+  editorCheckCallback: (checking: boolean) => checkIndent(checking, "indent"),
 });
 
-export const unindentScene: CommandBuilder = (plugin) => ({
+export const unindentScene: CommandBuilder = (_plugin) => ({
   id: "longform-unindent-scene",
-  name: "Unindent Scene",
-  editorCheckCallback: (checking: boolean) =>
-    checkIndent(checking, "unindent", plugin.app),
+  name: "Unindent scene",
+  editorCheckCallback: (checking: boolean) => checkIndent(checking, "unindent"),
 });

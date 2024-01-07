@@ -1,4 +1,5 @@
 import { repeat } from "lodash";
+import { formatSceneNumber } from "src/model/draft-utils";
 import type { CompileSceneInput } from "..";
 import type { CompileContext } from "./abstract-compile-step";
 import {
@@ -38,7 +39,7 @@ export const PrependTitleStep = makeBuiltinStep({
     const format = context.optionValues["format"] as string;
     const separator = context.optionValues["separator"] as string;
 
-    return input.map((sceneInput, index) => {
+    return input.map((sceneInput) => {
       let title = format;
       const regex = /\$3{(?<torepeat>.*)}/;
       const match = format.match(regex);
@@ -49,9 +50,12 @@ export const PrependTitleStep = makeBuiltinStep({
           repeat(toRepeat, (sceneInput.indentationLevel ?? -1) + 1)
         );
       }
-      title = title
-        .replace("$1", sceneInput.name)
-        .replace("$2", `${index + 1}`);
+      title = title.replace("$1", sceneInput.name);
+      if (sceneInput.numbering) {
+        const formatted = formatSceneNumber(sceneInput.numbering);
+        title = title.replace("$2", formatted);
+      }
+
       const contents = `${title}${separator}${sceneInput.contents}`;
       return {
         ...sceneInput,

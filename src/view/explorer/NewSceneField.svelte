@@ -1,7 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { drafts, selectedDraft } from "src/model/stores";
-  import type { MultipleSceneDraft } from "src/model/types";
+  import { selectedDraft } from "src/model/stores";
 
   let newSceneName: string = "";
   let newSceneInput: HTMLElement;
@@ -24,34 +23,11 @@
     }
   }
 
-  const makeScenePath: (draft: MultipleSceneDraft, scene: string) => string =
-    getContext("makeScenePath");
-  const onNewScene: (path: string) => void = getContext("onNewScene");
+  const onNewScene: (name: string) => void = getContext("onNewScene");
   function onNewSceneEnter() {
     if (newSceneName.length > 0 && !error) {
-      const scenePath = makeScenePath(
-        $selectedDraft as MultipleSceneDraft,
-        newSceneName
-      );
-      if (scenePath) {
-        onNewScene(scenePath);
-
-        const currentDraftIndex = $drafts.findIndex(
-          (d) => d.vaultPath === $selectedDraft.vaultPath
-        );
-        if (currentDraftIndex >= 0 && $selectedDraft.format === "scenes") {
-          drafts.update((d) => {
-            const targetDraft = d[currentDraftIndex] as MultipleSceneDraft;
-            (d[currentDraftIndex] as MultipleSceneDraft).scenes = [
-              ...targetDraft.scenes,
-              { title: newSceneName, indent: 0 },
-            ];
-            return d;
-          });
-        }
-
-        newSceneName = "";
-      }
+      onNewScene(newSceneName);
+      newSceneName = "";
     }
   }
 </script>
@@ -81,16 +57,16 @@
 <style>
   .new-scene-container {
     margin: 0;
-    border-top: 1px solid var(--text-muted);
-    padding: 4px 0;
+    border-top: var(--border-width) solid var(--text-muted);
+    padding: var(--size-4-1) 0;
   }
 
   #new-scene {
     padding: 0;
     border: 0;
     background: inherit;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 1em;
+    line-height: var(--h3-line-height);
     width: 100%;
   }
 

@@ -81,7 +81,7 @@
   .longform-steps-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: var(--size-4-4);
     grid-auto-rows: auto;
   }
 
@@ -90,29 +90,29 @@
     grid-column: auto;
     grid-row: auto;
     background-color: var(--background-secondary);
-    border: 2px solid var(--background-modifier-border);
-    border-radius: 1rem;
-    padding: 0.5rem;
+    border: var(--size-2-1) solid var(--background-modifier-border);
+    border-radius: var(--size-4-4);
+    padding: var(--size-4-2);
   }
 
   .longform-compile-step:hover {
-    border: 2px solid var(--text-accent);
+    border: var(--size-2-1) solid var(--text-accent);
     background-color: var(--background-modifier-form-field);
   }
 
   .longform-compile-step h3 {
-    padding: 8px 0;
+    padding: var(--size-4-2) 0;
     margin: 0;
   }
 
   .longform-compile-step .longform-step-kind-pill {
     background-color: var(--text-accent);
     color: var(--text-on-accent);
-    border-radius: 10px;
-    font-size: 0.7rem;
+    border-radius: var(--radius-l);
+    font-size: var(--font-smallest);
     font-weight: bold;
-    padding: 0.25rem;
-    margin-right: 0.25rem;
-    height: 1.2rem;
+    padding: var(--size-4-1);
+    margin-right: var(--size-4-1);
+    height: var(--size-4-5);
   }
 </style>

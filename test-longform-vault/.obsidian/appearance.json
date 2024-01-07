@@ -3,6 +3,9 @@
   "theme": "moonstone",
   "translucency": false,
   "enabledCssSnippets": [
-    "writing"
-  ]
+    "writing",
+    "test-longform-font"
+  ],
+  "cssTheme": "",
+  "accentColor": ""
 }

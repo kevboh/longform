@@ -2,11 +2,16 @@
 longform:
   format: scenes
   title: A Novel; or, What Projects Look Like Now
-  workflow: test
-  folder: /
-  scenes: []
+  workflow: Default Workflow
+  sceneFolder: scenes-hello
+  scenes:
+    - in this draft
+    - test
+    - test3
+    - test4
   ignoredFiles: []
 othermetadata: sure
+test: new
 ---
 
 ### What is This?

@@ -1,42 +1,92 @@
-import { stringifyYaml } from "obsidian";
-import { omit } from "lodash";
+import { TFile, Vault } from "obsidian";
+import { get, type Writable } from "svelte/store";
 
-import type { Draft, IndentedScene } from "./types";
-import { stripFrontmatter } from "./note-utils";
+import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
+import { scenePath } from "src/model/scene-navigation";
+import { createNoteWithPotentialTemplate } from "./note-utils";
+import { pluginSettings } from "./stores";
 
 export function draftTitle(draft: Draft): string {
   return draft.draftTitle ?? draft.vaultPath;
 }
 
-export function draftToYAML(draft: Draft): string {
-  let longformEntry: Record<string, any> = {};
-  longformEntry["format"] = draft.format;
+type SceneInsertionLocation = {
+  at: "before" | "after" | "end";
+  relativeTo: number | null;
+};
+
+export async function createScene(
+  path: string,
+  draft: MultipleSceneDraft
+): Promise<void> {
+  const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
+  createNoteWithPotentialTemplate(path, template);
+  app.workspace.openLinkText(path, "/", false);
+}
+
+export async function insertScene(
+  draftsStore: Writable<Draft[]>,
+  draft: MultipleSceneDraft,
+  sceneName: string,
+  vault: Vault,
+  location: SceneInsertionLocation
+) {
+  const newScenePath = scenePath(sceneName, draft, vault);
+
+  if (!newScenePath || !draft || draft.format !== "scenes") {
+    return;
+  }
+
+  draftsStore.update((allDrafts) => {
+    return allDrafts.map((d) => {
+      if (d.vaultPath === draft.vaultPath && d.format === "scenes") {
+        if (location.at === "end") {
+          d.scenes = [...d.scenes, { title: sceneName, indent: 0 }];
+        } else {
+          const relativeScene = d.scenes[location.relativeTo];
+          const index =
+            location.at === "before"
+              ? location.relativeTo
+              : location.relativeTo + 1;
+          d.scenes.splice(index, 0, {
+            title: sceneName,
+            indent: relativeScene.indent,
+          });
+        }
+      }
+      return d;
+    });
+  });
+  await createScene(newScenePath, draft);
+}
+
+export function setDraftOnFrontmatterObject(
+  obj: Record<string, any>,
+  draft: Draft
+) {
+  obj["longform"] = {};
+  obj["longform"]["format"] = draft.format;
   if (draft.titleInFrontmatter) {
-    longformEntry["title"] = draft.title;
+    obj["longform"]["title"] = draft.title;
   }
   if (draft.draftTitle) {
-    longformEntry["draftTitle"] = draft.draftTitle;
+    obj["longform"]["draftTitle"] = draft.draftTitle;
   }
   if (draft.workflow) {
-    longformEntry["workflow"] = draft.workflow;
+    obj["longform"]["workflow"] = draft.workflow;
   }
 
   if (draft.format === "scenes") {
-    longformEntry = Object.assign(longformEntry, {
-      folder: draft.sceneFolder,
-      scenes: indentedScenesToArrays(draft.scenes),
-      ignoredFiles: draft.ignoredFiles,
-    });
+    obj["longform"]["sceneFolder"] = draft.sceneFolder;
+    obj["longform"]["scenes"] = indentedScenesToArrays(draft.scenes);
+    if (draft.sceneTemplate) {
+      obj["longform"]["sceneTemplate"] = draft.sceneTemplate;
+    }
+    obj["longform"]["ignoredFiles"] = draft.ignoredFiles;
   }
-
-  const obj = {
-    longform: longformEntry,
-  };
-
-  return stringifyYaml(obj).trim();
 }
 
-function indentedScenesToArrays(indented: IndentedScene[]) {
+export function indentedScenesToArrays(indented: IndentedScene[]) {
   const result: any = [];
   // track our current indentation level
   let currentIndent = 0;
@@ -93,26 +143,60 @@ export function arraysToIndentedScenes(
   }
 }
 
+export type NumberedScene = IndentedScene & {
+  numbering: number[];
+};
+
+export function numberScenes(scenes: IndentedScene[]): NumberedScene[] {
+  const numbering = [0];
+  let lastNumberedIndent = 0;
+
+  return scenes.map((scene) => {
+    const { indent } = scene;
+    if (indent > lastNumberedIndent) {
+      let fill = lastNumberedIndent + 1;
+      while (fill <= indent) {
+        numbering[fill] = 1;
+        fill = fill + 1;
+      }
+      numbering[indent] = 0;
+    } else if (indent < lastNumberedIndent) {
+      const start = indent + 1;
+      numbering.splice(start, numbering.length - start);
+    }
+    lastNumberedIndent = indent;
+
+    numbering[indent] = numbering[indent] + 1;
+    return {
+      ...scene,
+      numbering: [...numbering],
+    };
+  });
+}
+
+export function formatSceneNumber(numbering: number[]): string {
+  return numbering.join(".");
+}
+
 export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
-  const metadata = app.metadataCache.getCache(path);
-  let formatted = "";
-  if (metadata) {
-    const fm = omit(metadata.frontmatter, ["position", "longform"]);
-    formatted =
-      Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
-  }
-
-  const newFm = `---\n${draftToYAML(draft)}\n${formatted}---\n\n`;
-
   const exists = await app.vault.adapter.exists(path);
-  let contents = "";
-  if (exists) {
-    const fileContents = await app.vault.adapter.read(path);
-    contents = stripFrontmatter(fileContents);
-    contents = newFm + contents;
-  } else {
-    contents = newFm;
+  if (!exists) {
+    await app.vault.create(path, "");
   }
 
-  await app.vault.adapter.write(path, contents);
+  const file = app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) {
+    // TODO: error?
+    return;
+  }
+  try {
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      setDraftOnFrontmatterObject(fm, draft);
+    });
+  } catch (error) {
+    console.error(
+      "[Longform] insertDraftIntoFrontmatter: processFrontMatter error:",
+      error
+    );
+  }
 }

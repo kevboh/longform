@@ -9,8 +9,9 @@
   import { last } from "lodash";
   import { getContext } from "svelte";
   import { draftTitle } from "src/model/draft-utils";
+  import { Keymap, type PaneType } from "obsidian";
 
-  const openFileAtPath: (path: string, newLeaf: boolean) => void =
+  const openFileAtPath: (path: string, paneType: PaneType | boolean) => void =
     getContext("onSceneClick");
 
   // Map current projects to options for select element
@@ -44,13 +45,15 @@
       draftPath = last(newProject).vaultPath;
     } else {
       draftPath = newProject[0].vaultPath;
-      openFileAtPath(draftPath, false);
+      if (newProject[0].format === "single") {
+        openFileAtPath(draftPath, false);
+      }
     }
     $selectedDraftVaultPath = draftPath;
   }
 
   function onDraftClick(e: MouseEvent) {
-    openFileAtPath($selectedDraft.vaultPath, e.metaKey);
+    openFileAtPath($selectedDraft.vaultPath, Keymap.isModEvent(e));
   }
 </script>
 
@@ -60,7 +63,7 @@
       <div class="select" id="select-projects">
         <select
           name="projects"
-          value={$selectedDraft && $selectedDraft.title}
+          value={$selectedDraft ? $selectedDraft.title : projectOptions[0]}
           on:change={projectSelected}
         >
           {#each projectOptions as projectOption}
@@ -88,15 +91,16 @@
     {/if}
   {:else}
     <p>
-      To use Longform, start by marking a folder as a Longform project by
-      right-clicking it and selecting "Mark as Longform project."
+      To begin, find or create a folder somewhere in your vault in which 
+      you would like to create your novel. Right-click it and select 
+      <code>Create Longform Project.</code>
     </p>
   {/if}
 </div>
 
 <style>
   #project-picker-container {
-    margin-bottom: 8px;
+    margin-bottom: var(--size-4-2);
   }
 
   select {
@@ -106,10 +110,11 @@
     margin: 0;
     width: 100%;
     font-family: inherit;
-    font-size: inherit;
+    font-size: 1em;
     cursor: inherit;
     line-height: inherit;
     outline: none;
+    box-shadow: none;
   }
 
   .select {
@@ -138,17 +143,16 @@
 
   .right-arrow::after {
     content: "";
-    width: 0.8em;
-    height: 0.5em;
+    width: var(--font-smallest);
+    height: var(--size-4-2);
     background-color: var(--text-muted);
     clip-path: polygon(50% 0%, 50% 100%, 100% 50%);
   }
 
   .current-draft-path {
     color: var(--text-muted);
-    font-size: 10px;
-    padding: 0 4px;
-    line-height: 12px;
+    font-size: var(--font-smallest);
+    padding: 0 0 var(--size-4-1) 0;
   }
 
   .current-draft-path:hover {

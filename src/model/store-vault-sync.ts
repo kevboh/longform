@@ -1,22 +1,22 @@
 import {
   normalizePath,
-  parseYaml,
-  stringifyYaml,
+  TFile,
   type App,
   type CachedMetadata,
   type MetadataCache,
-  type TFile,
   type Vault,
 } from "obsidian";
-import { cloneDeep, isEqual, omit } from "lodash";
-import picomatch from "picomatch";
+import { cloneDeep, isEqual } from "lodash";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
 import { drafts as draftsStore, selectedDraftVaultPath } from "./stores";
-import { arraysToIndentedScenes, draftToYAML } from "src/model/draft-utils";
-import { fileNameFromPath, replaceFrontmatter } from "./note-utils";
-import { findScene } from "./scene-navigation";
+import {
+  arraysToIndentedScenes,
+  setDraftOnFrontmatterObject,
+} from "src/model/draft-utils";
+import { fileNameFromPath } from "./note-utils";
+import { findScene, sceneFolderPath } from "./scene-navigation";
 
 type FileWithMetadata = {
   file: TFile;
@@ -94,15 +94,18 @@ export class StoreVaultSync {
 
   async fileMetadataChanged(file: TFile, _data: string, cache: CachedMetadata) {
     if (this.pathsToIgnoreNextChange.delete(file.path)) {
-      console.debug(
-        `ignored ${file.path} metadata change, anticipated from store`
-      );
       return;
     }
 
     const result = await this.draftFor({ file, metadata: cache });
     if (!result) {
-      console.debug(`no valid draft at ${file.path}, ignoring`);
+      const testDeletedDraft = this.lastKnownDraftsByPath[file.path];
+      if (testDeletedDraft) {
+        // a draft's YAML was removed, remove it from drafts
+        draftsStore.update((drafts) => {
+          return drafts.filter((d) => d.vaultPath !== file.path);
+        });
+      }
       return;
     }
 
@@ -126,6 +129,41 @@ export class StoreVaultSync {
     }
   }
 
+  async fileCreated(file: TFile) {
+    const drafts = get(draftsStore);
+
+    // check if a new scene has been moved into this folder
+    const scenePath = file.parent.path;
+    const memberOfDraft = drafts.find((d) => {
+      if (d.format !== "scenes") {
+        return false;
+      }
+      const parentPath = this.vault.getAbstractFileByPath(d.vaultPath).parent
+        .path;
+      const targetPath = normalizePath(`${parentPath}/${d.sceneFolder}`);
+      return (
+        // file is in the scene folder
+        targetPath === scenePath &&
+        // file isn't already a scene
+        !d.scenes.map((s) => s.title).contains(file.basename)
+      );
+    });
+    if (memberOfDraft) {
+      draftsStore.update((allDrafts) => {
+        return allDrafts.map((d) => {
+          if (
+            d.vaultPath === memberOfDraft.vaultPath &&
+            d.format === "scenes" &&
+            !d.unknownFiles.contains(file.basename)
+          ) {
+            d.unknownFiles.push(file.basename);
+          }
+          return d;
+        });
+      });
+    }
+  }
+
   async fileDeleted(file: TFile) {
     const drafts = get(draftsStore);
     const draftIndex = drafts.findIndex((d) => d.vaultPath === file.path);
@@ -143,7 +181,7 @@ export class StoreVaultSync {
       }
     } else {
       // scene deletion = remove scene from draft
-      const found = findScene(file.path, drafts, this.vault);
+      const found = findScene(file.path, drafts);
       if (found) {
         draftsStore.update((_drafts) => {
           return _drafts.map((d) => {
@@ -156,6 +194,26 @@ export class StoreVaultSync {
             return d;
           });
         });
+      } else {
+        // check unknown files, delete from there if present
+        const inDraftUnknown = drafts.find(
+          (d) => d.format === "scenes" && d.unknownFiles.contains(file.basename)
+        );
+        if (inDraftUnknown) {
+          draftsStore.update((allDrafts) => {
+            return allDrafts.map((d) => {
+              if (
+                d.vaultPath === inDraftUnknown.vaultPath &&
+                d.format === "scenes"
+              ) {
+                d.unknownFiles = d.unknownFiles.filter(
+                  (f) => f !== file.basename
+                );
+              }
+              return d;
+            });
+          });
+        }
       }
     }
   }
@@ -180,19 +238,69 @@ export class StoreVaultSync {
     } else {
       // scene renamed
       const newTitle = fileNameFromPath(file.path);
-      const found = findScene(oldPath, drafts, this.vault);
-      if (found) {
+      const foundOld = findScene(oldPath, drafts);
+
+      // possibilities here:
+      // 1. note was renamed in-place: rename the scene in the associated draft
+      // 2. note was moved out of a draft: remove it from the old draft
+      // 3. note was moved into a draft: add it to the new draft
+      // (2) and (3) can occur for the same note.
+
+      // in-place
+      const oldParent = oldPath.split("/").slice(0, -1).join("/");
+      if (foundOld && oldParent === file.parent.path) {
         draftsStore.update((_drafts) => {
           return _drafts.map((d) => {
             if (
-              d.vaultPath === found.draft.vaultPath &&
+              d.vaultPath === foundOld.draft.vaultPath &&
               d.format === "scenes"
             ) {
-              d.scenes[found.index].title = newTitle;
+              d.scenes[foundOld.index].title = newTitle;
             }
             return d;
           });
         });
+      } else {
+        //in and/or out
+
+        // moved out of a draft
+        const oldDraft = drafts.find((d) => {
+          return (
+            d.format === "scenes" &&
+            sceneFolderPath(d, this.vault) === oldParent
+          );
+        });
+        if (oldDraft) {
+          draftsStore.update((_drafts) => {
+            return _drafts.map((d) => {
+              if (d.vaultPath === oldDraft.vaultPath && d.format === "scenes") {
+                d.scenes = d.scenes.filter((s) => s.title !== file.basename);
+                d.unknownFiles = d.unknownFiles.filter(
+                  (f) => f !== file.basename
+                );
+              }
+              return d;
+            });
+          });
+        }
+
+        // moved into a draft
+        const newDraft = drafts.find((d) => {
+          return (
+            d.format === "scenes" &&
+            sceneFolderPath(d, this.vault) === file.parent.path
+          );
+        });
+        if (newDraft) {
+          draftsStore.update((_drafts) => {
+            return _drafts.map((d) => {
+              if (d.vaultPath === newDraft.vaultPath && d.format === "scenes") {
+                d.unknownFiles.push(file.basename);
+              }
+              return d;
+            });
+          });
+        }
       }
     }
   }
@@ -230,14 +338,10 @@ export class StoreVaultSync {
     fileWithMetadata: FileWithMetadata
   ): Promise<{ draft: Draft; dirty: boolean } | null> {
     if (!fileWithMetadata.metadata.frontmatter) {
-      console.log(`no frontmatter at ${fileWithMetadata.file.path}`);
       return null;
     }
     const longformEntry = fileWithMetadata.metadata.frontmatter["longform"];
     if (!longformEntry) {
-      console.log(
-        `no longform frontmatter entry at ${fileWithMetadata.file.path}`
-      );
       return null;
     }
     const format = longformEntry["format"];
@@ -260,31 +364,47 @@ export class StoreVaultSync {
         // so we will parse out the yaml directly from the file contents, just in case.
         // discord discussion: https://discord.com/channels/686053708261228577/840286264964022302/994589562082951219
 
-        const contents = await this.vault.adapter.read(
-          fileWithMetadata.file.path
-        );
-        const regex = /^---\n(?<yaml>(?:.*?\n)*)---/m;
-        const result = contents.match(regex);
-        if (result.groups && result.groups["yaml"]) {
-          const yaml = result.groups["yaml"];
-          const parsed = parseYaml(yaml);
-          rawScenes = parsed["longform"]["scenes"];
+        // 2023-01-03: Confirmed this issue is still present; using new processFrontMatter function
+        // seems to read correctly, though!
+
+        let fm = null;
+        try {
+          await app.fileManager.processFrontMatter(
+            fileWithMetadata.file,
+            (_fm) => {
+              fm = _fm;
+            }
+          );
+        } catch (error) {
+          console.error(
+            "[Longform] error manually loading frontmatter:",
+            error
+          );
+        }
+
+        if (fm) {
+          rawScenes = fm["longform"]["scenes"];
         }
       }
 
       // Convert to indented scenes
       const scenes = arraysToIndentedScenes(rawScenes);
       const sceneFolder = longformEntry["sceneFolder"] ?? "/";
+      const sceneTemplate = longformEntry["sceneTemplate"] ?? null;
       const ignoredFiles: string[] = longformEntry["ignoredFiles"] ?? [];
       const normalizedSceneFolder = normalizePath(
         `${fileWithMetadata.file.parent.path}/${sceneFolder}`
       );
 
-      const filenamesInSceneFolder = (
-        await this.vault.adapter.list(normalizedSceneFolder)
-      ).files
-        .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
-        .map((f) => this.vault.getAbstractFileByPath(f).name.slice(0, -3));
+      let filenamesInSceneFolder: string[] = [];
+      if (await this.vault.adapter.exists(normalizedSceneFolder)) {
+        filenamesInSceneFolder = (
+          await this.vault.adapter.list(normalizedSceneFolder)
+        ).files
+          .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
+          .map((f) => this.vault.getAbstractFileByPath(f)?.name.slice(0, -3))
+          .filter(maybeName => maybeName !== null && maybeName !== undefined) as string[];
+      }  
 
       // Filter removed scenes
       const knownScenes = scenes.filter(({ title }) =>
@@ -299,8 +419,9 @@ export class StoreVaultSync {
       );
 
       // ignore all new scenes that are known-to-ignore per ignoredFiles
+      const ignoredRegexes = ignoredFiles.map((p) => ignoredPatternToRegex(p));
       const unknownFiles = newScenes.filter(
-        (s) => !picomatch.isMatch(s, ignoredFiles)
+        (s) => ignoredRegexes.find((r) => r.test(s)) === undefined
       );
 
       return {
@@ -314,6 +435,7 @@ export class StoreVaultSync {
           scenes: knownScenes,
           ignoredFiles,
           unknownFiles,
+          sceneTemplate,
           workflow,
         },
         dirty,
@@ -339,18 +461,34 @@ export class StoreVaultSync {
   }
 
   private async writeDraftFrontmatter(draft: Draft) {
-    // Get index file frontmatter
-    const fm = omit(this.metadataCache.getCache(draft.vaultPath).frontmatter, [
-      "position",
-      "longform",
-    ]);
-    const formatted =
-      Object.keys(fm).length > 0 ? `${stringifyYaml(fm).trim()}\n` : "";
+    const file = app.vault.getAbstractFileByPath(draft.vaultPath);
+    if (!file || !(file instanceof TFile)) {
+      return;
+    }
 
-    const newFm = `---\n${draftToYAML(draft)}\n${formatted}---\n\n`;
-
-    const contents = await this.vault.adapter.read(draft.vaultPath);
-    const newContents = replaceFrontmatter(contents, newFm);
-    await this.vault.adapter.write(draft.vaultPath, newContents);
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      setDraftOnFrontmatterObject(fm, draft);
+    });
   }
+}
+
+const ESCAPED_CHARACTERS = new Set("/&$^+.()=!|[]{},".split(""));
+function ignoredPatternToRegex(pattern: string): RegExp {
+  let regex = "";
+
+  for (let index = 0; index < pattern.length; index++) {
+    const c = pattern[index];
+
+    if (ESCAPED_CHARACTERS.has(c)) {
+      regex += "\\" + c;
+    } else if (c === "*") {
+      regex += ".*";
+    } else if (c === "?") {
+      regex += ".";
+    } else {
+      regex += c;
+    }
+  }
+
+  return new RegExp(`^${regex}$`);
 }
