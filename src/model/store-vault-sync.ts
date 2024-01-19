@@ -326,7 +326,7 @@ export class StoreVaultSync {
     file: TFile
   ): Promise<FileWithMetadata | null> {
     const metadata = this.metadataCache.getFileCache(file);
-    if (metadata.frontmatter && metadata.frontmatter["longform"]) {
+    if (metadata && metadata.frontmatter && metadata.frontmatter["longform"]) {
       return { file, metadata };
     }
     return null;
@@ -403,8 +403,10 @@ export class StoreVaultSync {
         ).files
           .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
           .map((f) => this.vault.getAbstractFileByPath(f)?.name.slice(0, -3))
-          .filter(maybeName => maybeName !== null && maybeName !== undefined) as string[];
-      }  
+          .filter(
+            (maybeName) => maybeName !== null && maybeName !== undefined
+          ) as string[];
+      }
 
       // Filter removed scenes
       const knownScenes = scenes.filter(({ title }) =>
