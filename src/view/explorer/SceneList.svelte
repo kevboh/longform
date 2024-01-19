@@ -19,11 +19,9 @@
   import { selectElementContents } from "../utils";
   import { addAll, addScene, ignoreAll, ignoreScene } from "./scene-menu-items";
 
-  let currentDraftIndex: number;
-  $: {
-    currentDraftIndex = $drafts.findIndex(
-      (d) => d.vaultPath === $selectedDraft.vaultPath
-    );
+  let currentDraftIndex: number = -1;
+  $: if($selectedDraft) {
+    currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
   }
 
   // Function to make paths from scene names
@@ -231,6 +229,7 @@
   }
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
+    if (!$selectedDraft) return;
     if (action === "add") {
       addScene(fileName);
     } else {
@@ -239,6 +238,7 @@
   }
 
   function doWithAll(action: "add" | "ignore") {
+    if (!$selectedDraft) return;
     if (action === "add") {
       addAll();
     } else {
@@ -270,6 +270,7 @@
     if (
       oldIndex !== undoIndex &&
       newValue &&
+      currentDraftIndex >= 0 &&
       newValue.draftVaultPath === $drafts[currentDraftIndex].vaultPath &&
       $drafts[currentDraftIndex].format === "scenes"
     ) {
@@ -361,7 +362,7 @@
       </div>
     </SortableList>
   </div>
-  {#if $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
+  {#if $selectedDraft && $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
     <div id="longform-unknown-files-wizard">
       <div class="longform-unknown-inner">
         <p class="longform-unknown-explanation">

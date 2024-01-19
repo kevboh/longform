@@ -5,6 +5,9 @@ import { get } from "svelte/store";
 
 const getSelectedDraftWithIndex = () => {
     const draft = get(selectedDraft) as MultipleSceneDraft;
+    if (!draft) {
+        return { index: -1, draft }
+    }
     const index = get(drafts).findIndex(
         (d) => d.vaultPath === draft.vaultPath
     );
@@ -13,6 +16,9 @@ const getSelectedDraftWithIndex = () => {
 
 export const addScene = (fileName: string) => {
     const { index, draft } = getSelectedDraftWithIndex()
+    if (!draft) {
+        return;
+    }
     if (index >= 0 && draft.format === "scenes") {
         drafts.update((d) => {
             const targetDraft = d[index] as MultipleSceneDraft;
@@ -29,6 +35,9 @@ export const addScene = (fileName: string) => {
 
 export const ignoreScene = (fileName: string) => {
     const { index, draft } = getSelectedDraftWithIndex()
+    if (!draft) {
+        return;
+    }
     if (index >= 0 && draft.format === "scenes") {
         drafts.update((d) => {
             const targetDraft = d[index] as MultipleSceneDraft;
@@ -46,6 +55,9 @@ export const ignoreScene = (fileName: string) => {
 
 export const addAll = () => {
     const { index, draft } = getSelectedDraftWithIndex()
+    if (!draft) {
+        return;
+    }
     if (index >= 0 && draft.format === "scenes") {
         drafts.update((d) => {
             const targetDraft = d[index] as MultipleSceneDraft;
@@ -61,6 +73,9 @@ export const addAll = () => {
 
 export const ignoreAll = () => {
     const { index, draft } = getSelectedDraftWithIndex()
+    if (!draft) {
+        return;
+    }
     if (index >= 0 && draft.format === "scenes") {
         drafts.update((d) => {
             const targetDraft = d[index] as MultipleSceneDraft;

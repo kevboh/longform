@@ -63,9 +63,7 @@
         allWorkflowNames.length > 0
       ) {
         // shadowed here to prevent circular reference
-        const _currentDraftIndex = $drafts.findIndex(
-          (d) => d.vaultPath === $selectedDraft.vaultPath
-        );
+        const _currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
         $drafts[_currentDraftIndex].workflow = allWorkflowNames[0];
       }
     }
@@ -329,7 +327,7 @@
       >
         <CompileStepView
           ordinal={item.index + 1}
-          bind:step={$workflows[currentWorkflowName].steps[item.index]}
+          step={$workflows[currentWorkflowName].steps[item.index]}
           on:removeStep={() => {
             const newWorkflow = {
               ...$currentWorkflow,
