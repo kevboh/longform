@@ -20,8 +20,10 @@
   import { addAll, addScene, ignoreAll, ignoreScene } from "./scene-menu-items";
 
   let currentDraftIndex: number = -1;
-  $: if($selectedDraft) {
-    currentDraftIndex = $drafts.findIndex((d) => d.vaultPath === $selectedDraft.vaultPath);
+  $: if ($selectedDraft) {
+    currentDraftIndex = $drafts.findIndex(
+      (d) => d.vaultPath === $selectedDraft.vaultPath
+    );
   }
 
   // Function to make paths from scene names
@@ -167,8 +169,11 @@
     }
   }
 
-  // Context click and inline editing
-  let editingName: string | null = null;
+  // Context click and inline editing.
+  // editingPath is the item.path of the currently-context-clicked scene, or null if none clicked.
+  let editingPath: string | null = null;
+  // originalName is the original scene name of the scene whose path is editingPath.
+  let originalName: string | null = null;
 
   const onContextClick: (
     path: string,
@@ -182,36 +187,46 @@
       return;
     }
     const { x, y } = event;
-    const element = document.elementFromPoint(x, y);
+    let element = document.elementFromPoint(x, y);
+    // If the scene name has been right-clicked grab the parent instead.
+    if (element.id.startsWith("longform-scene-")) {
+      element = element.parentElement;
+    }
     const scenePath =
       element && element instanceof HTMLElement && element.dataset.scenePath;
-    if (scenePath) {
-      onContextClick(scenePath, x, y, () => {
-        if (element && element instanceof HTMLElement) {
-          const name = element.dataset.sceneName;
-          editingName = name;
-          const innerElement = activeDocument.getElementById(
-            `longform-scene-${editingName}`
-          );
-          setTimeout(() => selectElementContents(innerElement), 0);
-        }
-      });
+    if (!scenePath) {
+      return;
     }
+    onContextClick(scenePath, x, y, () => {
+      if (element && element instanceof HTMLElement) {
+        const path = element.dataset.scenePath;
+        editingPath = path;
+        const innerElement = activeDocument.querySelector(
+          `[data-item-path='${path}']`
+        );
+        if (!(innerElement instanceof HTMLElement)) {
+          return;
+        }
+        originalName = innerElement.dataset.itemName;
+        setTimeout(() => selectElementContents(innerElement), 0);
+      }
+    });
   }
 
   function onKeydown(event: KeyboardEvent) {
     if (
-      editingName &&
+      editingPath &&
       event.target instanceof HTMLElement &&
       $selectedDraft.format === "scenes"
     ) {
       const newName = event.target.innerText;
       if (event.key === "Enter") {
         // Rename file
-        const oldPath = scenePath(editingName, $selectedDraft, app.vault);
         const newPath = scenePath(newName, $selectedDraft, app.vault);
-        app.vault.adapter.rename(oldPath, newPath);
-        editingName = null;
+        const file = app.vault.getAbstractFileByPath(editingPath);
+        app.fileManager.renameFile(file, newPath);
+        editingPath = null;
+        originalName = null;
         return false;
       } else if (event.key === "Escape") {
         event.target.blur();
@@ -223,9 +238,10 @@
 
   function onBlur(event: FocusEvent) {
     if (event.target instanceof HTMLElement) {
-      event.target.innerText = editingName;
+      event.target.innerText = originalName;
     }
-    editingName = null;
+    editingPath = null;
+    originalName = null;
   }
 
   function doWithUnknown(fileName: string, action: "add" | "ignore") {
@@ -351,10 +367,12 @@
           {/if}
           <div
             id={`longform-scene-${item.name}`}
+            data-item-path={item.path}
+            data-item-name={item.name}
             style="display: inline;"
-            on:keydown={item.name === editingName ? onKeydown : null}
-            on:blur={item.name === editingName ? onBlur : null}
-            contenteditable={item.name === editingName}
+            on:keydown={item.path === editingPath ? onKeydown : null}
+            on:blur={item.path === editingPath ? onBlur : null}
+            contenteditable={item.path === editingPath}
           >
             {item.name}
           </div>
