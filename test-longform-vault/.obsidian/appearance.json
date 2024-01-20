@@ -4,7 +4,8 @@
   "translucency": false,
   "enabledCssSnippets": [
     "writing",
-    "test-longform-font"
+    "test-longform-font",
+    "test-status-styling"
   ],
   "cssTheme": "",
   "accentColor": ""

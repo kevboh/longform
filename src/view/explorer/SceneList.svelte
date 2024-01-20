@@ -5,7 +5,7 @@
   */
   import type Sortable from "sortablejs";
   import { getContext, onDestroy } from "svelte";
-  import { Keymap, Notice, Platform, type PaneType } from "obsidian";
+  import { Keymap, Notice, Platform, type PaneType, TFile } from "obsidian";
 
   import { activeFile } from "../stores";
   import { drafts, pluginSettings, selectedDraft } from "src/model/stores";
@@ -39,6 +39,7 @@
     collapsible: boolean;
     hidden: boolean;
     numbering: number[];
+    status: string | undefined;
   };
   let items: SceneItem[];
   let collapsedItems: string[] = [];
@@ -74,14 +75,29 @@
       }
 
       const nextScene = index < scenes.length - 1 ? scenes[index + 1] : false;
+      const path = makeScenePath($selectedDraft as MultipleSceneDraft, title);
+      // TODO: Get app by some other means?
+      const file = app.vault.getAbstractFileByPath(path);
+      let status = undefined;
+      if (file && file instanceof TFile) {
+        const metadata = app.metadataCache.getFileCache(file);
+        if (
+          metadata &&
+          metadata.frontmatter &&
+          metadata.frontmatter["status"]
+        ) {
+          status = `${metadata.frontmatter["status"]}`;
+        }
+      }
       const item = {
         id: title,
         name: title,
-        indent: indent,
-        path: makeScenePath($selectedDraft as MultipleSceneDraft, title),
+        indent,
+        path,
         collapsible: nextScene && nextScene.indent > indent,
         hidden,
         numbering,
+        status,
       };
       itemsToReturn.push(item);
     });
@@ -346,6 +362,7 @@
         data-scene-path={item.path}
         data-scene-indent={item.indent}
         data-scene-name={item.name}
+        data-scene-status={item.status}
       >
         {#if item.collapsible}
           <Disclosure

@@ -23,6 +23,17 @@ type FileWithMetadata = {
   metadata: CachedMetadata;
 };
 
+export function resolveIfLongformFile(
+  metadataCache: MetadataCache,
+  file: TFile
+): FileWithMetadata | null {
+  const metadata = metadataCache.getFileCache(file);
+  if (metadata && metadata.frontmatter && metadata.frontmatter["longform"]) {
+    return { file, metadata };
+  }
+  return null;
+}
+
 /**
  * Observes any file with a `longform` metadata entry and keeps its
  * metadata and associated scenes (if any) updated in the `drafts`
@@ -54,8 +65,8 @@ export class StoreVaultSync {
     const start = new Date().getTime();
 
     const files = this.vault.getMarkdownFiles();
-    const resolvedFiles = await Promise.all(
-      files.map((f) => this.resolveIfLongformFile(f))
+    const resolvedFiles = files.map((f) =>
+      resolveIfLongformFile(this.metadataCache, f)
     );
     const draftFiles = resolvedFiles.filter((f) => f !== null);
 
@@ -320,16 +331,6 @@ export class StoreVaultSync {
         return acc;
       }, {})
     );
-  }
-
-  private async resolveIfLongformFile(
-    file: TFile
-  ): Promise<FileWithMetadata | null> {
-    const metadata = this.metadataCache.getFileCache(file);
-    if (metadata && metadata.frontmatter && metadata.frontmatter["longform"]) {
-      return { file, metadata };
-    }
-    return null;
   }
 
   // if dirty, draft is modified from reality of index file

@@ -1,0 +1,4 @@
+[data-scene-status="done"]::before {
+  content: "🎉";
+  padding: 0 4px 0 0;
+}
