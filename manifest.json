@@ -1,7 +1,7 @@
 {
   "id": "longform",
   "name": "Longform",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "minAppVersion": "1.0",
   "description": "Write novels, screenplays, and other long projects in Obsidian.",
   "author": "Kevin Barrett",

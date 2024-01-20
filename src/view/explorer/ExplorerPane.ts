@@ -5,6 +5,7 @@ import {
   TAbstractFile,
   WorkspaceLeaf,
   type PaneType,
+  Scope,
 } from "obsidian";
 import type { CompileStatus, Workflow } from "src/compile";
 import { compile, CompileStepKind } from "src/compile";
@@ -27,6 +28,7 @@ export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 export class ExplorerPane extends ItemView {
   private explorerView: ExplorerView;
   private undoManager = new UndoManager();
+  private scope: Scope;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -45,34 +47,31 @@ export class ExplorerPane extends ItemView {
   }
 
   async onOpen(): Promise<void> {
-    this.registerScopeEvent(
-      this.app.scope.register(
-        ["Mod"],
-        "z",
-        (evt: KeyboardEvent, ctx: KeymapContext) => {
-          const activePane = app.workspace.getActiveViewOfType(ExplorerPane);
-          if (activePane === this) {
-            this.undoManager.send("undo", evt, ctx);
-            return false;
-          }
-          return true;
+    this.scope = new Scope(this.app.scope);
+    this.scope.register(
+      ["Mod"],
+      "z",
+      (evt: KeyboardEvent, ctx: KeymapContext) => {
+        const activePane = this.app.workspace.getActiveViewOfType(ExplorerPane);
+        if (activePane === this) {
+          this.undoManager.send("undo", evt, ctx);
+          return false;
         }
-      )
+        return true;
+      }
     );
 
-    this.registerScopeEvent(
-      this.app.scope.register(
-        ["Mod", "Shift"],
-        "z",
-        (evt: KeyboardEvent, ctx: KeymapContext) => {
-          const activePane = app.workspace.getActiveViewOfType(ExplorerPane);
-          if (activePane === this) {
-            this.undoManager.send("redo", evt, ctx);
-            return false;
-          }
-          return true;
+    this.scope.register(
+      ["Mod", "Shift"],
+      "z",
+      (evt: KeyboardEvent, ctx: KeymapContext) => {
+        const activePane = this.app.workspace.getActiveViewOfType(ExplorerPane);
+        if (activePane === this) {
+          this.undoManager.send("redo", evt, ctx);
+          return false;
         }
-      )
+        return true;
+      }
     );
 
     const context = new Map();
@@ -175,7 +174,7 @@ export class ExplorerPane extends ItemView {
           return;
         }
         const menu = new Menu();
-        menu.addSeparator()
+        menu.addSeparator();
         menu.addItem((item) => {
           item.setTitle("Rename");
           item.setIcon("pencil");
@@ -208,8 +207,12 @@ export class ExplorerPane extends ItemView {
         menu.addItem((item) => {
           item.setTitle("Ignore note in Longform");
           item.setIcon("minus-circle");
-          item.onClick(() => ignoreScene(file.name.endsWith('.md') ? file.name.slice(0, -3) : file.name));
-        })
+          item.onClick(() =>
+            ignoreScene(
+              file.name.endsWith(".md") ? file.name.slice(0, -3) : file.name
+            )
+          );
+        });
         // Triggering this event lets other apps insert menu items
         // including Obsidian, giving us lots of stuff for free.
         this.app.workspace.trigger("file-menu", menu, file, "longform");
