@@ -87,8 +87,7 @@ export interface LongformPluginSettings {
   sessions: WordCountSession[];
   showWordCountInStatusBar: boolean;
   startNewSessionEachDay: boolean;
-  sessionGoal: number;
-  displaySessionWordsAboveGoal: boolean;
+    sessionGoal: number;
   applyGoalTo: "all" | "project" | "note";
   notifyOnGoal: boolean;
   countDeletionsForGoal: boolean;
@@ -116,8 +115,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   sessions: [],
   showWordCountInStatusBar: true,
   startNewSessionEachDay: true,
-  sessionGoal: 500,
-  displaySessionWordsAboveGoal: true,
+    sessionGoal: 500,
   applyGoalTo: "all",
   notifyOnGoal: true,
   countDeletionsForGoal: false,
@@ -137,8 +135,7 @@ export const TRACKED_SETTINGS_PATHS = [
   "sessions",
   "showWordCountInStatusBar",
   "startNewSessionEachDay",
-  "sessionGoal",
-  "displaySessionWordsAboveGoal",
+    "sessionGoal",
   "applyGoalTo",
   "notifyOnGoal",
   "countDeletionsForGoal",
@@ -153,8 +150,7 @@ export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
   "userScriptFolder",
   "showWordCountInStatusBar",
   "startNewSessionEachDay",
-  "sessionGoal",
-  "displaySessionWordsAboveGoal",
+    "sessionGoal",
   "applyGoalTo",
   "notifyOnGoal",
   "countDeletionsForGoal",
