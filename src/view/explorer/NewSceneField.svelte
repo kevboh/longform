@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
   import { selectedDraft } from "src/model/stores";
+  import { invalidFilenameCharacters, isValidFilename } from "../utils";
 
   let newSceneName: string = "";
   let newSceneInput: HTMLElement;
@@ -16,8 +17,8 @@
       error = null;
     } else if (sceneNames.contains(newSceneName)) {
       error = "A scene with this name already exists in this draft.";
-    } else if (newSceneName.match(/[\/\\:]/g)) {
-      error = "A scene name cannot contain the characters: \\ / :";
+    } else if (!isValidFilename(newSceneName)) {
+      error = `A scene name cannot contain the characters: ${invalidFilenameCharacters()}`;
     } else {
       error = null;
     }
