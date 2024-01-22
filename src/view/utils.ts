@@ -16,10 +16,10 @@ export function invalidFilenameCharacters(): string {
 }
 
 export function isValidFilename(name: string): boolean {
-  if (Platform.isWin && name.match(/[\*"\\\/:<>|\?]*/g)) {
+  if (Platform.isWin && name.match(/[*"\\/:<>|?]*/g)) {
     return false;
   }
-  if (name.match(/[\/\\:]/g)) {
+  if (name.match(/[/\\:]/g)) {
     return false;
   }
   return true;
