@@ -63,7 +63,7 @@ const callbackForFormat = (
     }
   })();
 
-  insertDraftIntoFrontmatter(file.path, newDraft).then(() => {
+  insertDraftIntoFrontmatter(view.app, file.path, newDraft).then(() => {
     selectedDraftVaultPath.set(file.path);
   });
 };

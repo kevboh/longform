@@ -22,6 +22,7 @@ import { insertScene } from "src/model/draft-utils";
 import NewDraftModal from "src/view/project-lifecycle/new-draft-modal";
 import { UndoManager } from "../undo/undo-manager";
 import { ignoreScene } from "./scene-menu-items";
+import { appContext } from "../utils";
 
 export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
 
@@ -74,7 +75,7 @@ export class ExplorerPane extends ItemView {
       }
     );
 
-    const context = new Map();
+    const context = appContext(this);
 
     context.set("undoManager", this.undoManager);
 
@@ -119,6 +120,7 @@ export class ExplorerPane extends ItemView {
     // Context function for creating new scene notes given a path
     context.set("onNewScene", async (name: string) => {
       await insertScene(
+        this.app,
         drafts,
         get(selectedDraft) as MultipleSceneDraft,
         name,
@@ -158,7 +160,7 @@ export class ExplorerPane extends ItemView {
         .indexOf(file.name.split(".md")[0]);
 
       if (relativeTo >= 0) {
-        insertScene(drafts, draft, sceneName, this.app.vault, {
+        insertScene(this.app, drafts, draft, sceneName, this.app.vault, {
           at,
           relativeTo,
         });

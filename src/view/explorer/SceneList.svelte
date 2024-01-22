@@ -16,8 +16,10 @@
   import type { UndoManager } from "src/view/undo/undo-manager";
   import { cloneDeep } from "lodash";
   import { scenePath } from "src/model/scene-navigation";
-  import { selectElementContents } from "../utils";
+  import { selectElementContents, useApp } from "../utils";
   import { addAll, addScene, ignoreAll, ignoreScene } from "./scene-menu-items";
+
+  const app = useApp();
 
   let currentDraftIndex: number = -1;
   $: if ($selectedDraft) {
@@ -76,7 +78,6 @@
 
       const nextScene = index < scenes.length - 1 ? scenes[index + 1] : false;
       const path = makeScenePath($selectedDraft as MultipleSceneDraft, title);
-      // TODO: Get app by some other means?
       const file = app.vault.getAbstractFileByPath(path);
       let status = undefined;
       if (file && file instanceof TFile) {

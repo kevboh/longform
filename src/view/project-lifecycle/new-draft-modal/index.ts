@@ -5,6 +5,7 @@ import { selectedDraft, selectedDraftVaultPath } from "src/model/stores";
 import type { Draft } from "src/model/types";
 import { get } from "svelte/store";
 import NewDraftModal from "./NewDraftModal.svelte";
+import { appContext } from "src/view/utils";
 
 export default class NewDraftModalContainer extends Modal {
   constructor(app: App) {
@@ -21,7 +22,7 @@ export default class NewDraftModalContainer extends Modal {
     });
     const entrypoint = contentEl.createDiv("longform-add-create-draft-root");
 
-    const context = new Map();
+    const context = appContext(this);
     context.set("close", () => this.close());
 
     context.set(
@@ -39,7 +40,7 @@ export default class NewDraftModalContainer extends Modal {
             titleInFrontmatter: true,
             draftTitle,
           };
-          await insertDraftIntoFrontmatter(newVaultPath, newDraft);
+          await insertDraftIntoFrontmatter(this.app, newVaultPath, newDraft);
           selectedDraftVaultPath.set(newVaultPath);
           this.app.workspace.openLinkText(newVaultPath, "/", false);
         } else {
@@ -71,7 +72,7 @@ export default class NewDraftModalContainer extends Modal {
             draftTitle,
             scenes: copyScenes ? draft.scenes : [],
           };
-          await insertDraftIntoFrontmatter(newVaultPath, newDraft);
+          await insertDraftIntoFrontmatter(this.app, newVaultPath, newDraft);
           selectedDraftVaultPath.set(newVaultPath);
         }
         this.close();

@@ -1,6 +1,7 @@
 import { App, Modal } from "obsidian";
 
 import AddStepModal from "./AddStepModal.svelte";
+import { appContext } from "src/view/utils";
 
 export default class AddStepModalContainer extends Modal {
   constructor(app: App) {
@@ -13,7 +14,7 @@ export default class AddStepModalContainer extends Modal {
     contentEl.createEl("h1", { text: "Add Compile Step to Workfow" });
     const entrypoint = contentEl.createDiv("longform-add-step-root");
 
-    const context = new Map();
+    const context = appContext(this);
     context.set("close", () => this.close());
 
     new AddStepModal({

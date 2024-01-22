@@ -44,6 +44,7 @@ export function resolveIfLongformFile(
  * Thus, keeps both store and vault in sync.
  */
 export class StoreVaultSync {
+  private app: App;
   private vault: Vault;
   private metadataCache: MetadataCache;
 
@@ -53,6 +54,7 @@ export class StoreVaultSync {
   private pathsToIgnoreNextChange: Set<string> = new Set();
 
   constructor(app: App) {
+    this.app = app;
     this.vault = app.vault;
     this.metadataCache = app.metadataCache;
   }
@@ -370,7 +372,7 @@ export class StoreVaultSync {
 
         let fm = null;
         try {
-          await app.fileManager.processFrontMatter(
+          await this.app.fileManager.processFrontMatter(
             fileWithMetadata.file,
             (_fm) => {
               fm = _fm;
@@ -464,12 +466,12 @@ export class StoreVaultSync {
   }
 
   private async writeDraftFrontmatter(draft: Draft) {
-    const file = app.vault.getAbstractFileByPath(draft.vaultPath);
+    const file = this.app.vault.getAbstractFileByPath(draft.vaultPath);
     if (!file || !(file instanceof TFile)) {
       return;
     }
 
-    await app.fileManager.processFrontMatter(file, (fm) => {
+    await this.app.fileManager.processFrontMatter(file, (fm) => {
       setDraftOnFrontmatterObject(fm, draft);
     });
   }

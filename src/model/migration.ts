@@ -93,7 +93,7 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
             sceneTemplate: null,
           };
 
-          await insertDraftIntoFrontmatter(vaultPath, draft);
+          await insertDraftIntoFrontmatter(app, vaultPath, draft);
           await moveScenes(
             normalizePath(
               `${projectPath}/${project.draftsPath}/${oldDraft.folder}/`
@@ -134,7 +134,7 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
               sceneTemplate: null,
             };
 
-            await insertDraftIntoFrontmatter(vaultPath, draft);
+            await insertDraftIntoFrontmatter(app, vaultPath, draft);
             await moveScenes(
               normalizePath(
                 `${projectPath}/${project.draftsPath}/${oldDraft.folder}/`

@@ -1,4 +1,4 @@
-import { TFile, Vault } from "obsidian";
+import { App, TFile, Vault } from "obsidian";
 import { get, type Writable } from "svelte/store";
 
 import type { Draft, IndentedScene, MultipleSceneDraft } from "./types";
@@ -16,15 +16,17 @@ type SceneInsertionLocation = {
 };
 
 export async function createScene(
+  app: App,
   path: string,
   draft: MultipleSceneDraft
 ): Promise<void> {
   const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
-  createNoteWithPotentialTemplate(path, template);
+  createNoteWithPotentialTemplate(app, path, template);
   app.workspace.openLinkText(path, "/", false);
 }
 
 export async function insertScene(
+  app: App,
   draftsStore: Writable<Draft[]>,
   draft: MultipleSceneDraft,
   sceneName: string,
@@ -57,7 +59,7 @@ export async function insertScene(
       return d;
     });
   });
-  await createScene(newScenePath, draft);
+  await createScene(app, newScenePath, draft);
 }
 
 export function setDraftOnFrontmatterObject(
@@ -178,7 +180,11 @@ export function formatSceneNumber(numbering: number[]): string {
   return numbering.join(".");
 }
 
-export async function insertDraftIntoFrontmatter(path: string, draft: Draft) {
+export async function insertDraftIntoFrontmatter(
+  app: App,
+  path: string,
+  draft: Draft
+) {
   const exists = await app.vault.adapter.exists(path);
   if (!exists) {
     await app.vault.create(path, "");

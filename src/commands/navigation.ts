@@ -264,7 +264,7 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
   },
 });
 
-export const revealProjectFolder: CommandBuilder = (_plugin) => ({
+export const revealProjectFolder: CommandBuilder = (plugin) => ({
   id: "longform-reveal-project-folder",
   name: "Reveal current project in navigation",
   checkCallback(checking) {
@@ -279,8 +279,8 @@ export const revealProjectFolder: CommandBuilder = (_plugin) => ({
 
     // NOTE: This is private Obsidian API, and may fail or change at any time.
     try {
-      const parent = app.vault.getAbstractFileByPath(path).parent;
-      (app as any).internalPlugins.plugins[
+      const parent = plugin.app.vault.getAbstractFileByPath(path).parent;
+      (plugin.app as any).internalPlugins.plugins[
         "file-explorer"
       ].instance.revealInFolder(parent);
     } catch (error) {

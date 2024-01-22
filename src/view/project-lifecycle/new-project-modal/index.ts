@@ -8,6 +8,7 @@ import type {
 } from "src/model/types";
 import { selectedTab } from "src/view/stores";
 import NewProjectModal from "./NewProjectModal.svelte";
+import { appContext } from "src/view/utils";
 
 export default class NewProjectModalContainer extends Modal {
   private parent: TFolder;
@@ -25,7 +26,7 @@ export default class NewProjectModalContainer extends Modal {
     });
     const entrypoint = contentEl.createDiv("longform-add-create-project-root");
 
-    const context = new Map();
+    const context = appContext(this);
     context.set("close", () => this.close());
     context.set(
       "createProject",
@@ -72,7 +73,7 @@ export default class NewProjectModalContainer extends Modal {
           }
         })();
 
-        await insertDraftIntoFrontmatter(path, newDraft);
+        await insertDraftIntoFrontmatter(this.app, path, newDraft);
         selectedDraftVaultPath.set(path);
         selectedTab.set(format === "scenes" ? "Scenes" : "Project");
         if (format === "single") {

@@ -1,5 +1,5 @@
 import { last, sum } from "lodash";
-import type { TFile } from "obsidian";
+import type { App, TFile } from "obsidian";
 
 import type { Draft, DraftWordCounts } from "./types";
 
@@ -14,20 +14,21 @@ export function fileNameFromPath(path: string): string {
  * @param template Path to template to use.
  */
 export async function createNoteWithPotentialTemplate(
+  app: App,
   path: string,
   template: string | null
 ): Promise<void> {
-  const file = await createNote(path);
+  const file = await createNote(app, path);
   if (template && file) {
     let contents = "";
     let pluginUsed = "";
     try {
-      if (isTemplaterEnabled()) {
+      if (isTemplaterEnabled(app)) {
         pluginUsed = "Templater";
-        contents = await createWithTemplater(file, template);
-      } else if (isTemplatesEnabled()) {
+        contents = await createWithTemplater(app, file, template);
+      } else if (isTemplatesEnabled(app)) {
         pluginUsed = "Core Templates";
-        contents = await createWithTemplates(template);
+        contents = await createWithTemplates(app, template);
       }
     } catch (error) {
       console.error(`[Longform] Error using plugin [${pluginUsed}]:`, error);
@@ -45,6 +46,7 @@ export async function createNoteWithPotentialTemplate(
  * @returns `null` if it fails to create the note.  `TFile` for the new note, if successful.
  */
 export async function createNote(
+  app: App,
   path: string,
   initialContent = ""
 ): Promise<TFile | null> {
@@ -72,15 +74,16 @@ export async function createNote(
   }
 }
 
-function isTemplaterEnabled(): boolean {
+function isTemplaterEnabled(app: App): boolean {
   return !!(app as any).plugins.getPlugin("templater-obsidian");
 }
 
-function isTemplatesEnabled(): boolean {
+function isTemplatesEnabled(app: App): boolean {
   return !!(app as any).internalPlugins.getEnabledPluginById("templates");
 }
 
 async function createWithTemplater(
+  app: App,
   file: TFile,
   templatePath: string
 ): Promise<string> {
@@ -101,8 +104,10 @@ async function createWithTemplater(
   return await templaterPlugin.templater.read_and_parse_template(runningConfig);
 }
 
-async function createWithTemplates(templatePath: string): Promise<string> {
-  console.log(templatePath);
+async function createWithTemplates(
+  app: App,
+  templatePath: string
+): Promise<string> {
   const corePlugin = (app as any).internalPlugins.getEnabledPluginById(
     "templates"
   );

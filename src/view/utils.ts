@@ -1,4 +1,5 @@
-import { Platform } from "obsidian";
+import { App, Modal, Platform, View } from "obsidian";
+import { getContext } from "svelte";
 
 export function selectElementContents(el: HTMLElement) {
   const range = document.createRange();
@@ -23,4 +24,14 @@ export function isValidFilename(name: string): boolean {
     return false;
   }
   return true;
+}
+
+export function appContext(view: View | Modal): Map<string, any> {
+  const context = new Map<string, any>();
+  context.set("app", view.app);
+  return context;
+}
+
+export function useApp(): App {
+  return getContext("app") as App;
 }

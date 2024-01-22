@@ -19,6 +19,9 @@
     activeFile,
   } from "../stores";
   import DraftList from "./DraftList.svelte";
+  import { useApp } from "../utils";
+
+  const app = useApp();
 
   let showMetdata = true;
   let showWordCount = true;
