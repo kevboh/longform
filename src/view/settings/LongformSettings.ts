@@ -157,7 +157,7 @@ export class LongformSettingsTab extends PluginSettingTab {
           }
         });
       });
-      new Setting(containerEl)
+    new Setting(containerEl)
       .setName("Goal applies to")
       .setDesc(
         "You can set your word count goal to target all Longform writing, or you can make each project or scene have its own discrete goal."

@@ -130,7 +130,7 @@
       draftCount = $projects[$selectedDraft.title].length > 1 ? draft : null;
       sceneCount = $selectedDraft.format === "scenes" ? scene : null;
     }
-  }  
+  }
 
   let showProgress = false;
   $: {
@@ -144,7 +144,9 @@
   let goalDescription: string;
   $: {
     goalPercentage = Math.ceil(Math.min($goalProgress, 1) * 100);
-    goalDescription = `${Math.round($goalProgress * $pluginSettings.sessionGoal)}/${$pluginSettings.sessionGoal}`;
+    goalDescription = `${Math.round(
+      $goalProgress * $pluginSettings.sessionGoal
+    )}/${$pluginSettings.sessionGoal}`;
   }
 
   function pluralize(
