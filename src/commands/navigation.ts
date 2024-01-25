@@ -298,9 +298,9 @@ export const focusNewSceneField: CommandBuilder = (plugin) => ({
   checkCallback(checking) {
     const draft = get(selectedDraft);
     if (checking) {
-      return draft.format === "scenes";
+      return draft && draft.format === "scenes";
     }
-    if (draft.format !== "scenes") {
+    if (!draft || draft.format !== "scenes") {
       return;
     }
 
