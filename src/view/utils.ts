@@ -17,13 +17,9 @@ export function invalidFilenameCharacters(): string {
 }
 
 export function isValidFilename(name: string): boolean {
-  if (Platform.isWin && name.match(/[*"\\/:<>|?]*/g)) {
-    return false;
-  }
-  if (name.match(/[/\\:]/g)) {
-    return false;
-  }
-  return true;
+  return !invalidFilenameCharacters()
+    .split(" ")
+    .some((c) => name.contains(c));
 }
 
 export function appContext(view: View | Modal): Map<string, any> {
