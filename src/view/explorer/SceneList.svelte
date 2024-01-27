@@ -357,7 +357,7 @@
     >
       <div
         class="scene-container{item.hidden ? ' hidden' : ''}"
-        style="margin-left: {item.indent * 32}px;"
+        style="padding-left: calc({item.indent} * var(--longform-explorer-indent-size));"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
@@ -466,7 +466,7 @@
     color: var(--text-muted);
     font-size: 1em;
     line-height: 1.1em;
-    white-space: nowrap;
+    white-space: normal;
     padding: var(--size-2-1) 0;
   }
 
@@ -496,7 +496,7 @@
   }
 
   .longform-scene-number::after {
-    content: ":";
+    content: ".";
   }
 
   #longform-unknown-files-wizard {

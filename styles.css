@@ -1,5 +1,6 @@
 :root {
   --longform-explorer-font-size: var(--font-ui-medium);
+  --longform-explorer-indent-size: 2em;
 }
 
 .longform-settings-user-steps {
