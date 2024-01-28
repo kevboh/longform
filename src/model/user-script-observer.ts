@@ -49,7 +49,6 @@ export class UserScriptObserver {
         return;
       }
 
-
       if (s.userScriptFolder == null) {
         return;
       }
@@ -182,12 +181,14 @@ export class UserScriptObserver {
           availableKinds: loadedStep.description.availableKinds.map(
             (v: string) => CompileStepKind[v as keyof typeof CompileStepKind]
           ),
-          options: loadedStep.description.options.map((o: any) => ({
-            ...o,
-            type: CompileStepOptionType[
-              o.type as keyof typeof CompileStepOptionType
-            ],
-          })),
+          options: loadedStep.description.options
+            ? loadedStep.description.options.map((o: any) => ({
+                ...o,
+                type: CompileStepOptionType[
+                  o.type as keyof typeof CompileStepOptionType
+                ],
+              }))
+            : [],
         },
       },
       true
