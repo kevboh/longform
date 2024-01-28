@@ -18,11 +18,14 @@ type SceneInsertionLocation = {
 export async function createScene(
   app: App,
   path: string,
-  draft: MultipleSceneDraft
+  draft: MultipleSceneDraft,
+  open: boolean
 ): Promise<void> {
   const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
   createNoteWithPotentialTemplate(app, path, template);
-  app.workspace.openLinkText(path, "/", false);
+  if (open) {
+    app.workspace.openLinkText(path, "/", false);
+  }
 }
 
 export async function insertScene(
@@ -31,7 +34,8 @@ export async function insertScene(
   draft: MultipleSceneDraft,
   sceneName: string,
   vault: Vault,
-  location: SceneInsertionLocation
+  location: SceneInsertionLocation,
+  open: boolean
 ) {
   const newScenePath = scenePath(sceneName, draft, vault);
 
@@ -59,7 +63,7 @@ export async function insertScene(
       return d;
     });
   });
-  await createScene(app, newScenePath, draft);
+  await createScene(app, newScenePath, draft, open);
 }
 
 export function setDraftOnFrontmatterObject(

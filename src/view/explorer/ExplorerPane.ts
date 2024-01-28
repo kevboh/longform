@@ -118,14 +118,15 @@ export class ExplorerPane extends ItemView {
     );
 
     // Context function for creating new scene notes given a path
-    context.set("onNewScene", async (name: string) => {
+    context.set("onNewScene", async (name: string, open: boolean) => {
       await insertScene(
         this.app,
         drafts,
         get(selectedDraft) as MultipleSceneDraft,
         name,
         this.app.vault,
-        { at: "end", relativeTo: null }
+        { at: "end", relativeTo: null },
+        open
       );
     });
 
@@ -160,10 +161,18 @@ export class ExplorerPane extends ItemView {
         .indexOf(file.name.split(".md")[0]);
 
       if (relativeTo >= 0) {
-        insertScene(this.app, drafts, draft, sceneName, this.app.vault, {
-          at,
-          relativeTo,
-        });
+        insertScene(
+          this.app,
+          drafts,
+          draft,
+          sceneName,
+          this.app.vault,
+          {
+            at,
+            relativeTo,
+          },
+          true
+        );
       }
     };
 

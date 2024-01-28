@@ -24,10 +24,11 @@
     }
   }
 
-  const onNewScene: (name: string) => void = getContext("onNewScene");
-  function onNewSceneEnter() {
+  const onNewScene: (name: string, open: boolean) => void =
+    getContext("onNewScene");
+  function onNewSceneEnter(open: boolean) {
     if (newSceneName.length > 0 && !error) {
-      onNewScene(newSceneName);
+      onNewScene(newSceneName, open);
       newSceneName = "";
     }
   }
@@ -42,7 +43,7 @@
     bind:this={newSceneInput}
     on:keydown={(e) => {
       if (e.key === "Enter") {
-        onNewSceneEnter();
+        onNewSceneEnter(!e.shiftKey);
       } else if (e.key === "Escape") {
         newSceneName = "";
         newSceneInput.blur();
