@@ -47,7 +47,7 @@ export class LongformAPI {
   /**
    * Converts a YAML-compatible potentially-nested array of strings into a single-dimension array of `{title: string; indent: number}` objects.
    *
-   * Longform uses the YAML format to store scenes with indentation information; this function is useful if you want to read that YAML yourself and convert it into data you can reason about. For examle, the YAML:
+   * Longform uses the YAML format to store scenes with indentation information; this function is useful if you want to read that YAML yourself and convert it into data you can reason about. For example, the YAML:
    *
    * ```yaml
    * - My First Scene

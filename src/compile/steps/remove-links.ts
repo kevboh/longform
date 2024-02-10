@@ -89,7 +89,7 @@ export function replaceWikiLinks(contents: string): string {
         if (startOfAlias >= 0) {
           additionalAlias = true;
         }
-        startOfAlias = i + 1; // update to ealiest instance of the character
+        startOfAlias = i + 1; // update to earliest instance of the character
         continue;
       }
       if (char === "[") {
