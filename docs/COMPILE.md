@@ -28,10 +28,10 @@ _Scene_
 
 Prepends each scene's title (its note name) before its content. Options:
 
-| Name         | Type | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------ | ---- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Title Format | Text | $1      | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene’s number (first scene is “1,“ it’s child is “1.1,” etc.). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for unindented scenes becomes “#”.    |
-| Separator    | Text | \n\n    | Some text to insert between the formatted title and the rest of the scene.                                                                                                                                                                                                                                                                                                                                   |
+| Name         | Type | Default | Description                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------ | ---- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title Format | Text | $1      | A format string that lets you customize how the title is inserted. A `$1` in the string will be replaced with the scene title. A `$2`, if present, will be replaced with the scene’s number (first scene is “1,“ it’s child is “1.1,” etc.). Wrapping text in $3{} will repeat that text a number of times equal to the scene’s indentation level plus one—e.g., $3{#} for unindented scenes becomes “#”. |
+| Separator    | Text | \n\n    | Some text to insert between the formatted title and the rest of the scene.                                                                                                                                                                                                                                                                                                                                |
 
 #### Remove Comments
 
@@ -183,7 +183,7 @@ Once loaded, the user script will be available in the Add Step menu of Compile. 
 
 ## Workflows
 
-In Compile, steps are organized into workflows. Longform ships with a defaut workflow that demonstrates Compile and produces a simple formatted manuscript. Feel free to customize or delete the default workflow.
+In Compile, steps are organized into workflows. Longform ships with a default workflow that demonstrates Compile and produces a simple formatted manuscript. Feel free to customize or delete the default workflow.
 
 You can create new workflows to suit each of your projects. Each workflow has a description box you may use to remind yourself what exactly the workflow does. A Longform project remembers its last-used workflow and will select it first when you next open the Compile tab.
 
@@ -193,4 +193,4 @@ You can drag steps within a workflow to rearrange them.
 
 ## The Future
 
-Compile remains a feature that will change over time. [Open issues](https://github.com/kevboh/longform/issues?q=is%3Aissue+is%3Aopen+label%3Acompile) are a good way to track what's on the roadmap. I plan on adding more steps and a few more features that allow you to fully customize what happens inside a given workflow. As always, if you think a step should be added or changed, or that compile should behave differently, pleaes open an issue in GitHub.
+Compile remains a feature that will change over time. [Open issues](https://github.com/kevboh/longform/issues?q=is%3Aissue+is%3Aopen+label%3Acompile) are a good way to track what's on the roadmap. I plan on adding more steps and a few more features that allow you to fully customize what happens inside a given workflow. As always, if you think a step should be added or changed, or that compile should behave differently, please open an issue in GitHub.

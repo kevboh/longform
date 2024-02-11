@@ -77,8 +77,8 @@ async function ensureContainingFolderExists(
   app: App,
   filePath: string
 ): Promise<void> {
-  const conatiningFolderParts = filePath.split("/");
-  const containingFolderPath = conatiningFolderParts.slice(0, -1).join("/");
+  const containingFolderParts = filePath.split("/");
+  const containingFolderPath = containingFolderParts.slice(0, -1).join("/");
 
   try {
     await app.vault.createFolder(containingFolderPath);
