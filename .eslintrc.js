@@ -10,6 +10,6 @@ module.exports = {
     ],
     "@typescript-eslint/ban-ts-comment": 0,
     "@typescript-eslint/no-explicit-any": 0,
-    "eol-last": ["error", "always"]
+    "eol-last": ["error", "always"],
   },
 };
