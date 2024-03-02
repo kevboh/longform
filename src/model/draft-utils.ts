@@ -67,30 +67,11 @@ export async function insertScene(
   await createScene(app, newScenePath, draft, open);
 }
 
-export { setDraftOnFrontmatterObject, indentedScenesToArrays } from "./draft"
-
-export function arraysToIndentedScenes(
-  arr: any,
-  result: IndentedScene[] = [],
-  currentIndent = -1
-): IndentedScene[] {
-  if (arr instanceof Array) {
-    if (arr.length === 0) {
-      return result;
-    }
-
-    const next = arr.shift();
-    const inner = arraysToIndentedScenes(next, [], currentIndent + 1);
-    return arraysToIndentedScenes(arr, [...result, ...inner], currentIndent);
-  } else {
-    return [
-      {
-        title: arr,
-        indent: currentIndent,
-      },
-    ];
-  }
-}
+export {
+  setDraftOnFrontmatterObject,
+  indentedScenesToArrays,
+  arraysToIndentedScenes,
+} from "./draft";
 
 export type NumberedScene = IndentedScene & {
   numbering: number[];

@@ -17,6 +17,9 @@ import {
 } from "src/model/draft-utils";
 import { fileNameFromPath } from "./note-utils";
 import { findScene, sceneFolderPath } from "./scene-navigation";
+import { draftForNote, possibleDraftFileCreated } from "./draft";
+import { VaultDirectory } from "src/utils/VaultDirectory";
+import type { Note } from "./file-system";
 
 type FileWithMetadata = {
   file: TFile;
@@ -110,36 +113,21 @@ export class StoreVaultSync {
       return;
     }
 
-    const result = await this.draftFor({ file, metadata: cache });
-    if (!result) {
-      const testDeletedDraft = this.lastKnownDraftsByPath[file.path];
-      if (testDeletedDraft) {
-        // a draft's YAML was removed, remove it from drafts
-        draftsStore.update((drafts) => {
-          return drafts.filter((d) => d.vaultPath !== file.path);
-        });
+    possibleDraftFileCreated(
+      new VaultDirectory(this.app),
+      {
+        cacheDraft: (draft) => {
+          this.lastKnownDraftsByPath[draft.vaultPath] = draft;
+        },
+        getCachedDraftByPath: (path) => this.lastKnownDraftsByPath[path],
+      },
+      {
+        path: file.path,
+        getMetadata: () => cache,
+        modifyFrontMatter: (transform) =>
+          this.app.fileManager.processFrontMatter(file, transform),
       }
-      return;
-    }
-
-    const { draft } = result;
-
-    const old = this.lastKnownDraftsByPath[draft.vaultPath];
-    if (!old || !isEqual(draft, old)) {
-      this.lastKnownDraftsByPath[draft.vaultPath] = draft;
-      draftsStore.update((drafts) => {
-        const indexOfDraft = drafts.findIndex(
-          (d) => d.vaultPath === draft.vaultPath
-        );
-        if (indexOfDraft < 0) {
-          //new draft
-          drafts.push(draft);
-        } else {
-          drafts[indexOfDraft] = draft;
-        }
-        return drafts;
-      });
-    }
+    );
   }
 
   async fileCreated(file: TFile) {
@@ -335,134 +323,13 @@ export class StoreVaultSync {
     );
   }
 
-  // if dirty, draft is modified from reality of index file
-  // and should be written back to index file
-  private async draftFor(
-    fileWithMetadata: FileWithMetadata
-  ): Promise<{ draft: Draft; dirty: boolean } | null> {
-    if (!fileWithMetadata.metadata.frontmatter) {
-      return null;
-    }
-    const longformEntry = fileWithMetadata.metadata.frontmatter["longform"];
-    if (!longformEntry) {
-      return null;
-    }
-    const format = longformEntry["format"];
-    const vaultPath = fileWithMetadata.file.path;
-    let title = longformEntry["title"];
-    let titleInFrontmatter = true;
-    if (!title) {
-      titleInFrontmatter = false;
-      title = fileNameFromPath(vaultPath);
-    }
-    const workflow = longformEntry["workflow"] ?? null;
-    const draftTitle = longformEntry["draftTitle"] ?? null;
-
-    if (format === "scenes") {
-      let rawScenes: any = longformEntry["scenes"] ?? [];
-
-      if (rawScenes.length === 0) {
-        // fallback for issue where the metadata cache seems to fail to recognize yaml arrays.
-        // in this case, it reports the array as empty when it's not,
-        // so we will parse out the yaml directly from the file contents, just in case.
-        // discord discussion: https://discord.com/channels/686053708261228577/840286264964022302/994589562082951219
-
-        // 2023-01-03: Confirmed this issue is still present; using new processFrontMatter function
-        // seems to read correctly, though!
-
-        let fm = null;
-        try {
-          await this.app.fileManager.processFrontMatter(
-            fileWithMetadata.file,
-            (_fm) => {
-              fm = _fm;
-            }
-          );
-        } catch (error) {
-          console.error(
-            "[Longform] error manually loading frontmatter:",
-            error
-          );
-        }
-
-        if (fm) {
-          rawScenes = fm["longform"]["scenes"];
-        }
-      }
-
-      // Convert to indented scenes
-      const scenes = arraysToIndentedScenes(rawScenes);
-      const sceneFolder = longformEntry["sceneFolder"] ?? "/";
-      const sceneTemplate = longformEntry["sceneTemplate"] ?? null;
-      const ignoredFiles: string[] = longformEntry["ignoredFiles"] ?? [];
-      const normalizedSceneFolder = normalizePath(
-        `${fileWithMetadata.file.parent.path}/${sceneFolder}`
-      );
-
-      let filenamesInSceneFolder: string[] = [];
-      if (await this.vault.adapter.exists(normalizedSceneFolder)) {
-        filenamesInSceneFolder = (
-          await this.vault.adapter.list(normalizedSceneFolder)
-        ).files
-          .filter((f) => f !== fileWithMetadata.file.path && f.endsWith(".md"))
-          .map((f) => this.vault.getAbstractFileByPath(f)?.name.slice(0, -3))
-          .filter(
-            (maybeName) => maybeName !== null && maybeName !== undefined
-          ) as string[];
-      }
-
-      // Filter removed scenes
-      const knownScenes = scenes.filter(({ title }) =>
-        filenamesInSceneFolder.contains(title)
-      );
-
-      const dirty = knownScenes.length !== scenes.length;
-
-      const sceneTitles = new Set(scenes.map((s) => s.title));
-      const newScenes = filenamesInSceneFolder.filter(
-        (s) => !sceneTitles.has(s)
-      );
-
-      // ignore all new scenes that are known-to-ignore per ignoredFiles
-      const ignoredRegexes = ignoredFiles.map((p) => ignoredPatternToRegex(p));
-      const unknownFiles = newScenes.filter(
-        (s) => ignoredRegexes.find((r) => r.test(s)) === undefined
-      );
-
-      return {
-        draft: {
-          format: "scenes",
-          title,
-          titleInFrontmatter,
-          draftTitle,
-          vaultPath,
-          sceneFolder,
-          scenes: knownScenes,
-          ignoredFiles,
-          unknownFiles,
-          sceneTemplate,
-          workflow,
-        },
-        dirty,
-      };
-    } else if (format === "single") {
-      return {
-        draft: {
-          format: "single",
-          title,
-          titleInFrontmatter,
-          draftTitle,
-          vaultPath,
-          workflow,
-        },
-        dirty: false,
-      };
-    } else {
-      console.log(
-        `[Longform] Error loading draft at ${fileWithMetadata.file.path}: invalid longform.format. Ignoring.`
-      );
-      return null;
-    }
+  private draftFor(file: FileWithMetadata) {
+    return draftForNote(new VaultDirectory(this.app), {
+      path: file.file.path,
+      getMetadata: () => file.metadata,
+      modifyFrontMatter: (transform) =>
+        this.app.fileManager.processFrontMatter(file.file, transform),
+    });
   }
 
   private async writeDraftFrontmatter(draft: Draft) {
@@ -475,25 +342,4 @@ export class StoreVaultSync {
       setDraftOnFrontmatterObject(fm, draft);
     });
   }
-}
-
-const ESCAPED_CHARACTERS = new Set("/&$^+.()=!|[]{},".split(""));
-function ignoredPatternToRegex(pattern: string): RegExp {
-  let regex = "";
-
-  for (let index = 0; index < pattern.length; index++) {
-    const c = pattern[index];
-
-    if (ESCAPED_CHARACTERS.has(c)) {
-      regex += "\\" + c;
-    } else if (c === "*") {
-      regex += ".*";
-    } else if (c === "?") {
-      regex += ".";
-    } else {
-      regex += c;
-    }
-  }
-
-  return new RegExp(`^${regex}$`);
 }
