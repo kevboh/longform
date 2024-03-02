@@ -4,6 +4,9 @@ import type * as vitest from "vitest";
  * A sub section of a larger filesystem.  All methods work with paths relative to this directory
  */
 export interface Directory {
+  readonly path: string;
+  readonly name: string;
+
   /**
    *
    * @param path the path from the root of this directory
@@ -36,13 +39,28 @@ export interface Directory {
    * @returns the path object at this location, or `null` if nothing exists there.
    */
   getPath(path: string): Path | null;
+
+  /**
+   * Lists all the files and folders as paths relative to this directory.  If a subfolderPath is provided, will list all the files and folders in that subfolder as paths relative to THIS directory.
+   * @param subfolderPath (optional) the path of a subfolder within this directory to list the files and folders from.
+   */
+  list(subfolderPath?: string): Promise<{
+    readonly files: readonly string[];
+    readonly folders: readonly string[];
+  }>;
 }
 
-export type Path =
-  | (Directory & { isNote: false; isDirectory: true })
-  | (Note & { isNote: true; isDirectory: false });
+export type NotePath = Note & { isNote: true; isDirectory: false };
+export type DirectoryPath = Directory & { isNote: false; isDirectory: true };
+
+export type Path = DirectoryPath | NotePath;
 
 export interface Note {
+  readonly path: string;
+  readonly name: string;
+
+  getMetadata(): { readonly frontmatter?: Record<string, any> };
+
   modifyFrontMatter(
     transform: (frontmatter: Record<string, any>) => void
   ): Promise<void>;

@@ -7,6 +7,14 @@ import type { Directory, Note, Path } from "src/model/file-system";
 export class VaultDirectory implements Directory {
   constructor(private readonly app: App) {}
 
+  get name() {
+    return "";
+  }
+
+  get path() {
+    return "";
+  }
+
   pathExists(path: string): Promise<boolean> {
     return this.app.vault.adapter.exists(normalizePath(path));
   }
@@ -51,6 +59,13 @@ export class VaultDirectory implements Directory {
       return null;
     }
   }
+
+  async list(subfolderPath?: string): Promise<{
+    readonly files: readonly string[];
+    readonly folders: readonly string[];
+  }> {
+    return this.app.vault.adapter.list(normalizePath(subfolderPath ?? "/"));
+  }
 }
 
 class TFileNote implements Note {
@@ -62,6 +77,18 @@ class TFileNote implements Note {
   }
 
   constructor(public file: TFile, private app: App) {}
+
+  get path(): string {
+    return this.file.path;
+  }
+
+  get name(): string {
+    return this.file.name;
+  }
+
+  getMetadata(): { readonly frontmatter?: Record<string, any> } {
+    return this.app.metadataCache.getFileCache(this.file);
+  }
 
   modifyFrontMatter(
     transform: (frontmatter: Record<string, any>) => void
@@ -80,6 +107,14 @@ class TFolderDirectory implements Directory {
 
   constructor(private readonly app: App, private readonly tfolder: TFolder) {
     this.pathExists = app.vault.adapter.exists.bind(app.vault.adapter);
+  }
+
+  get path(): string {
+    return this.tfolder.path;
+  }
+
+  get name(): string {
+    return this.tfolder.name;
   }
 
   pathExists(path: string): Promise<boolean> {
@@ -115,5 +150,15 @@ class TFolderDirectory implements Directory {
     } else {
       return null;
     }
+  }
+
+  list(subfolderPath?: string): Promise<{
+    readonly files: readonly string[];
+    readonly folders: readonly string[];
+  }> {
+    return Promise.resolve({
+      files: [],
+      folders: [],
+    });
   }
 }

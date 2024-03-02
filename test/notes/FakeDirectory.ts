@@ -8,7 +8,8 @@ export class FakeDirectory implements Directory {
     return true;
   }
   constructor(
-    private readonly path: string = "",
+    public readonly path: string = "",
+    public readonly name: string,
     private readonly children: Map<
       string,
       FakeDirectory | (Note & { isNote: true; isDirectory: false })
@@ -50,37 +51,51 @@ export class FakeDirectory implements Directory {
     return child.recursivelyGetPath(parts, index + 1);
   }
 
+  private childPath(path: string) {
+    if (this.path.length > 0) {
+      return this.path + "/" + path;
+    }
+    return path;
+  }
+
   private createDirectoryChild(immediatePath: string) {
-    const directory = new FakeDirectory(immediatePath);
+    const directory = new FakeDirectory(
+      this.childPath(immediatePath),
+      immediatePath
+    );
     this.children.set(immediatePath, directory);
     return directory;
   }
 
-  private recursivelyCreateDirectoryPath(parts: string[], index: number) {
-    if (index >= parts.length) return;
-    const name = parts[index];
-    const existingChild = this.children.get(name);
-    if (!existingChild) {
-      this.createDirectoryChild(name).recursivelyCreateDirectoryPath(
-        parts,
-        index + 1
-      );
-      return;
+  private recursivelyCreateDirectoryPath(
+    parts: string[],
+    index: number
+  ): Promise<Directory> {
+    if (index >= parts.length) {
+      throw new Error("");
     }
-    if (!existingChild.isDirectory) {
+    const name = parts[index];
+    let child = this.children.get(name);
+    if (!child) {
+      child = this.createDirectoryChild(name);
+    }
+    if (!child.isDirectory) {
       throw new Error("Cannot create directory as child of note.");
     }
 
-    existingChild.createDirectory(parts.slice(index).join("/"));
+    if (index === parts.length - 1) {
+      return Promise.resolve(child);
+    }
+
+    return child.recursivelyCreateDirectoryPath(parts, index + 1);
   }
 
   createDirectory(path: string): Promise<Directory> {
     if (path.includes("/")) {
       const parts = path.split("/");
-      this.recursivelyCreateDirectoryPath(parts, 0);
-      return;
+      return this.recursivelyCreateDirectoryPath(parts, 0);
     }
-    const directory = new FakeDirectory(path);
+    const directory = new FakeDirectory(this.childPath(path), path);
     this.children.set(path, directory);
     return Promise.resolve(directory);
   }
@@ -103,13 +118,20 @@ export class FakeDirectory implements Directory {
       return parent.createFile(parts[parts.length - 1], content);
     }
 
-    const metadata: Record<string, any> = {};
+    const frontmatter: Record<string, any> = {};
 
     const note = {
       modifyFrontMatter(transform: (frontmatter: Record<string, any>) => void) {
-        transform(metadata);
+        transform(frontmatter);
         return Promise.resolve();
       },
+      getMetadata() {
+        return {
+          frontmatter,
+        };
+      },
+      path: this.childPath(path),
+      name: path,
       isNote: true as const,
       isDirectory: false as const,
     };
@@ -125,6 +147,29 @@ export class FakeDirectory implements Directory {
     return this.recursivelyGetPath(path.split("/"), 0);
   }
 
+  list(subfolderPath?: string): Promise<{
+    readonly files: readonly string[];
+    readonly folders: readonly string[];
+  }> {
+    if (subfolderPath) {
+      const path = this.recursivelyGetPath(subfolderPath.split("/"), 0);
+      if (path.isDirectory) {
+        return path.list();
+      } else {
+        throw new Error("Cannot list children of file");
+      }
+    }
+
+    return Promise.resolve({
+      files: Array.from(this.children.values())
+        .filter((entry) => entry.isNote)
+        .map((entry) => entry.path),
+      folders: Array.from(this.children.values())
+        .filter((entry) => entry.isDirectory)
+        .map((entry) => entry.path),
+    });
+  }
+
   deletePath(path: string): Promise<void> {
     this.children.delete(path);
     return Promise.resolve();
@@ -133,6 +178,6 @@ export class FakeDirectory implements Directory {
 
 export class InMemoryFileSystem extends FakeDirectory {
   constructor() {
-    super();
+    super("", "");
   }
 }

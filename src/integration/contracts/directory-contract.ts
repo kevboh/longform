@@ -1,4 +1,9 @@
-import type { Directory } from "src/model/file-system";
+import type {
+  Directory,
+  DirectoryPath,
+  NotePath,
+  Path,
+} from "src/model/file-system";
 import type IntegrationTestFramework from "../framework";
 
 /**
@@ -6,6 +11,34 @@ import type IntegrationTestFramework from "../framework";
  */
 export function directoryContract(framework: IntegrationTestFramework) {
   const { beforeEach, describe, it } = framework;
+
+  function expectNote(
+    path: Path | null,
+    message?: string
+  ): asserts path is NotePath {
+    if (!path) {
+      throw new Error(`Expected note to be defined.  ` + (message ?? ""));
+    }
+    if (!path.isNote || path.isDirectory) {
+      throw new Error(
+        `Expected to find note, but found directory.  ` + (message ?? "")
+      );
+    }
+  }
+
+  function expectDirectory(
+    path: Path | null,
+    message?: string
+  ): asserts path is DirectoryPath {
+    if (!path) {
+      throw new Error(`Expected directory to be defined.  ` + (message ?? ""));
+    }
+    if (!path.isDirectory || path.isNote) {
+      throw new Error(
+        `Expected to find directory, but found note.  ` + (message ?? "")
+      );
+    }
+  }
 
   return {
     test(factory: () => Directory, pathNamePrefix: string = "") {
@@ -48,6 +81,13 @@ export function directoryContract(framework: IntegrationTestFramework) {
             if (!(await directory.pathExists(`${fileName}.md`))) {
               throw new Error(`Expected to find file at "${fileName}.md"`);
             }
+            const note = directory.getPath(`${fileName}.md`);
+            expectNote(note, `${fileName}.md`);
+            if (note.path !== `${fileName}.md`) {
+              throw new Error(
+                `Expected created note to have path "${fileName}.md" but found "${note.path}"`
+              );
+            }
           });
 
           it(`creates a nested note in the directory`, async () => {
@@ -61,8 +101,11 @@ export function directoryContract(framework: IntegrationTestFramework) {
               throw new Error(`Expected "${fullName}" to exist.`);
             }
             const note = directory.getPath(fullName);
-            if (!note || !note.isNote) {
-              throw new Error(`Expected to find note at "${fullName}"`);
+            expectNote(note, fullName);
+            if (note.path !== fullName) {
+              throw new Error(
+                `Expected created note to have path "${fullName}", found "${note.path}"`
+              );
             }
           });
           it(`cannot create nested note in non-existent directory`, async () => {
@@ -90,9 +133,7 @@ export function directoryContract(framework: IntegrationTestFramework) {
             const fileName = `${uniqueName()}.md`;
             await directory.createFile(fileName);
             const note = directory.getPath(fileName);
-            if (!note || !note.isNote) {
-              throw new Error("Did not create path for note");
-            }
+            expectNote(note, fileName);
 
             await note.modifyFrontMatter((frontmatter) => {
               frontmatter.foo = "bar";
@@ -121,11 +162,7 @@ export function directoryContract(framework: IntegrationTestFramework) {
             await directory.createDirectory(directoryName);
 
             const child = directory.getPath(directoryName);
-            if (!child || !child.isDirectory || child.isNote) {
-              throw new Error(
-                `Expected to find directory at "${directoryName}"`
-              );
-            }
+            expectDirectory(child);
           });
           it(`creates parent directories at that path`, async () => {
             const parentDirectoryName = uniqueName();
@@ -133,12 +170,102 @@ export function directoryContract(framework: IntegrationTestFramework) {
               `${parentDirectoryName}/${uniqueName()}`
             );
 
-            const child = directory.getPath(parentDirectoryName);
-            if (!child) throw new Error("Did not create parent of directory");
-            if (!child.isDirectory || child.isNote)
-              throw new Error(
-                "Created a file for the parent instead of a directory."
-              );
+            expectDirectory(directory.getPath(parentDirectoryName));
+          });
+        });
+
+        describe(`listing child paths`, () => {
+          it(`lists immediate children`, async () => {
+            const files = [
+              await directory.createFile(uniqueName() + ".md"),
+              await directory.createFile(uniqueName() + ".md"),
+              await directory.createFile(uniqueName() + ".md"),
+            ];
+            const folders = [
+              await directory.createDirectory(uniqueName()),
+              await directory.createDirectory(uniqueName()),
+              await directory.createDirectory(uniqueName()),
+            ];
+
+            const list = await directory.list();
+
+            for (const file of files) {
+              if (!list.files.includes(file.path)) {
+                throw new Error(
+                  `Expected list of files to include all child files.`
+                );
+              }
+              if (list.folders.includes(file.path)) {
+                throw new Error(
+                  `Should not include folders in list of child files.`
+                );
+              }
+            }
+            for (const folder of folders) {
+              if (!list.folders.includes(folder.path)) {
+                throw new Error(
+                  `Expected list of folders to include all child folders.`
+                );
+              }
+              if (list.files.includes(folder.path)) {
+                throw new Error(
+                  `Should not include files in list of child folders.`
+                );
+              }
+            }
+          });
+        });
+
+        describe(`listing paths in subdirectory`, () => {
+          it(`lists paths relative to this directory`, async () => {
+            const subfolder = await directory.createDirectory(uniqueName());
+            const files = [
+              await subfolder.createFile(uniqueName() + ".md"),
+              await subfolder.createFile(uniqueName() + ".md"),
+              await subfolder.createFile(uniqueName() + ".md"),
+            ];
+            const folders = [
+              await subfolder.createDirectory(uniqueName()),
+              await subfolder.createDirectory(uniqueName()),
+              await subfolder.createDirectory(uniqueName()),
+            ];
+
+            const list = await directory.list(subfolder.path);
+
+            for (const file of files) {
+              if (file.path !== `${subfolder.path}/${file.name}`) {
+                throw new Error(
+                  `File path should be relative to root directory.`
+                );
+              }
+              if (!list.files.includes(file.path)) {
+                throw new Error(
+                  `Expected list of files to include all child files.`
+                );
+              }
+              if (list.folders.includes(file.path)) {
+                throw new Error(
+                  `Should not include folders in list of child files.`
+                );
+              }
+            }
+            for (const folder of folders) {
+              if (folder.path !== `${subfolder.path}/${folder.name}`) {
+                throw new Error(
+                  `Folder path should be relative to root directory.`
+                );
+              }
+              if (!list.folders.includes(folder.path)) {
+                throw new Error(
+                  `Expected list of folders to include all child folders.`
+                );
+              }
+              if (list.files.includes(folder.path)) {
+                throw new Error(
+                  `Should not include files in list of child folders.`
+                );
+              }
+            }
           });
         });
 
@@ -151,13 +278,9 @@ export function directoryContract(framework: IntegrationTestFramework) {
             await directory.createFile(`${subfolder}/${nested}/${fileName}.md`);
 
             const child = directory.getPath(subfolder);
-            if (!child.isDirectory)
-              throw new Error("Did not create directory.");
+            expectDirectory(child);
             const file = child.getPath(`${nested}/${fileName}.md`);
-            if (!file || !file.isNote)
-              throw new Error(
-                `Expected to find file at ${subfolder}/${nested}/${fileName}.md from within ${subfolder}.  Found: ${file}`
-              );
+            expectNote(file);
           });
 
           it(`communicates with parent when subpaths are created`, async () => {
@@ -168,8 +291,7 @@ export function directoryContract(framework: IntegrationTestFramework) {
             await child.createFile("nested file.md");
 
             const file = directory.getPath(`${subfolder}/nested file.md`);
-            if (!file.isNote)
-              throw new Error("Subdirectory cannot access nested files");
+            expectNote(file);
           });
 
           it(`can access subpaths created through parent`, async () => {
@@ -180,8 +302,7 @@ export function directoryContract(framework: IntegrationTestFramework) {
             await directory.createFile(`${subfolder}/nested file.md`);
 
             const file = child.getPath("nested file.md");
-            if (!file.isNote)
-              throw new Error("Subdirectory cannot access nested files");
+            expectNote(file);
           });
         });
       });
