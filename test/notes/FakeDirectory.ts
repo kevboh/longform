@@ -74,7 +74,7 @@ export class FakeDirectory implements Directory {
     existingChild.createDirectory(parts.slice(index).join("/"));
   }
 
-  createDirectory(path: string): Promise<void> {
+  createDirectory(path: string): Promise<Directory> {
     if (path.includes("/")) {
       const parts = path.split("/");
       this.recursivelyCreateDirectoryPath(parts, 0);
@@ -82,7 +82,7 @@ export class FakeDirectory implements Directory {
     }
     const directory = new FakeDirectory(path);
     this.children.set(path, directory);
-    return Promise.resolve();
+    return Promise.resolve(directory);
   }
 
   createFile(path: string, content?: string): Promise<Note> {
