@@ -1,16 +1,28 @@
 import { possibleDraftFileCreated } from "src/model/draft";
 import type { Note } from "src/model/file-system";
 import { createNewProject } from "src/model/project";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { Draft } from "src/model/types";
 import { InMemoryFileSystem } from "test/notes/FakeDirectory";
 import { describe, expect, it } from "vitest";
 
-describe("Creating a new project", () => {
-  const formats = ["single", "scenes"] as const;
-  describe("through the plugin api", () => {
-    for (const format of formats) {
-      it(`creates a new index file for ${format} project`, async () => {
+function noCache() {
+  return {
+    getCachedDraftByPath(path: string): Draft | null {
+      return null;
+    },
+    cacheDraft(draft: Draft) {
+      return;
+    },
+  };
+}
+
+const formats = ["single", "scenes"] as const;
+for (const format of formats) {
+  const projectType = format === "single" ? "single-scene" : "multi-scene";
+  describe(`Creating a new "${projectType}" project`, () => {
+    describe(`through the plugin api`, () => {
+      it(`creates a new index file`, async () => {
         // Arrange
         const fileSystem = new InMemoryFileSystem();
 
@@ -36,7 +48,7 @@ describe("Creating a new project", () => {
         expect(indexFile.isNote).toBe(true);
       });
 
-      it(`populates the frontmatter of the new index file with longform ${format} properties`, async () => {
+      it(`populates the index file frontmatter with a longform property`, async () => {
         // Arrange
         const fileSystem = new InMemoryFileSystem();
 
@@ -72,56 +84,10 @@ describe("Creating a new project", () => {
           expect(frontmatter.longform).toHaveProperty("scenes", []);
         }
       });
-    }
-  });
-
-  describe(`by a new index file being detected`, () => {
-    function noCache() {
-      return {
-        getCachedDraftByPath(path: string): Draft | null {
-          return null;
-        },
-        cacheDraft(draft: Draft) {
-          return;
-        },
-      };
-    }
-
-    it(`does nothing if the file does not have a longform property`, async () => {
-      const fileSystem = new InMemoryFileSystem();
-      const file = await fileSystem.createFile("new-project.md");
-
-      const { drafts, createdDraft } = await possibleDraftFileCreated(
-        fileSystem,
-        noCache(),
-        file
-      );
-
-      expect(get(drafts)).toHaveLength(0);
-      expect(createdDraft).toBeNull();
     });
 
-    it(`does not create a new draft if format is unrecognized`, async () => {
-      const fileSystem = new InMemoryFileSystem();
-      const file = await fileSystem.createFile("new-project.md");
-      file.modifyFrontMatter((frontmatter) => {
-        frontmatter["longform"] = {
-          format: "unrecognized",
-        };
-      });
-
-      const { drafts, createdDraft } = await possibleDraftFileCreated(
-        fileSystem,
-        noCache(),
-        file
-      );
-
-      expect(get(drafts)).toHaveLength(0);
-      expect(createdDraft).toBeNull();
-    });
-
-    for (const format of formats) {
-      it(`adds a new draft to the drafts store with format ${format}`, async () => {
+    describe(`by detecting a new index file being modified`, () => {
+      it(`creates a new ${projectType} draft`, async () => {
         const fileSystem = new InMemoryFileSystem();
         const file = await fileSystem.createFile("new-project.md");
         file.modifyFrontMatter((frontmatter) => {
@@ -133,6 +99,7 @@ describe("Creating a new project", () => {
         const { drafts, createdDraft } = await possibleDraftFileCreated(
           fileSystem,
           noCache(),
+          writable([]),
           file
         );
 
@@ -146,6 +113,43 @@ describe("Creating a new project", () => {
         expect(createdDraft).toHaveProperty("vaultPath", "new-project.md");
         expect(createdDraft).toHaveProperty("workflow", null);
       });
-    }
+    });
+  });
+}
+
+describe(`when a new index file is modified`, () => {
+  it(`does not create a new draft if there is no longform property`, async () => {
+    const fileSystem = new InMemoryFileSystem();
+    const file = await fileSystem.createFile("new-project.md");
+
+    const { drafts, createdDraft } = await possibleDraftFileCreated(
+      fileSystem,
+      noCache(),
+      writable([]),
+      file
+    );
+
+    expect(get(drafts)).toHaveLength(0);
+    expect(createdDraft).toBeNull();
+  });
+
+  it(`does not create a new draft if the format is unrecognized`, async () => {
+    const fileSystem = new InMemoryFileSystem();
+    const file = await fileSystem.createFile("new-project.md");
+    file.modifyFrontMatter((frontmatter) => {
+      frontmatter["longform"] = {
+        format: "unrecognized",
+      };
+    });
+
+    const { drafts, createdDraft } = await possibleDraftFileCreated(
+      fileSystem,
+      noCache(),
+      writable([]),
+      file
+    );
+
+    expect(get(drafts)).toHaveLength(0);
+    expect(createdDraft).toBeNull();
   });
 });

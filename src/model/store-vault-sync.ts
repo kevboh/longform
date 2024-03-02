@@ -10,7 +10,11 @@ import { cloneDeep, isEqual } from "lodash";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
-import { drafts as draftsStore, selectedDraftVaultPath } from "./stores";
+import {
+  drafts,
+  drafts as draftsStore,
+  selectedDraftVaultPath,
+} from "./stores";
 import {
   arraysToIndentedScenes,
   setDraftOnFrontmatterObject,
@@ -121,6 +125,7 @@ export class StoreVaultSync {
         },
         getCachedDraftByPath: (path) => this.lastKnownDraftsByPath[path],
       },
+      drafts,
       {
         path: file.path,
         name: file.name,

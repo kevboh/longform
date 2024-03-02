@@ -1,6 +1,5 @@
 import { isEqual } from "lodash";
 import type { Directory, Note } from "./file-system";
-import { drafts } from "./stores";
 import type { Draft, IndentedScene } from "./types";
 import { fileNameFromPath } from "./note-utils";
 import type { Writable } from "svelte/store";
@@ -99,6 +98,7 @@ export async function possibleDraftFileCreated(
     getCachedDraftByPath(path: string): Draft | null;
     cacheDraft(draft: Draft): void;
   },
+  draftsStore: Writable<Draft[]>,
 
   note: Note
 ): Promise<{ drafts: Writable<Draft[]>; createdDraft: Draft | null }> {
@@ -107,11 +107,11 @@ export async function possibleDraftFileCreated(
     const testDeletedDraft = draftCache.getCachedDraftByPath(note.path);
     if (testDeletedDraft) {
       // a draft's YAML was removed, remove it from drafts
-      drafts.update((drafts) => {
+      draftsStore.update((drafts) => {
         return drafts.filter((d) => d.vaultPath !== note.path);
       });
     }
-    return { drafts, createdDraft: null };
+    return { drafts: draftsStore, createdDraft: null };
   }
 
   const { draft } = result;
@@ -119,7 +119,7 @@ export async function possibleDraftFileCreated(
   const old = draftCache.getCachedDraftByPath(draft.vaultPath);
   if (!old || !isEqual(draft, old)) {
     draftCache.cacheDraft(draft);
-    drafts.update((drafts) => {
+    draftsStore.update((drafts) => {
       const indexOfDraft = drafts.findIndex(
         (d) => d.vaultPath === draft.vaultPath
       );
@@ -133,7 +133,7 @@ export async function possibleDraftFileCreated(
     });
   }
 
-  return { drafts, createdDraft: draft };
+  return { drafts: draftsStore, createdDraft: draft };
 }
 
 // if dirty, draft is modified from reality of index file
@@ -203,7 +203,7 @@ export async function draftForNote(
         await fileSystem.list(normalizedSceneFolder)
       ).files
         .filter((f) => f.endsWith(".md") && f !== note.path)
-        .map((f) => f.slice(0, -3));
+        .map((f) => fileNameFromPath(f).slice(0, -3)); // TODO: test
     }
 
     // Filter removed scenes
