@@ -123,6 +123,7 @@ export class StoreVaultSync {
       },
       {
         path: file.path,
+        name: file.name,
         getMetadata: () => cache,
         modifyFrontMatter: (transform) =>
           this.app.fileManager.processFrontMatter(file, transform),
@@ -326,6 +327,7 @@ export class StoreVaultSync {
   private draftFor(file: FileWithMetadata) {
     return draftForNote(new VaultDirectory(this.app), {
       path: file.file.path,
+      name: file.file.name,
       getMetadata: () => file.metadata,
       modifyFrontMatter: (transform) =>
         this.app.fileManager.processFrontMatter(file.file, transform),

@@ -3,6 +3,7 @@ import type { Directory, Note } from "./file-system";
 import { drafts } from "./stores";
 import type { Draft, IndentedScene } from "./types";
 import { fileNameFromPath } from "./note-utils";
+import type { Writable } from "svelte/store";
 
 export async function insertDraftIntoFrontmatter(
   fileSystem: Directory,
@@ -100,7 +101,7 @@ export async function possibleDraftFileCreated(
   },
 
   note: Note
-) {
+): Promise<{ drafts: Writable<Draft[]>; createdDraft: Draft | null }> {
   const result: { draft: Draft } | null = await draftForNote(fileSystem, note);
   if (!result) {
     const testDeletedDraft = draftCache.getCachedDraftByPath(note.path);
@@ -110,7 +111,7 @@ export async function possibleDraftFileCreated(
         return drafts.filter((d) => d.vaultPath !== note.path);
       });
     }
-    return;
+    return { drafts, createdDraft: null };
   }
 
   const { draft } = result;
@@ -130,9 +131,9 @@ export async function possibleDraftFileCreated(
       }
       return drafts;
     });
-
-    return drafts;
   }
+
+  return { drafts, createdDraft: draft };
 }
 
 // if dirty, draft is modified from reality of index file
@@ -201,16 +202,13 @@ export async function draftForNote(
       filenamesInSceneFolder = (
         await fileSystem.list(normalizedSceneFolder)
       ).files
-        .filter((f) => f !== note.path && f.endsWith(".md"))
-        .map((f) => this.vault.getAbstractFileByPath(f)?.name.slice(0, -3))
-        .filter(
-          (maybeName) => maybeName !== null && maybeName !== undefined
-        ) as string[];
+        .filter((f) => f.endsWith(".md") && f !== note.path)
+        .map((f) => f.slice(0, -3));
     }
 
     // Filter removed scenes
     const knownScenes = scenes.filter(({ title }) =>
-      filenamesInSceneFolder.contains(title)
+      filenamesInSceneFolder.includes(title)
     );
 
     const dirty = knownScenes.length !== scenes.length;
