@@ -1,7 +1,7 @@
-import { describe } from "vitest";
-import { directoryContract } from "./directory-contract";
+import * as vitest from "vitest";
 import { InMemoryFileSystem } from "./FakeDirectory";
+import { directoryContract } from "src/integration/contracts/directory-contract";
 
-describe(`In-Memory File System`, () => {
-  directoryContract(() => new InMemoryFileSystem());
+vitest.describe(`In-Memory File System`, () => {
+  directoryContract(vitest).test(() => new InMemoryFileSystem());
 });
