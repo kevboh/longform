@@ -63,6 +63,11 @@ const DEV_PLUGIN_CONFIG = {
   ),
 };
 
+const INT_TEST_PLUGIN_CONFIG = {
+  ...DEV_PLUGIN_CONFIG,
+  input: "src/integration/main.ts",
+};
+
 const PROD_PLUGIN_CONFIG = {
   ...BASE_CONFIG,
   output: {
@@ -75,6 +80,10 @@ const PROD_PLUGIN_CONFIG = {
   plugins: getPlugins(),
 };
 
-const config = isProd ? PROD_PLUGIN_CONFIG : DEV_PLUGIN_CONFIG;
+const config = isProd
+  ? PROD_PLUGIN_CONFIG
+  : env.BUILD === "integrationTest"
+  ? INT_TEST_PLUGIN_CONFIG
+  : DEV_PLUGIN_CONFIG;
 
 export default config;
