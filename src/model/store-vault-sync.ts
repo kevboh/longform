@@ -22,7 +22,7 @@ import {
 import { fileNameFromPath } from "./note-utils";
 import { findScene, sceneFolderPath } from "./scene-navigation";
 import { draftForNote, possibleDraftFileCreated } from "./draft";
-import { VaultDirectory } from "src/utils/VaultDirectory";
+import { TFolderDirectory, VaultDirectory } from "src/utils/VaultDirectory";
 import type { Note } from "./file-system";
 
 type FileWithMetadata = {
@@ -129,6 +129,7 @@ export class StoreVaultSync {
       {
         path: file.path,
         name: file.name,
+        parent: new TFolderDirectory(this.app, file.parent),
         getMetadata: () => cache,
         modifyFrontMatter: (transform) =>
           this.app.fileManager.processFrontMatter(file, transform),
@@ -333,6 +334,7 @@ export class StoreVaultSync {
     return draftForNote(new VaultDirectory(this.app), {
       path: file.file.path,
       name: file.file.name,
+      parent: new TFolderDirectory(this.app, file.file.parent),
       getMetadata: () => file.metadata,
       modifyFrontMatter: (transform) =>
         this.app.fileManager.processFrontMatter(file.file, transform),

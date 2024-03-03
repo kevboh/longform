@@ -109,7 +109,7 @@ class TFileNote implements Note {
   }
 }
 
-class TFolderDirectory implements Directory {
+export class TFolderDirectory implements Directory {
   get isDirectory(): true {
     return true;
   }
