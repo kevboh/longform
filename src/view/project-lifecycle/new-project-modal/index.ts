@@ -1,14 +1,8 @@
 import { App, Modal, TFolder } from "obsidian";
-import { insertDraftIntoFrontmatter } from "src/model/draft-utils";
-import { selectedDraftVaultPath } from "src/model/stores";
-import type {
-  Draft,
-  MultipleSceneDraft,
-  SingleSceneDraft,
-} from "src/model/types";
-import { selectedTab } from "src/view/stores";
 import NewProjectModal from "./NewProjectModal.svelte";
 import { appContext } from "src/view/utils";
+import { createNewProject } from "src/model/project";
+import { VaultDirectory } from "src/utils/VaultDirectory";
 
 export default class NewProjectModalContainer extends Modal {
   private parent: TFolder;
@@ -31,55 +25,19 @@ export default class NewProjectModalContainer extends Modal {
     context.set(
       "createProject",
       async (format: "scenes" | "single", title: string, path: string) => {
-        const exists = await this.app.vault.adapter.exists(path);
-        if (exists) {
-          console.log(
-            `[Longform] Cannot create project at ${path}, already exists.`
-          );
-          return;
-        }
-
-        const parentPath = path.split("/").slice(0, -1).join("/");
-        if (!(await this.app.vault.adapter.exists(parentPath))) {
-          await this.app.vault.createFolder(parentPath);
-        }
-
-        const newDraft: Draft = (() => {
-          if (format === "scenes") {
-            const multi: MultipleSceneDraft = {
-              format: "scenes",
-              title,
-              titleInFrontmatter: true,
-              draftTitle: null,
-              vaultPath: path,
-              workflow: null,
-              sceneFolder: "/",
-              scenes: [],
-              ignoredFiles: [],
-              unknownFiles: [],
-              sceneTemplate: null,
-            };
-            return multi;
-          } else {
-            const single: SingleSceneDraft = {
-              format: "single",
-              title,
-              titleInFrontmatter: true,
-              draftTitle: null,
-              vaultPath: path,
-              workflow: null,
-            };
-            return single;
+        const createNewProjectInObsidian = createNewProject.bind(
+          null,
+          new VaultDirectory(this.app),
+          {
+            openNoteFileInCurrentLeaf: (path) => {
+              return this.app.workspace.openLinkText(path, "/", false);
+            },
           }
-        })();
+        );
 
-        await insertDraftIntoFrontmatter(this.app, path, newDraft);
-        selectedDraftVaultPath.set(path);
-        selectedTab.set(format === "scenes" ? "Scenes" : "Project");
-        if (format === "single") {
-          this.app.workspace.openLinkText(path, "/", false);
+        if (await createNewProjectInObsidian(format, title, path)) {
+          this.close();
         }
-        this.close();
       }
     );
 

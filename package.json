@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "svelte-check --tsconfig tsconfig.json --fail-on-hints && eslint . --ext .ts",
     "test:unit": "vitest",
+    "test:integration": "rollup --config rollup.config.js -w --environment BUILD:integrationTest",
     "dev": "rollup --config rollup.config.js -w",
     "build": "npm run lint && rollup --config rollup.config.js --environment BUILD:production"
   },
