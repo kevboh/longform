@@ -2,7 +2,7 @@ import { possibleDraftFileCreated } from "src/model/draft";
 import type { Note } from "src/model/file-system";
 import { createNewProject } from "src/model/project";
 import { get, writable } from "svelte/store";
-import type { Draft } from "src/model/types";
+import type { Draft, MultipleSceneDraft } from "src/model/types";
 import { InMemoryFileSystem } from "test/notes/FakeDirectory";
 import { describe, expect, it } from "vitest";
 
@@ -108,11 +108,175 @@ for (const format of formats) {
         expect(createdDraft).toBeDefined();
         expect(createdDraft).toHaveProperty("format", format);
         expect(createdDraft).toHaveProperty("title", "new-project");
-        expect(createdDraft).toHaveProperty("titleInFrontmatter", false);
         expect(createdDraft).toHaveProperty("draftTitle", null);
         expect(createdDraft).toHaveProperty("vaultPath", "new-project.md");
         expect(createdDraft).toHaveProperty("workflow", null);
       });
+
+      it(`titles the project after the title in the frontmatter`, async () => {
+        const fileSystem = new InMemoryFileSystem();
+        const file = await fileSystem.createFile("new-project.md");
+        file.modifyFrontMatter((frontmatter) => {
+          frontmatter["longform"] = {
+            format,
+            title: "Different Title",
+          };
+        });
+
+        const { drafts, createdDraft } = await possibleDraftFileCreated(
+          fileSystem,
+          noCache(),
+          writable([]),
+          file
+        );
+
+        expect(get(drafts)).toContainEqual(createdDraft);
+
+        expect(createdDraft).toBeDefined();
+        expect(createdDraft).toHaveProperty("title", "Different Title");
+      });
+
+      it(`titles the project after the name of the file, if not provided`, async () => {
+        const fileSystem = new InMemoryFileSystem();
+        await fileSystem.createDirectory("subfolder/nested");
+        const file = await fileSystem.createFile(
+          "subfolder/nested/new-project.md"
+        );
+        file.modifyFrontMatter((frontmatter) => {
+          frontmatter["longform"] = {
+            format,
+          };
+        });
+
+        const { drafts, createdDraft } = await possibleDraftFileCreated(
+          fileSystem,
+          noCache(),
+          writable([]),
+          file
+        );
+
+        expect(get(drafts)).toContainEqual(createdDraft);
+
+        expect(createdDraft).toBeDefined();
+        expect(createdDraft).toHaveProperty("title", "new-project");
+        expect(createdDraft).toHaveProperty(
+          "vaultPath",
+          "subfolder/nested/new-project.md"
+        );
+      });
+
+      if (format === "scenes") {
+        function expectMultiSceneDraft(
+          draft: any
+        ): asserts draft is MultipleSceneDraft {
+          if (draft.format !== "scenes") {
+            throw new Error("Draft does not have expected format");
+          }
+          if (!(`scenes` in draft)) {
+            throw new Error("Draft does not have 'scenes' property");
+          }
+        }
+
+        it(`reads defined scene names`, async () => {
+          const fileSystem = new InMemoryFileSystem();
+          const file = await fileSystem.createFile("new-project.md");
+          await fileSystem.createFile("Part 1.md");
+          await fileSystem.createFile("Act 1.md");
+          await fileSystem.createFile("Scene 1.md");
+          await fileSystem.createFile("Scene 2.md");
+          await fileSystem.createFile("Act 2.md");
+          await fileSystem.createFile("Part 2.md");
+
+          file.modifyFrontMatter((frontmatter) => {
+            frontmatter["longform"] = {
+              format,
+              scenes: [
+                "Part 1",
+                ["Act 1", ["Scene 1", "Scene 2"], "Act 2", []],
+                "Part 2",
+              ],
+            };
+          });
+
+          const { drafts, createdDraft } = await possibleDraftFileCreated(
+            fileSystem,
+            noCache(),
+            writable([]),
+            file
+          );
+
+          expect(get(drafts)).toContainEqual(createdDraft);
+
+          expect(createdDraft).toBeDefined();
+          expectMultiSceneDraft(createdDraft);
+          expect(createdDraft.scenes).toEqual([
+            { title: "Part 1", indent: 0 },
+            { title: "Act 1", indent: 1 },
+            { title: "Scene 1", indent: 2 },
+            { title: "Scene 2", indent: 2 },
+            { title: "Act 2", indent: 1 },
+            { title: "Part 2", indent: 0 },
+          ]);
+        });
+
+        it(`reads scenes from defined scene folder`, async () => {
+          const fileSystem = new InMemoryFileSystem();
+          const file = await fileSystem.createFile("new-project.md");
+          await fileSystem.createDirectory("scenes");
+          await fileSystem.createFile("scenes/Scene 1.md");
+
+          file.modifyFrontMatter((frontmatter) => {
+            frontmatter["longform"] = {
+              format,
+              sceneFolder: "scenes",
+              scenes: ["Scene 1"],
+            };
+          });
+
+          const { drafts, createdDraft } = await possibleDraftFileCreated(
+            fileSystem,
+            noCache(),
+            writable([]),
+            file
+          );
+
+          expect(get(drafts)).toContainEqual(createdDraft);
+
+          expect(createdDraft).toBeDefined();
+          expectMultiSceneDraft(createdDraft);
+          expect(createdDraft.scenes).toEqual([
+            { title: "Scene 1", indent: 0 },
+          ]);
+        });
+
+        it(`collects scenes in scene folder that are not included in scene list`, async () => {
+          const fileSystem = new InMemoryFileSystem();
+          const file = await fileSystem.createFile("new-project.md");
+          await fileSystem.createDirectory("scenes");
+          await fileSystem.createFile("scenes/Scene 1.md");
+
+          file.modifyFrontMatter((frontmatter) => {
+            frontmatter["longform"] = {
+              format,
+              sceneFolder: "scenes",
+            };
+          });
+
+          const { drafts, createdDraft } = await possibleDraftFileCreated(
+            fileSystem,
+            noCache(),
+            writable([]),
+            file
+          );
+
+          expect(get(drafts)).toContainEqual(createdDraft);
+
+          expect(createdDraft).toBeDefined();
+          expectMultiSceneDraft(createdDraft);
+          expect(createdDraft.scenes).to.not.include("Scene 1");
+          expect(createdDraft.unknownFiles).toEqual(["Scene 1"]);
+        });
+      }
     });
   });
 }

@@ -15,6 +15,10 @@ export class VaultDirectory implements Directory {
     return "";
   }
 
+  get parent(): Directory | null {
+    return null;
+  }
+
   pathExists(path: string): Promise<boolean> {
     return this.app.vault.adapter.exists(normalizePath(path));
   }
@@ -86,6 +90,14 @@ class TFileNote implements Note {
     return this.file.name;
   }
 
+  get parent(): TFolderDirectory | null {
+    const parent = this.file.parent;
+    if (parent) {
+      return new TFolderDirectory(this.app, parent);
+    }
+    return null;
+  }
+
   getMetadata(): { readonly frontmatter?: Record<string, any> } {
     return this.app.metadataCache.getFileCache(this.file);
   }
@@ -115,6 +127,14 @@ class TFolderDirectory implements Directory {
 
   get name(): string {
     return this.tfolder.name;
+  }
+
+  get parent(): TFolderDirectory | null {
+    const parent = this.tfolder.parent;
+    if (parent) {
+      return new TFolderDirectory(this.app, parent);
+    }
+    return null;
   }
 
   pathExists(path: string): Promise<boolean> {

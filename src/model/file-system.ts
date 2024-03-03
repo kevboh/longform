@@ -1,11 +1,10 @@
-import type * as vitest from "vitest";
-
 /**
  * A sub section of a larger filesystem.  All methods work with paths relative to this directory
  */
 export interface Directory {
   readonly path: string;
   readonly name: string;
+  readonly parent: Directory | null;
 
   /**
    *
@@ -58,6 +57,7 @@ export type Path = DirectoryPath | NotePath;
 export interface Note {
   readonly path: string;
   readonly name: string;
+  readonly parent: Directory | null;
 
   getMetadata(): { readonly frontmatter?: Record<string, any> };
 

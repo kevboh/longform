@@ -71,6 +71,30 @@ export function directoryContract(framework: IntegrationTestFramework) {
               throw new Error(`Expected file at "${path}" not to exist`);
             }
           });
+          it(`treats empty string path like root`, async () => {
+            if (!(await directory.pathExists(""))) {
+              throw new Error(`Expected path "" to self to exist`);
+            }
+          });
+          it(`treats "/" path like root`, async () => {
+            if (!(await directory.pathExists("/"))) {
+              throw new Error(`Expected path "/" to self to exist`);
+            }
+          });
+          it(`treats paths that start with "/" as relative`, async () => {
+            const file = await directory.createFile(uniqueName() + ".md");
+            const subfolder = await directory.createDirectory(uniqueName());
+            const nestedFile = await directory.createFile(
+              `${subfolder.path}/${uniqueName()}.md`
+            );
+
+            if (!(await directory.pathExists(`/${file.path}`))) {
+              throw new Error(`Expected child to exist.`);
+            }
+            if (!(await directory.pathExists(`/${nestedFile.path}`))) {
+              throw new Error(`Expected nested decendent to exist.`);
+            }
+          });
         });
 
         describe("creating a note", () => {
@@ -175,45 +199,47 @@ export function directoryContract(framework: IntegrationTestFramework) {
         });
 
         describe(`listing child paths`, () => {
-          it(`lists immediate children`, async () => {
-            const files = [
-              await directory.createFile(uniqueName() + ".md"),
-              await directory.createFile(uniqueName() + ".md"),
-              await directory.createFile(uniqueName() + ".md"),
-            ];
-            const folders = [
-              await directory.createDirectory(uniqueName()),
-              await directory.createDirectory(uniqueName()),
-              await directory.createDirectory(uniqueName()),
-            ];
+          for (const selfPath of [undefined, "", "/"]) {
+            it(`lists immediate children with path ${selfPath}`, async () => {
+              const files = [
+                await directory.createFile(uniqueName() + ".md"),
+                await directory.createFile(uniqueName() + ".md"),
+                await directory.createFile(uniqueName() + ".md"),
+              ];
+              const folders = [
+                await directory.createDirectory(uniqueName()),
+                await directory.createDirectory(uniqueName()),
+                await directory.createDirectory(uniqueName()),
+              ];
 
-            const list = await directory.list();
+              const list = await directory.list(selfPath);
 
-            for (const file of files) {
-              if (!list.files.includes(file.path)) {
-                throw new Error(
-                  `Expected list of files to include all child files.`
-                );
+              for (const file of files) {
+                if (!list.files.includes(file.path)) {
+                  throw new Error(
+                    `Expected list of files to include all child files.`
+                  );
+                }
+                if (list.folders.includes(file.path)) {
+                  throw new Error(
+                    `Should not include folders in list of child files.`
+                  );
+                }
               }
-              if (list.folders.includes(file.path)) {
-                throw new Error(
-                  `Should not include folders in list of child files.`
-                );
+              for (const folder of folders) {
+                if (!list.folders.includes(folder.path)) {
+                  throw new Error(
+                    `Expected list of folders to include all child folders.`
+                  );
+                }
+                if (list.files.includes(folder.path)) {
+                  throw new Error(
+                    `Should not include files in list of child folders.`
+                  );
+                }
               }
-            }
-            for (const folder of folders) {
-              if (!list.folders.includes(folder.path)) {
-                throw new Error(
-                  `Expected list of folders to include all child folders.`
-                );
-              }
-              if (list.files.includes(folder.path)) {
-                throw new Error(
-                  `Should not include files in list of child folders.`
-                );
-              }
-            }
-          });
+            });
+          }
         });
 
         describe(`listing paths in subdirectory`, () => {
@@ -265,6 +291,15 @@ export function directoryContract(framework: IntegrationTestFramework) {
                   `Should not include files in list of child folders.`
                 );
               }
+            }
+          });
+          it(`handles paths beginning with slash as relative to root`, async () => {
+            const subfolder = await directory.createDirectory(uniqueName());
+            const list = await directory.list(`/${subfolder.path}`);
+            if (!list) {
+              throw new Error(
+                `Should have returned list value for valid subfolder`
+              );
             }
           });
         });

@@ -1,4 +1,4 @@
-import type { Directory, Note, Path } from "src/model/file-system";
+import type { Directory, Note, NotePath, Path } from "src/model/file-system";
 
 export class FakeDirectory implements Directory {
   get isNote(): false {
@@ -9,6 +9,7 @@ export class FakeDirectory implements Directory {
   }
   constructor(
     public readonly path: string = "",
+    public readonly parent: FakeDirectory | null,
     public readonly name: string,
     private readonly children: Map<
       string,
@@ -21,10 +22,7 @@ export class FakeDirectory implements Directory {
   }
 
   private pathExistsSync(path: string): boolean {
-    if (!path.includes("/")) {
-      return this.children.has(path);
-    }
-    return !!this.recursivelyGetPath(path.split("/"), 0);
+    return !!this.getPath(path);
   }
 
   private recursivelyGetPath(
@@ -32,7 +30,7 @@ export class FakeDirectory implements Directory {
     index: number
   ): null | FakeDirectory | (Note & { isNote: true; isDirectory: false }) {
     if (index >= parts.length) {
-      return null;
+      return this;
     }
     const name = parts[index];
     const child = this.children.get(name);
@@ -61,6 +59,7 @@ export class FakeDirectory implements Directory {
   private createDirectoryChild(immediatePath: string) {
     const directory = new FakeDirectory(
       this.childPath(immediatePath),
+      this,
       immediatePath
     );
     this.children.set(immediatePath, directory);
@@ -70,9 +69,9 @@ export class FakeDirectory implements Directory {
   private recursivelyCreateDirectoryPath(
     parts: string[],
     index: number
-  ): Promise<Directory> {
+  ): FakeDirectory {
     if (index >= parts.length) {
-      throw new Error("");
+      return this;
     }
     const name = parts[index];
     let child = this.children.get(name);
@@ -84,44 +83,48 @@ export class FakeDirectory implements Directory {
     }
 
     if (index === parts.length - 1) {
-      return Promise.resolve(child);
+      return child;
     }
 
     return child.recursivelyCreateDirectoryPath(parts, index + 1);
   }
 
   createDirectory(path: string): Promise<Directory> {
-    if (path.includes("/")) {
-      const parts = path.split("/");
-      return this.recursivelyCreateDirectoryPath(parts, 0);
+    const parts = this.breakPathIntoParts(path);
+    if (parts.length === 0) {
+      return Promise.reject(new Error("Invalid directory path."));
     }
-    const directory = new FakeDirectory(this.childPath(path), path);
-    this.children.set(path, directory);
-    return Promise.resolve(directory);
+    const parentParts = parts.slice(0, -1);
+    const parent = this.recursivelyCreateDirectoryPath(parentParts, 0);
+    return Promise.resolve(
+      parent.createDirectoryChild(parts[parts.length - 1])
+    );
   }
 
   createFile(path: string, content?: string): Promise<Note> {
-    if (path.includes("/")) {
-      const parts = path.split("/");
-      const parentParts = parts.slice(0, -1);
-      const parent = this.recursivelyGetPath(parentParts, 0);
-      if (!parent) {
-        return Promise.reject(
-          new Error(`Directory "${parentParts.join("/")}" does not exist.`)
-        );
-      }
-
-      if (!parent.isDirectory) {
-        return Promise.reject(new Error(`Cannot create file inside file.`));
-      }
-
-      return parent.createFile(parts[parts.length - 1], content);
+    const parts = this.breakPathIntoParts(path);
+    if (parts.length === 0) {
+      return Promise.reject(new Error("Invalid path"));
     }
+    const parentParts = parts.slice(0, -1);
+    const parent = this.recursivelyGetPath(parentParts, 0);
+    if (!parent) {
+      return Promise.reject(
+        new Error(`Directory ${parentParts.join("/")} does not exist.`)
+      );
+    }
+    if (!parent.isDirectory) {
+      return Promise.reject(new Error("Cannot create file inside file."));
+    }
+    return Promise.resolve(
+      parent.createChildFile(parts[parts.length - 1], content)
+    );
+  }
 
+  private createChildFile(name: string, content?: string) {
     const frontmatter: Record<string, any> = {};
-
-    const note = {
-      modifyFrontMatter(transform: (frontmatter: Record<string, any>) => void) {
+    const note: NotePath = {
+      modifyFrontMatter(transform) {
         transform(frontmatter);
         return Promise.resolve();
       },
@@ -130,21 +133,22 @@ export class FakeDirectory implements Directory {
           frontmatter,
         };
       },
-      path: this.childPath(path),
-      name: path,
-      isNote: true as const,
-      isDirectory: false as const,
+      path: this.childPath(name),
+      name,
+      parent: this,
+      isNote: true,
+      isDirectory: false,
     };
-    this.children.set(path, note);
-
-    return Promise.resolve(note);
+    this.children.set(name, note);
+    return note;
   }
 
   getPath(path: string): Path | null {
-    if (!path.includes("/")) {
-      return this.children.get(path) ?? null;
+    const parts = this.breakPathIntoParts(path);
+    if (parts.length === 0) {
+      return this;
     }
-    return this.recursivelyGetPath(path.split("/"), 0);
+    return this.recursivelyGetPath(parts, 0);
   }
 
   list(subfolderPath?: string): Promise<{
@@ -152,7 +156,14 @@ export class FakeDirectory implements Directory {
     readonly folders: readonly string[];
   }> {
     if (subfolderPath) {
-      const path = this.recursivelyGetPath(subfolderPath.split("/"), 0);
+      const parts = this.breakPathIntoParts(subfolderPath);
+      if (parts.length === 0) {
+        return this.list();
+      }
+      const path = this.recursivelyGetPath(parts, 0);
+      if (!path) {
+        throw new Error("No directory found at " + subfolderPath);
+      }
       if (path.isDirectory) {
         return path.list();
       } else {
@@ -174,10 +185,14 @@ export class FakeDirectory implements Directory {
     this.children.delete(path);
     return Promise.resolve();
   }
+
+  private breakPathIntoParts(path: string) {
+    return path.split("/").filter((part) => part.length > 0);
+  }
 }
 
 export class InMemoryFileSystem extends FakeDirectory {
   constructor() {
-    super("", "");
+    super("", null, "");
   }
 }

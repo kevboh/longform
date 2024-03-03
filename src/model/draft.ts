@@ -192,10 +192,7 @@ export async function draftForNote(
     const sceneFolder = longformEntry["sceneFolder"] ?? "/";
     const sceneTemplate = longformEntry["sceneTemplate"] ?? null;
     const ignoredFiles: string[] = longformEntry["ignoredFiles"] ?? [];
-    const normalizedSceneFolder = `${note.path
-      .split("/")
-      .slice(0, -1)
-      .join("/")}/${sceneFolder}`;
+    const normalizedSceneFolder = `${note.parent.path}/${sceneFolder}`;
 
     let filenamesInSceneFolder: string[] = [];
     if (await fileSystem.pathExists(normalizedSceneFolder)) {
@@ -203,7 +200,7 @@ export async function draftForNote(
         await fileSystem.list(normalizedSceneFolder)
       ).files
         .filter((f) => f.endsWith(".md") && f !== note.path)
-        .map((f) => fileNameFromPath(f).slice(0, -3)); // TODO: test
+        .map((f) => fileNameFromPath(f));
     }
 
     // Filter removed scenes
