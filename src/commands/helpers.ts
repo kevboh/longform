@@ -6,6 +6,17 @@ import {
   type PaneType,
 } from "obsidian";
 
+declare module "obsidian" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- cannot declare otherwise
+	interface FuzzySuggestModal<T> {
+		chooser?: {
+			useSelectedItem: (evt: KeyboardEvent) => boolean;
+			moveDown: (count: number) => void;
+			moveUp: (count: number) => void;
+		};
+	}
+}
+
 export class JumpModal<T> extends FuzzySuggestModal<string> {
   items: Map<string, T>;
   onSelect: (value: T, modEvent: boolean | PaneType) => void;
@@ -32,6 +43,23 @@ export class JumpModal<T> extends FuzzySuggestModal<string> {
       this.close();
       return false;
     });
+
+    // navigate up/down with Tab and Shift+Tab
+		this.scope.register([], "Tab", (evt: KeyboardEvent): void => {
+			if (evt.isComposing || !this.chooser) return;
+			this.chooser.moveDown(1);
+		});
+		this.scope.register(["Shift"], "Tab", (evt: KeyboardEvent): void => {
+			if (evt.isComposing || !this.chooser) return;
+			this.chooser.moveUp(1);
+		});
+    instructions.concat([{
+      command: "↹ ",
+      purpose: "Down",
+    },{
+      command: "↹ ",
+      purpose: "Down",
+    }])
 
     this.setInstructions(instructions);
   }
