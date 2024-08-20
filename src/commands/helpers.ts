@@ -45,14 +45,12 @@ export class JumpModal<T> extends FuzzySuggestModal<string> {
     });
 
     // navigate up/down with Tab and Shift+Tab
-		this.scope.register([], "Tab", (evt: KeyboardEvent): void => {
-			if (evt.isComposing || !this.chooser) return;
-			this.chooser.moveDown(1);
-		});
-		this.scope.register(["Shift"], "Tab", (evt: KeyboardEvent): void => {
-			if (evt.isComposing || !this.chooser) return;
-			this.chooser.moveUp(1);
-		});
+    this.scope.register([], "Tab", (): void => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    });
+    this.scope.register(["Shift"], "Tab", (): void => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
+    });
     instructions.concat([{
       command: "↹ ",
       purpose: "Down",
