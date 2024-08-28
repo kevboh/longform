@@ -5,5 +5,6 @@ export default defineConfig({
     coverage: {
       reporter: ["text", "html"],
     },
+    exclude: ["src/**/*", "node_modules/**/*"],
   },
 });
