@@ -269,7 +269,7 @@ export async function compile(
           },
           context
         );
-        currentInput[0].contents = result;
+        currentInput[0] = result;
       } else {
         currentInput = await step.compile(currentInput, context);
       }
