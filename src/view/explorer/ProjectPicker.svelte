@@ -91,8 +91,8 @@
     {/if}
   {:else}
     <p>
-      To begin, find or create a folder somewhere in your vault in which 
-      you would like to create your novel. Right-click it and select 
+      To begin, find or create a folder somewhere in your vault in which you
+      would like to create your novel. Right-click it and select
       <code>Create Longform Project.</code>
     </p>
   {/if}
@@ -105,10 +105,11 @@
 
   select {
     background-color: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
+    border: var(--input-border-width) solid var(--background-modifier-border);
+    border-radius: var(--input-radius);
+    padding: var(--size-4-2);
     width: 100%;
+    height: 100%;
     font-family: inherit;
     font-size: 1em;
     cursor: inherit;
@@ -122,19 +123,29 @@
   }
 
   .select > select {
-    color: var(--text-accent);
+    background-color: var(--background-secondary);
+    color: var(--text-muted);
+    appearance: auto;
   }
 
   .select > select:hover {
-    text-decoration: underline;
-    color: var(--text-accent-hover);
+    color: var(--text-normal);
+    box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+    border-color: var(--background-modifier-border-focus);
+    transition:
+      box-shadow 0.15s ease-in-out,
+      border 0.15s ease-in-out;
   }
 
-  #project-picker {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
+  .select select option {
+    font-size: var(--nav-item-size);
+    padding: var(--nav-item-padding);
+  }
+
+  .select select option:checked,
+  .select select option:hover {
+    box-shadow: 0 0 10px 100px var(--background-modifier-hover) inset;
+    color: inherit;
   }
 
   .right-arrow {
@@ -150,9 +161,9 @@
   }
 
   .current-draft-path {
-    color: var(--text-muted);
+    color: var(--text-faint);
     font-size: var(--font-smallest);
-    padding: 0 0 var(--size-4-1) 0;
+    padding: 0 0 var(--size-4-1) var(--size-4-3);
   }
 
   .current-draft-path:hover {

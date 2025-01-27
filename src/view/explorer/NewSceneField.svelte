@@ -38,7 +38,7 @@
   <input
     id="new-scene"
     type="text"
-    placeholder="New Scene…"
+    placeholder="New Scene"
     bind:value={newSceneName}
     bind:this={newSceneInput}
     on:keydown={(e) => {
@@ -59,24 +59,20 @@
 <style>
   .new-scene-container {
     margin: 0;
-    border-top: var(--border-width) solid var(--text-muted);
-    padding: var(--size-4-1) 0;
+    padding: var(--size-4-2) 0;
   }
 
   #new-scene {
-    padding: 0;
-    border: 0;
-    background: inherit;
-    font-size: 1em;
-    line-height: var(--h3-line-height);
     width: 100%;
+    background: var(--background-modifier-form-field);
+    border: var(--input-border-width) solid var(--background-modifier-border);
+    border-radius: var(--input-radius);
+    font-size: var(--font-ui-small);
+    padding: var(--size-4-1) var(--size-4-2);
   }
 
   #new-scene.invalid {
     color: var(--text-error);
   }
 
-  #new-scene::placeholder {
-    font-style: italic;
-  }
 </style>

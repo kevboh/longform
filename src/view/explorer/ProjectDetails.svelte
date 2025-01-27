@@ -316,10 +316,10 @@
   }
 
   h4 {
-    font-weight: bold;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-semibold);
     margin: 0;
     padding: 0;
-    font-size: 1em;
     margin-right: var(--size-4-1);
   }
 
