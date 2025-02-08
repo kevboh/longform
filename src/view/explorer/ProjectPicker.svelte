@@ -63,6 +63,7 @@
       <div class="select" id="select-projects">
         <select
           name="projects"
+          class="dropdown"
           value={$selectedDraft ? $selectedDraft.title : projectOptions[0]}
           on:change={projectSelected}
         >
@@ -118,34 +119,14 @@
     box-shadow: none;
   }
 
-  .select {
-    cursor: pointer;
-  }
-
-  .select > select {
-    background-color: var(--background-secondary);
-    color: var(--text-muted);
-    appearance: auto;
-  }
-
   .select > select:hover {
     color: var(--text-normal);
+    background-color: var(--background-modifier-hover);
     box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
     border-color: var(--background-modifier-border-focus);
     transition:
       box-shadow 0.15s ease-in-out,
       border 0.15s ease-in-out;
-  }
-
-  .select select option {
-    font-size: var(--nav-item-size);
-    padding: var(--nav-item-padding);
-  }
-
-  .select select option:checked,
-  .select select option:hover {
-    box-shadow: 0 0 10px 100px var(--background-modifier-hover) inset;
-    color: inherit;
   }
 
   .right-arrow {
