@@ -95,6 +95,9 @@ export interface LongformPluginSettings {
   sessionFile: string;
   numberScenes: boolean;
   sceneTemplate: string | null;
+  waitForSync: boolean;
+  fallbackWaitEnabled: boolean;
+  fallbackWaitTime: number;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
     [path: string]: {
@@ -124,6 +127,9 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   numberScenes: false,
   sceneTemplate: null,
   projects: {},
+  waitForSync: false,
+  fallbackWaitEnabled: true,
+  fallbackWaitTime: 5,
 };
 
 export const TRACKED_SETTINGS_PATHS = [
@@ -143,6 +149,9 @@ export const TRACKED_SETTINGS_PATHS = [
   "sessionFile",
   "numberScenes",
   "sceneTemplate",
+  "waitForSync",
+  "fallbackWaitEnabled",
+  "fallbackWaitTime",
 ];
 
 export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
@@ -158,4 +167,7 @@ export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
   "sessionFile",
   "numberScenes",
   "sceneTemplate",
+  "waitForSync",
+  "fallbackWaitEnabled",
+  "fallbackWaitTime",
 ];
