@@ -299,9 +299,13 @@
 <style>
   .longform-project-section {
     margin-top: var(--size-4-4);
-    padding-bottom: var(--size-4-4);
-    border-bottom: var(--border-width) solid var(--background-modifier-border);
+    padding-bottom: var(--size-4-2);
     padding-left: var(--size-4-8);
+  }
+
+  .longform-project-section + .longform-project-section {
+    border-top: var(--border-width) solid var(--background-modifier-border);
+    padding-top: var(--size-4-4);
   }
 
   .longform-project-section .right-triangle {

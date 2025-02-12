@@ -67,7 +67,7 @@
             <ProjectDetails />
           </div>
         {:else}
-          <div class="tab-panel-container">
+          <div class="tab-panel-container disconnected">
             <CompileView />
           </div>
         {/if}
@@ -116,5 +116,10 @@
   .tab-panel-container {
     background: var(--background-primary);
     padding: var(--size-4-1) var(--size-4-2);
+  }
+  
+  .tab-panel-container.disconnected {
+    background: none;
+    padding: 0;
   }
 </style>

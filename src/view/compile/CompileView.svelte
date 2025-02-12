@@ -348,15 +348,24 @@
       </div>
     {/if}
 
-    <p>
-      Compile workflows run their steps in order.<br /><b>Scene</b> workflows
-      run once per scene.<br /><b>Join</b> workflows run once and combine the
-      rest of your scene steps into a single manuscript.<br /><b>Manuscript</b>
-      steps run once on the joined manuscript.<br />Drag to rearrange.
-      <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md"
-        >Documentation here.</a
+    <ul class="longform-compile-instructions">
+      <li>
+        Compile workflows run their steps in order.
+      </li>
+      <li>
+        <strong>Scene</strong> workflows run once per scene.
+      </li>
+      <li>
+        <strong>Join</strong> workflows run once and combine the rest of your scene steps into a single manuscript.
+      </li>
+      <li>
+        <strong>Manuscript</strong> steps run once on the joined manuscript.
+      </li>
+      <li>
+        Drag to rearrange. <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md">Documentation here.</a
       >
-    </p>
+      </li>
+    </ul>
 
     <div class="longform-compile-run-container">
       {#if $currentWorkflow && $currentWorkflow.steps.length > 0}
@@ -378,11 +387,14 @@
 
 <style>
   .longform-workflow-picker-container {
-    margin-bottom: var(--size-4-8);
-    padding: var(--size-4-2) 0;
-    border-bottom: var(--border-width) solid var(--background-modifier-border);
+    padding: var(--size-4-2);
+    background: var(--background-primary);
     display: flex;
     flex-direction: column;
+  }
+
+  #longform-workflows {
+    color: var(--color-accent-2);
   }
 
   .longform-workflow-picker {
@@ -456,6 +468,20 @@
     text-decoration: underline;
     color: var(--text-accent-hover);
   }
+
+  .longform-compile-instructions {
+    font-size: var(--font-smallest);
+    padding: var(--size-4-4) var(--size-4-4) var(--size-4-1) var(--size-4-8);
+    color: var(--text-muted);
+  }
+  
+    .longform-compile-instructions li {
+      margin-bottom: var(--size-4-1)
+    }
+
+    .longform-compile-instructions strong {
+      color: var(--color-accent-2);
+    }
 
   .compile-button {
     font-weight: bold;
