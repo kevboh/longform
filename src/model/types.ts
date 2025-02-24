@@ -134,7 +134,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   fallbackWaitTime: 5,
 };
 
-export const TRACKED_SETTINGS_PATHS = [
+export const TRACKED_SETTINGS_PATHS: (keyof LongformPluginSettings)[] = [
   "version",
   "projects",
   "selectedDraftVaultPath",
@@ -154,22 +154,25 @@ export const TRACKED_SETTINGS_PATHS = [
   "waitForSync",
   "fallbackWaitEnabled",
   "fallbackWaitTime",
+  "writeProperty",
 ];
 
-export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
-  "sessionStorage",
-  "userScriptFolder",
-  "showWordCountInStatusBar",
-  "startNewSessionEachDay",
-  "sessionGoal",
-  "applyGoalTo",
-  "notifyOnGoal",
-  "countDeletionsForGoal",
-  "keepSessionCount",
-  "sessionFile",
-  "numberScenes",
-  "sceneTemplate",
-  "waitForSync",
-  "fallbackWaitEnabled",
-  "fallbackWaitTime",
-];
+export const PASSTHROUGH_SAVE_SETTINGS_PATHS: (keyof LongformPluginSettings)[] =
+  [
+    "sessionStorage",
+    "userScriptFolder",
+    "showWordCountInStatusBar",
+    "startNewSessionEachDay",
+    "sessionGoal",
+    "applyGoalTo",
+    "notifyOnGoal",
+    "countDeletionsForGoal",
+    "keepSessionCount",
+    "sessionFile",
+    "numberScenes",
+    "sceneTemplate",
+    "waitForSync",
+    "fallbackWaitEnabled",
+    "fallbackWaitTime",
+    "writeProperty",
+  ];
