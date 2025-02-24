@@ -69,7 +69,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Write scene index to frontmatter")
       .setDesc(
-        "If enabled, will add an index number to the frontmatter of scene files."
+        "If enabled, will add a scene index, and scene number, to the frontmatter of scene files."
       )
       .addToggle((toggle) => {
         toggle.setValue(settings.writeProperty);
