@@ -601,6 +601,27 @@ export class StoreVaultSync {
   }
 }
 
+export function syncSceneIndices(app: App): void | Promise<void[]> {
+  const writes: Promise<void>[] = [];
+  get(draftsStore).forEach((draft) => {
+    if (draft.format !== "scenes") return;
+    draft.scenes.map((indentedScene, index) => {
+      const sceneFilePath = scenePath(indentedScene.title, draft, app.vault);
+
+      const sceneFile = app.vault.getAbstractFileByPath(sceneFilePath);
+      // false if a folder, or not found
+      if (!(sceneFile instanceof TFile)) {
+        return;
+      }
+      return app.fileManager.processFrontMatter(sceneFile, (fm) => {
+        fm["longform-order"] = index;
+      });
+    });
+  });
+  if (writes.length === 0) return;
+  return Promise.all(writes);
+}
+
 const ESCAPED_CHARACTERS = new Set("/&$^+.()=!|[]{},".split(""));
 function ignoredPatternToRegex(pattern: string): RegExp {
   let regex = "";
