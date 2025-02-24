@@ -98,6 +98,7 @@ export interface LongformPluginSettings {
   waitForSync: boolean;
   fallbackWaitEnabled: boolean;
   fallbackWaitTime: number;
+  writeProperty: boolean;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
     [path: string]: {
@@ -126,6 +127,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   sessionFile: DEFAULT_SESSION_FILE,
   numberScenes: false,
   sceneTemplate: null,
+  writeProperty: false,
   projects: {},
   waitForSync: false,
   fallbackWaitEnabled: true,

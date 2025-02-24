@@ -16,10 +16,12 @@ export function fileNameFromPath(path: string): string {
 export async function createNoteWithPotentialTemplate(
   app: App,
   path: string,
+  index: number,
   template: string | null
 ): Promise<void> {
   const file = await createNote(app, path);
-  if (template && file) {
+  if (!file) return;
+  if (template) {
     let contents = "";
     let pluginUsed = "";
     try {
@@ -37,6 +39,9 @@ export async function createNoteWithPotentialTemplate(
       await app.vault.adapter.write(path, contents);
     }
   }
+  await app.fileManager.processFrontMatter(file, (fm) => {
+    fm["longform-order"] = index;
+  });
 }
 
 /**
