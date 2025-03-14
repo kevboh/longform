@@ -367,6 +367,7 @@
     border-radius: var(--radius-s);
     position: relative;
     overflow: hidden;
+    margin-top: var(--size-4-4);
   }
 
   .progress:before {
