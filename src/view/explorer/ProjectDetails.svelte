@@ -351,7 +351,14 @@
 
   .word-counts p {
     margin: var(--size-4-2) 0;
+    font-size: var(--font-smallest);
+    color: var(--text-muted);
   }
+
+  .word-counts p strong {
+    color: var(--text-normal);
+  }
+
 
   .progress {
     height: var(--size-4-6);

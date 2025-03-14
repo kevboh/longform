@@ -108,11 +108,11 @@
     background-color: transparent;
     border: var(--input-border-width) solid var(--background-modifier-border);
     border-radius: var(--input-radius);
-    padding: var(--size-4-2);
+    padding: var(--size-4-2) var(--size-4-3);
     width: 100%;
     height: 100%;
     font-family: inherit;
-    font-size: 1em;
+    font-size: var(--font-ui-large);
     cursor: inherit;
     line-height: inherit;
     outline: none;
