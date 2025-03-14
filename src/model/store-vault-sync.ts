@@ -424,7 +424,7 @@ export class StoreVaultSync {
       );
 
       // ignore all new scenes that are known-to-ignore per ignoredFiles
-      const ignoredRegexes = ignoredFiles.map((p) => ignoredPatternToRegex(p));
+      const ignoredRegexes = ignoredFiles.filter(n => n).map((p) => ignoredPatternToRegex(p));
       const unknownFiles = newScenes.filter(
         (s) => ignoredRegexes.find((r) => r.test(s)) === undefined
       );
