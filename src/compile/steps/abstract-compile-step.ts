@@ -38,6 +38,8 @@ export enum CompileStepOptionType {
   Boolean,
   /** A single-line freeform text entry. */
   Text,
+  /** Key-value text */
+  MultilineText,
 }
 
 /**

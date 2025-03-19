@@ -72,6 +72,13 @@
                   placeholder={option.default.replace(/\n/g, "\\n")}
                   bind:value={step.optionValues[option.id]}
                 />
+              {:else if option.type === CompileStepOptionType.MultilineText}
+                <label for={step.id + "-" + option.id}>{option.name}</label>
+                <textarea
+                  id={step.id + "-" + option.id}
+                  placeholder="key: value"
+                  bind:value={step.optionValues[option.id]}
+                />
               {:else}
                 <div class="longform-compile-step-checkbox-container">
                   <input
@@ -204,6 +211,13 @@
   .longform-compile-step-option input[type="text"] {
     margin: 0 0 var(--size-4-1) 0;
     width: 100%;
+  }
+
+  .longform-compile-step-option textarea {
+    color: var(--text-accent);
+    margin: 0 0 var(--size-4-1) 0;
+    width: 100%;
+    resize: vertical;
   }
 
   .longform-compile-step-option input[type="checkbox"] {
