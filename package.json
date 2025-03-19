@@ -1,6 +1,6 @@
 {
   "name": "longform",
-  "version": "2.0.7",
+  "version": "2.1.0",
   "description": "Write novels, screenplays, and other long projects in Obsidian (https://obsidian.md).",
   "main": "main.js",
   "scripts": {

@@ -75,7 +75,6 @@
         </select>
       </div>
       {#if $selectedProjectHasMultipleDrafts}
-        <span class="right-arrow" />
         <div class="select" id="select-drafts">
           <select name="drafts" bind:value={$selectedDraftVaultPath}>
             {#each draftOptions as draftOption}
@@ -129,18 +128,6 @@
       border 0.15s ease-in-out;
   }
 
-  .right-arrow {
-    display: grid;
-  }
-
-  .right-arrow::after {
-    content: "";
-    width: var(--font-smallest);
-    height: var(--size-4-2);
-    background-color: var(--text-muted);
-    clip-path: polygon(50% 0%, 50% 100%, 100% 50%);
-  }
-
   .current-draft-path {
     color: var(--text-faint);
     font-size: var(--font-smallest);
@@ -150,5 +137,9 @@
   .current-draft-path:hover {
     color: var(--text-accent);
     cursor: pointer;
+  }
+
+  #select-drafts {
+    margin-top: var(--size-4-1);
   }
 </style>
