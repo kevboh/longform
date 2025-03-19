@@ -17,6 +17,8 @@ import {
 } from "src/model/draft-utils";
 import { fileNameFromPath } from "./note-utils";
 import { findScene, sceneFolderPath } from "./scene-navigation";
+import { pluginSettings } from "./stores";
+import { waitingForSync } from "./stores";
 
 type FileWithMetadata = {
   file: TFile;
@@ -47,6 +49,8 @@ export class StoreVaultSync {
   private app: App;
   private vault: Vault;
   private metadataCache: MetadataCache;
+  private isInitializing = true;
+  private settlingTime = 30000; // fallback settling time
 
   private lastKnownDraftsByPath: Record<string, Draft> = {};
   private unsubscribeDraftsStore: Unsubscriber;
@@ -61,6 +65,93 @@ export class StoreVaultSync {
 
   destroy(): void {
     this.unsubscribeDraftsStore();
+  }
+
+  private isSyncEnabled(): boolean {
+    try {
+      // @ts-ignore - accessing private API
+      const syncPlugin = this.app.internalPlugins?.plugins?.sync;
+      return syncPlugin?.enabled === true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForSync(): Promise<void> {
+    const settings = get(pluginSettings);
+
+    // First check if "wait for sync" in setting or the Sync plugin itself is enabled
+    if (!settings.waitForSync || !this.isSyncEnabled()) {
+      return Promise.resolve();
+    }
+
+    try {
+      // @ts-ignore - accessing private API
+      const sync = this.app.internalPlugins.plugins.sync.instance;
+
+      // Set waitingForSync to disable watchers and enable loading spinner
+      waitingForSync.set(true);
+
+      // Check if we can't access the sync status (possibly due to Sync plugin API changes), use fallback wait if not
+      if (!sync?.syncing) {
+        return this.fallbackWait();
+      }
+
+      return new Promise((resolve) => {
+        if (!sync.syncing) {
+          waitingForSync.set(false);
+          resolve();
+          return;
+        }
+
+        console.log("[Longform] Waiting for active sync to complete...");
+
+        // Poll sync status every second
+        const interval = setInterval(() => {
+          if (!sync.syncing) {
+            clearInterval(interval);
+            clearTimeout(timeout);  // Clear the timeout when sync completes
+            console.log("[Longform] Sync complete.");
+            waitingForSync.set(false);
+            resolve();
+          }
+          console.log("[Longform] Sync status:", sync.syncStatus);
+        }, 1000);
+
+        // Add a timeout just in case sync never completes
+        const timeout = setTimeout(() => {
+          clearInterval(interval);
+          console.log("[Longform] Sync wait timed out");
+          waitingForSync.set(false);
+          resolve();
+        }, this.settlingTime);
+      });
+    } catch (error) {
+      waitingForSync.set(false);
+      return this.fallbackWait();
+    }
+  }
+
+  private async fallbackWait(): Promise<void> {
+    const settings = get(pluginSettings);
+    if (!settings.fallbackWaitEnabled) {
+      return Promise.resolve();
+    }
+
+    return new Promise(resolve =>
+      setTimeout(resolve, settings.fallbackWaitTime * 1000)
+    );
+  }
+
+  async initialize() {
+    try {
+      await this.waitForSync();
+      await this.discoverDrafts();
+
+      this.isInitializing = false;
+    } catch (error) {
+      this.isInitializing = false;
+    }
   }
 
   async discoverDrafts() {
@@ -94,9 +185,8 @@ export class StoreVaultSync {
     );
     draftsStore.set(draftsToWrite);
 
-    const message = `[Longform] Loaded and watching projects. Found ${
-      draftFiles.length
-    } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
+    const message = `[Longform] Loaded and watching projects. Found ${draftFiles.length
+      } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
 
     console.log(message);
 
@@ -106,6 +196,7 @@ export class StoreVaultSync {
   }
 
   async fileMetadataChanged(file: TFile, _data: string, cache: CachedMetadata) {
+    if (this.isInitializing) return;
     if (this.pathsToIgnoreNextChange.delete(file.path)) {
       return;
     }
@@ -143,6 +234,7 @@ export class StoreVaultSync {
   }
 
   async fileCreated(file: TFile) {
+    if (this.isInitializing) return;
     const drafts = get(draftsStore);
 
     // check if a new scene has been moved into this folder
@@ -178,6 +270,7 @@ export class StoreVaultSync {
   }
 
   async fileDeleted(file: TFile) {
+    if (this.isInitializing) return;
     const drafts = get(draftsStore);
     const draftIndex = drafts.findIndex((d) => d.vaultPath === file.path);
     if (draftIndex >= 0) {
@@ -232,6 +325,7 @@ export class StoreVaultSync {
   }
 
   async fileRenamed(file: TFile, oldPath: string) {
+    if (this.isInitializing) return;
     const drafts = get(draftsStore);
     const draftIndex = drafts.findIndex((d) => d.vaultPath === oldPath);
     if (draftIndex >= 0) {

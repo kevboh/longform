@@ -56,6 +56,11 @@ export const sessions = writable<WordCountSession[]>([]);
  */
 export const draftWordCounts = writable<DraftWordCounts>({});
 
+/**
+ * Writeable store of whether the plugin is waiting for sync.
+ */
+export const waitingForSync = writable<boolean>(false);
+
 // DERIVED STORES
 
 /**

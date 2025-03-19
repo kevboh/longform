@@ -266,8 +266,13 @@ export default class LongformPlugin extends Plugin {
     });
   }
 
-  private postLayoutInit(): void {
+  private async postLayoutInit(): Promise<void> {
     this.userScriptObserver.beginObserving();
+
+    // Initialize StoreVaultSync with sync awareness
+    await this.storeVaultSync.initialize();
+
+    // Continue with the rest of initialization only after sync is complete
     this.watchProjects();
 
     const defaultToScenes = once(function (d: Draft) {

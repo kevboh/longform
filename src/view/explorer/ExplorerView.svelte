@@ -3,6 +3,7 @@
 
   import { selectedDraft } from "src/model/stores";
   import { selectedTab } from "../stores";
+  import { waitingForSync } from "src/model/stores";
 
   import NewSceneField from "./NewSceneField.svelte";
   import ProjectPicker from "./ProjectPicker.svelte";
@@ -44,6 +45,13 @@
     <button class="longform-migrate-button" type="button" on:click={doMigration}
       >Migrate</button
     >
+  </div>
+{:else if $waitingForSync}
+  <div class="longform-sync-wait">
+    <div class="longform-spinner"></div>
+    <div class="longform-sync-message">
+      Waiting for Obsidian Sync to complete...
+    </div>
   </div>
 {:else}
   <div class="longform-explorer">
@@ -115,5 +123,39 @@
 
   .tab-panel-container {
     padding: 0;
+  }
+
+  .longform-sync-wait {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    gap: 1rem;
+  }
+
+  .longform-spinner {
+    border: 3px solid var(--background-modifier-border);
+    border-top: 3px solid var(--text-accent);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  .longform-sync-message {
+    color: var(--text-muted);
+    font-size: 0.8em;
+    text-align: center;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>

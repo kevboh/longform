@@ -90,9 +90,8 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
     this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
       if (steps && steps.length > 0) {
-        this.stepsSummary.innerText = `Loaded ${steps.length} step${
-          steps.length !== 1 ? "s" : ""
-        }:`;
+        this.stepsSummary.innerText = `Loaded ${steps.length} step${steps.length !== 1 ? "s" : ""
+          }:`;
       } else {
         this.stepsSummary.innerText = "No steps loaded.";
       }
@@ -255,6 +254,50 @@ export class LongformSettingsTab extends PluginSettingTab {
       sessionFileStorageSettings.settingEl.style.display =
         settings.sessionStorage === "file" ? "flex" : "none";
     });
+
+    new Setting(containerEl).setName("Troubleshooting").setHeading();
+
+    new Setting(containerEl)
+      .setName("Wait for Obsidian Sync")
+      .setDesc("Prevent Longform from running until Obsidian Sync completes its first sync. If you are using Sync, you may want to enable this if you experience issues with scenes disappearing or falsely being shown as new.")
+      .addToggle((cb) => {
+        cb.setValue(settings.waitForSync);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            waitForSync: value,
+          }));
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Enable fallback wait")
+      .setDesc("If sync status cannot be detected, wait for the time specified below before looking for scenes.")
+      .addToggle((cb) => {
+        cb.setValue(settings.fallbackWaitEnabled);
+        cb.onChange((value) => {
+          pluginSettings.update((s) => ({
+            ...s,
+            fallbackWaitEnabled: value,
+          }));
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Fallback wait time")
+      .setDesc("Time to wait in seconds if sync status cannot be detected.")
+      .addText((cb) => {
+        cb.setValue(settings.fallbackWaitTime.toString());
+        cb.onChange((value) => {
+          const numberValue = parseInt(value);
+          if (!isNaN(numberValue) && numberValue > 0) {
+            pluginSettings.update((s) => ({
+              ...s,
+              fallbackWaitTime: numberValue,
+            }));
+          }
+        });
+      });
 
     new Setting(containerEl).setName("Credits").setHeading();
 
