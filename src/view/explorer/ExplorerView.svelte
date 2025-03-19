@@ -75,7 +75,7 @@
             <ProjectDetails />
           </div>
         {:else}
-          <div class="tab-panel-container">
+          <div class="tab-panel-container disconnected">
             <CompileView />
           </div>
         {/if}
@@ -117,11 +117,17 @@
   }
 
   .tab-list {
-    margin: var(--size-4-1) 0;
-    border-bottom: var(--border-width) solid var(--text-muted);
+    margin: 0;
+    font-size: 0; /* To remove spacing between tabs */
   }
 
   .tab-panel-container {
+    background: var(--background-primary);
+    padding: var(--size-4-1) var(--size-4-2);
+  }
+  
+  .tab-panel-container.disconnected {
+    background: none;
     padding: 0;
   }
 

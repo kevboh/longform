@@ -356,8 +356,8 @@
       class="sortable-scene-list"
     >
       <div
-        class="scene-container{item.hidden ? ' hidden' : ''}"
-        style="padding-left: calc({item.indent} * var(--longform-explorer-indent-size));"
+        class="scene-container{item.hidden ? ' hidden' : ''}{item.collapsible ? ' collapsible' : ''}"
+        style="padding-left: calc(({item.indent} * var(--longform-explorer-indent-size)) + 6px {item.collapsible ? '' : '+ var(--size-4-4)'});"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
@@ -463,11 +463,27 @@
     border: var(--border-width) solid transparent;
     border-radius: var(--radius-s);
     cursor: pointer;
-    color: var(--text-muted);
-    font-size: 1em;
-    line-height: 1.1em;
+    color: var(--nav-item-color);
+    font-size: var(--nav-item-size);
+    font-weight: var(--nav-item-weight);
+    line-height: var(--line-height-tight);
+    padding: var(--size-4-1) var(--size-4-2);
     white-space: normal;
-    padding: var(--size-2-1) 0;
+  }
+
+  .scene-container.collapsible {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    color: var(--nav-item-color);
+    font-size: var(--nav-item-size);
+    font-weight: var(--nav-item-weight);
+    line-height: var(--line-height-tight);
+    padding: var(--size-4-1) var(--size-4-2);
+    white-space: normal;
   }
 
   .scene-container.hidden {

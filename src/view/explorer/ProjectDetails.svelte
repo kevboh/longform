@@ -184,8 +184,8 @@
           showMetdata = !showMetdata;
         }}
       >
-        <h4>Project Metadata</h4>
         <Disclosure collapsed={!showMetdata} />
+        <h4>Project Metadata</h4>
       </div>
       {#if showMetdata}
         <div>
@@ -197,38 +197,34 @@
             on:change={titleChanged}
           />
           {#if $selectedDraft.format === "scenes"}
-            <div style="margin-top: var(--size-4-2);">
-              <label for="longform-project-scene-folder">Scene Folder</label>
-              <input
-                id="longform-project-scene-folder"
-                type="text"
-                value={$selectedDraft.sceneFolder}
-                bind:this={sceneFolderInput}
-                on:blur={sceneFolderChanged}
-              />
-              <p class="longform-project-warning">
-                Changing scene folder does not move scenes. If you’re moving
-                scenes to a new folder, move them in your vault first, then
-                change this setting.
-              </p>
-            </div>
-            <div style="margin-top: var(--size-4-2);">
-              <label for="longform-project-scene-template">Scene Template</label
-              >
-              <input
-                id="longform-project-scene-template"
-                type="text"
-                value={$selectedDraft.sceneTemplate}
-                bind:this={sceneTemplateInput}
-                on:blur={sceneTemplateChanged}
-              />
-              <p class="longform-project-warning">
-                This file will be used as a template when creating new scenes
-                via the New Scene… field. If you use a templating plugin
-                (Templater or the core plugin) it will be used to process this
-                template.
-              </p>
-            </div>
+            <label for="longform-project-scene-folder">Scene Folder</label>
+            <input
+              id="longform-project-scene-folder"
+              type="text"
+              value={$selectedDraft.sceneFolder}
+              bind:this={sceneFolderInput}
+              on:blur={sceneFolderChanged}
+            />
+            <p class="longform-project-warning">
+              Changing scene folder does not move scenes. If you’re moving
+              scenes to a new folder, move them in your vault first, then
+              change this setting.
+            </p>
+            <label for="longform-project-scene-template">Scene Template</label
+            >
+            <input
+              id="longform-project-scene-template"
+              type="text"
+              value={$selectedDraft.sceneTemplate}
+              bind:this={sceneTemplateInput}
+              on:blur={sceneTemplateChanged}
+            />
+            <p class="longform-project-warning">
+              This file will be used as a template when creating new scenes
+              via the New Scene… field. If you use a templating plugin
+              (Templater or the core plugin) it will be used to process this
+              template.
+            </p>
           {/if}
         </div>
       {/if}
@@ -246,8 +242,8 @@
         showWordCount = !showWordCount;
       }}
     >
-      <h4>Word Count</h4>
       <Disclosure collapsed={!showWordCount} />
+      <h4>Word Count</h4>
     </div>
     {#if showWordCount}
       <div>
@@ -287,8 +283,8 @@
           showDrafts = !showDrafts;
         }}
       >
-        <h4>Drafts</h4>
         <Disclosure collapsed={!showDrafts} />
+        <h4>Drafts</h4>
       </div>
       <button type="button" on:click={onNewDraft}>
         <Icon iconName="plus-with-circle" />
@@ -303,8 +299,18 @@
 <style>
   .longform-project-section {
     margin-top: var(--size-4-4);
-    padding-bottom: var(--size-4-4);
-    border-bottom: var(--border-width) solid var(--background-modifier-border);
+    padding-bottom: var(--size-4-2);
+    padding-left: var(--size-4-8);
+  }
+
+  .longform-project-section + .longform-project-section {
+    border-top: var(--border-width) solid var(--background-modifier-border);
+    padding-top: var(--size-4-4);
+  }
+
+  .longform-project-section .right-triangle {
+    margin-left: var(--size-4-1);
+    margin-right: var(--size-4-2);
   }
 
   .longform-project-details-section-header {
@@ -313,38 +319,46 @@
     justify-content: start;
     align-items: center;
     cursor: pointer;
+    margin-left: calc(var(--size-4-6) * -1);
   }
 
   h4 {
-    font-weight: bold;
-    margin: 0;
-    padding: 0;
-    font-size: 1em;
-    margin-right: var(--size-4-1);
+    font-size: var(--font-ui-medium);
+    color: var(--text-normal);
+    user-select: none;
+    font-weight: inherit;
+    margin: 0 0 0 var(--size-4-4);
   }
 
   input {
     width: 100%;
-    color: var(--text-accent);
   }
 
   label {
-    font-weight: bold;
-    font-size: var(--font-smaller);
+    display: block;
+    font-size: var(--font-ui-smaller);
     color: var(--text-muted);
-    margin-top: var(--size-4-2);
+    margin-top: var(--size-4-4);
+    line-height: var(--line-height-tight);
   }
 
   p.longform-project-warning {
-    color: var(--text-muted);
+    color: var(--text-faint);
     font-size: var(--font-smallest);
-    margin: var(--size-2-1) 0 0 0;
+    margin: var(--size-2-1) 0 0 var(--size-2-1);
     line-height: normal;
   }
 
   .word-counts p {
     margin: var(--size-4-2) 0;
+    font-size: var(--font-smallest);
+    color: var(--text-muted);
   }
+
+  .word-counts p strong {
+    color: var(--text-normal);
+  }
+
 
   .progress {
     height: var(--size-4-6);
@@ -353,6 +367,7 @@
     border-radius: var(--radius-s);
     position: relative;
     overflow: hidden;
+    margin-top: var(--size-4-4);
   }
 
   .progress:before {
