@@ -2,6 +2,8 @@ import { last, sum } from "lodash";
 import type { App, TFile } from "obsidian";
 
 import type { Draft, DraftWordCounts } from "./types";
+import { get } from "svelte/store";
+import { pluginSettings } from "./stores";
 
 export function fileNameFromPath(path: string): string {
   return last(path.split("/")).split(".md")[0];
@@ -39,9 +41,11 @@ export async function createNoteWithPotentialTemplate(
       await app.vault.adapter.write(path, contents);
     }
   }
-  await app.fileManager.processFrontMatter(file, (fm) => {
-    fm["longform-order"] = index;
-  });
+  if (get(pluginSettings).writeProperty) {
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      fm["longform-order"] = index;
+    });
+  }
 }
 
 /**
