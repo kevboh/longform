@@ -18,11 +18,20 @@ type SceneInsertionLocation = {
 export async function createScene(
   app: App,
   path: string,
+  index: number,
   draft: MultipleSceneDraft,
   open: boolean
 ): Promise<void> {
   const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
-  createNoteWithPotentialTemplate(app, path, template);
+  const note = await createNoteWithPotentialTemplate(app, path, template);
+  if (note === null) return;
+
+  if (get(pluginSettings).writeProperty) {
+    await app.fileManager.processFrontMatter(note, (fm) => {
+      fm["longform-order"] = index;
+    });
+  }
+
   if (open) {
     app.workspace.openLinkText(path, "/", false);
   }
@@ -63,7 +72,14 @@ export async function insertScene(
       return d;
     });
   });
-  await createScene(app, newScenePath, draft, open);
+
+  await createScene(
+    app,
+    newScenePath,
+    draft.scenes.findIndex((s) => s.title === sceneName),
+    draft,
+    open
+  );
 }
 
 export function setDraftOnFrontmatterObject(
