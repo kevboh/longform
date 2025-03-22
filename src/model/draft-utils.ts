@@ -23,7 +23,15 @@ export async function createScene(
   open: boolean
 ): Promise<void> {
   const template = draft.sceneTemplate ?? get(pluginSettings).sceneTemplate;
-  await createNoteWithPotentialTemplate(app, path, index, template);
+  const note = await createNoteWithPotentialTemplate(app, path, template);
+  if (note === null) return;
+
+  if (get(pluginSettings).writeProperty) {
+    await app.fileManager.processFrontMatter(note, (fm) => {
+      fm["longform-order"] = index;
+    });
+  }
+
   if (open) {
     app.workspace.openLinkText(path, "/", false);
   }

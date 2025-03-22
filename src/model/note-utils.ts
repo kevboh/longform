@@ -2,8 +2,6 @@ import { last, sum } from "lodash";
 import type { App, TFile } from "obsidian";
 
 import type { Draft, DraftWordCounts } from "./types";
-import { get } from "svelte/store";
-import { pluginSettings } from "./stores";
 
 export function fileNameFromPath(path: string): string {
   return last(path.split("/")).split(".md")[0];
@@ -14,15 +12,16 @@ export function fileNameFromPath(path: string): string {
  * Prefers Templater, then the core Templates plugin, then a plain note without using the template.
  * @param path Path to note to create.
  * @param template Path to template to use.
+ * 
+ * @returns `null` if it fails to create the note.  `TFile` for the new note, if successful.
  */
 export async function createNoteWithPotentialTemplate(
   app: App,
   path: string,
-  index: number,
   template: string | null
-): Promise<void> {
+): Promise<TFile | null> {
   const file = await createNote(app, path);
-  if (!file) return;
+  if (!file) return null;
   if (template) {
     let contents = "";
     let pluginUsed = "";
@@ -41,11 +40,7 @@ export async function createNoteWithPotentialTemplate(
       await app.vault.adapter.write(path, contents);
     }
   }
-  if (get(pluginSettings).writeProperty) {
-    await app.fileManager.processFrontMatter(file, (fm) => {
-      fm["longform-order"] = index;
-    });
-  }
+  return file;
 }
 
 /**
