@@ -98,6 +98,7 @@ export interface LongformPluginSettings {
   waitForSync: boolean;
   fallbackWaitEnabled: boolean;
   fallbackWaitTime: number;
+  writeProperty: boolean;
   // DEPRECATED. To be removed in future, needed now for migrations.
   projects: {
     [path: string]: {
@@ -126,13 +127,14 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   sessionFile: DEFAULT_SESSION_FILE,
   numberScenes: false,
   sceneTemplate: null,
+  writeProperty: false,
   projects: {},
   waitForSync: false,
   fallbackWaitEnabled: true,
   fallbackWaitTime: 5,
 };
 
-export const TRACKED_SETTINGS_PATHS = [
+export const TRACKED_SETTINGS_PATHS: (keyof LongformPluginSettings)[] = [
   "version",
   "projects",
   "selectedDraftVaultPath",
@@ -152,22 +154,25 @@ export const TRACKED_SETTINGS_PATHS = [
   "waitForSync",
   "fallbackWaitEnabled",
   "fallbackWaitTime",
+  "writeProperty",
 ];
 
-export const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
-  "sessionStorage",
-  "userScriptFolder",
-  "showWordCountInStatusBar",
-  "startNewSessionEachDay",
-  "sessionGoal",
-  "applyGoalTo",
-  "notifyOnGoal",
-  "countDeletionsForGoal",
-  "keepSessionCount",
-  "sessionFile",
-  "numberScenes",
-  "sceneTemplate",
-  "waitForSync",
-  "fallbackWaitEnabled",
-  "fallbackWaitTime",
-];
+export const PASSTHROUGH_SAVE_SETTINGS_PATHS: (keyof LongformPluginSettings)[] =
+  [
+    "sessionStorage",
+    "userScriptFolder",
+    "showWordCountInStatusBar",
+    "startNewSessionEachDay",
+    "sessionGoal",
+    "applyGoalTo",
+    "notifyOnGoal",
+    "countDeletionsForGoal",
+    "keepSessionCount",
+    "sessionFile",
+    "numberScenes",
+    "sceneTemplate",
+    "waitForSync",
+    "fallbackWaitEnabled",
+    "fallbackWaitTime",
+    "writeProperty",
+  ];

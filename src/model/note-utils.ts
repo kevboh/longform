@@ -12,14 +12,17 @@ export function fileNameFromPath(path: string): string {
  * Prefers Templater, then the core Templates plugin, then a plain note without using the template.
  * @param path Path to note to create.
  * @param template Path to template to use.
+ * 
+ * @returns `null` if it fails to create the note.  `TFile` for the new note, if successful.
  */
 export async function createNoteWithPotentialTemplate(
   app: App,
   path: string,
   template: string | null
-): Promise<void> {
+): Promise<TFile | null> {
   const file = await createNote(app, path);
-  if (template && file) {
+  if (!file) return null;
+  if (template) {
     let contents = "";
     let pluginUsed = "";
     try {
@@ -37,6 +40,7 @@ export async function createNoteWithPotentialTemplate(
       await app.vault.adapter.write(path, contents);
     }
   }
+  return file;
 }
 
 /**

@@ -10,15 +10,20 @@ import { cloneDeep, isEqual } from "lodash";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { Draft } from "./types";
-import { drafts as draftsStore, selectedDraftVaultPath } from "./stores";
+import {
+  drafts as draftsStore,
+  pluginSettings,
+  waitingForSync,
+  selectedDraftVaultPath,
+} from "./stores";
 import {
   arraysToIndentedScenes,
+  formatSceneNumber,
+  numberScenes,
   setDraftOnFrontmatterObject,
 } from "src/model/draft-utils";
 import { fileNameFromPath } from "./note-utils";
-import { findScene, sceneFolderPath } from "./scene-navigation";
-import { pluginSettings } from "./stores";
-import { waitingForSync } from "./stores";
+import { findScene, sceneFolderPath, scenePath } from "./scene-navigation";
 
 type FileWithMetadata = {
   file: TFile;
@@ -568,7 +573,69 @@ export class StoreVaultSync {
     await this.app.fileManager.processFrontMatter(file, (fm) => {
       setDraftOnFrontmatterObject(fm, draft);
     });
+
+    // for multi-scene projects, optionally set a property on each scene that holds its order within the project
+    if (get(pluginSettings).writeProperty) {
+      if (draft.format === "scenes") {
+        const writes: Promise<void>[] = [];
+        const sceneNumbers = numberScenes(draft.scenes);
+        sceneNumbers.forEach((numberedScene, index) => {
+          const sceneFilePath = scenePath(
+            numberedScene.title,
+            draft,
+            this.app.vault
+          );
+
+          const sceneFile = this.app.vault.getAbstractFileByPath(sceneFilePath);
+          // false if a folder, or not found
+          if (!(sceneFile instanceof TFile)) {
+            return;
+          }
+          writes.push(
+            writeSceneNumbers(
+              this.app,
+              sceneFile,
+              index,
+              numberedScene.numbering
+            )
+          );
+        });
+
+        await Promise.all(writes);
+      }
+    }
   }
+}
+
+export function syncSceneIndices(app: App): void | Promise<void[]> {
+  const writes: Promise<void>[] = [];
+  get(draftsStore).forEach((draft) => {
+    if (draft.format !== "scenes") return;
+    numberScenes(draft.scenes).map((numberedScene, index) => {
+      const sceneFilePath = scenePath(numberedScene.title, draft, app.vault);
+
+      const sceneFile = app.vault.getAbstractFileByPath(sceneFilePath);
+      // false if a folder, or not found
+      if (!(sceneFile instanceof TFile)) {
+        return;
+      }
+      return writeSceneNumbers(app, sceneFile, index, numberedScene.numbering);
+    });
+  });
+  if (writes.length === 0) return;
+  return Promise.all(writes);
+}
+
+function writeSceneNumbers(
+  app: App,
+  file: TFile,
+  index: number,
+  numbering: number[]
+) {
+  return app.fileManager.processFrontMatter(file, (fm) => {
+    fm["longform-order"] = index;
+    fm["longform-number"] = formatSceneNumber(numbering);
+  });
 }
 
 const ESCAPED_CHARACTERS = new Set("/&$^+.()=!|[]{},".split(""));
