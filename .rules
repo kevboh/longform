@@ -1,0 +1,13 @@
+# LLM Rules
+
+This file provides general guidance for LLMs working in this codebase.
+
+## Overview
+
+This codebase is for Longform, an Obsidian plugin that assists in novel-writing. It enables users to order notes as _scenes_, to nest/indent those scenes, and to _compile_ those scenes into a single manuscript file.
+
+## Adding/Editing Compile Steps
+
+Compile steps make up workflows that turn scenes into manuscripts. They're defined in the `src/compile/steps` folder and exported in `src/compile/steps/index.ts`. Any steps in the `BUILTIN_STEPS` constant are available to users, in addition to their own custom scripts.
+
+Built-in compile steps like the ones you can add or edit call `makeBuiltinStep` with an object that describes the step, including a `compile` function.
