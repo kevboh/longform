@@ -101,4 +101,13 @@ describe("countWords", () => {
     const text = "The quick brown fox jumps over the lazy dog.";
     expect(countWords(text)).toBe(9);
   });
+
+  it("counts contractions with apostrophes as a single word", () => {
+    expect.soft(countWords("Can't"), '"Can\'t" should be 1 word').toBe(1);
+    expect.soft(countWords("don't"), '"don\'t" should be 1 word').toBe(1);
+    expect.soft(countWords("it's"), '"it\'s" should be 1 word').toBe(1);
+    expect.soft(countWords("won't"), '"won\'t" should be 1 word').toBe(1);
+    expect.soft(countWords("o'clock"), '"o\'clock" should be 1 word').toBe(1);
+    expect.soft(countWords("won't don't can't"), 'phrase with 3 contractions should be 3 words').toBe(3);
+  });
 });
