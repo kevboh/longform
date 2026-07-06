@@ -37,7 +37,7 @@ const WORD_COUNT_REGEX = (() => {
   );
 })();
 
-function countWords(
+export function countWords(
   text: string,
   removeMarkdown = true,
   removeComments = true
