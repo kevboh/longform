@@ -44,18 +44,18 @@ export function countWords(
 ): number {
   let textToCount = text;
 
+  if (removeComments) {
+    textToCount = textToCount
+      .replace(/<!--.*?-->/gs, "") // HTML comments
+      .replace(/%%.*?%%/gs, ""); // Markdown comments
+  }
+
   if (removeMarkdown) {
     textToCount = textToCount
       .replace(/`\$?=[^`]+`/g, "") // inline dataview
       .replace(/^---\n.*?\n---\n/s, "") // YAML Header
       .replace(/!?\[(.+)\]\(.+\)/g, "$1") // URLs & Image Captions
       .replace(/\*|_|\[\[|\]\]|\||==|~~|---|#|> |`/g, ""); // Markdown Syntax
-  }
-
-  if (removeComments) {
-    textToCount = textToCount
-      .replace(/<!--.*?-->/gs, "") // HTML comments
-      .replace(/%%.*?%%/gs, ""); // Markdown comments
   }
 
   return (textToCount.match(WORD_COUNT_REGEX) || []).length;
