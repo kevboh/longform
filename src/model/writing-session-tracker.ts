@@ -30,19 +30,25 @@ const WORD_COUNT_REGEX = (() => {
       .source;
   return new RegExp(
     [
-      "(?:[0-9]+(?:(?:,|\\.)[0-9]+)*|[\\-" + spaceDelimitedChars + "])+",
+      "(?:[0-9]+(?:(?:,|\\.)[0-9]+)*|[\\-'" + spaceDelimitedChars + "])+",
       nonSpaceDelimitedWords,
     ].join("|"),
     "g"
   );
 })();
 
-function countWords(
+export function countWords(
   text: string,
   removeMarkdown = true,
   removeComments = true
 ): number {
   let textToCount = text;
+
+  if (removeComments) {
+    textToCount = textToCount
+      .replace(/<!--.*?-->/gs, "") // HTML comments
+      .replace(/%%.*?%%/gs, ""); // Markdown comments
+  }
 
   if (removeMarkdown) {
     textToCount = textToCount
@@ -50,12 +56,6 @@ function countWords(
       .replace(/^---\n.*?\n---\n/s, "") // YAML Header
       .replace(/!?\[(.+)\]\(.+\)/g, "$1") // URLs & Image Captions
       .replace(/\*|_|\[\[|\]\]|\||==|~~|---|#|> |`/g, ""); // Markdown Syntax
-  }
-
-  if (removeComments) {
-    textToCount = textToCount
-      .replace(/<!--.*?-->/gs, "") // HTML comments
-      .replace(/%%.*?%%/gs, ""); // Markdown comments
   }
 
   return (textToCount.match(WORD_COUNT_REGEX) || []).length;
