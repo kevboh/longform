@@ -30,7 +30,7 @@ const WORD_COUNT_REGEX = (() => {
       .source;
   return new RegExp(
     [
-      "(?:[0-9]+(?:(?:,|\\.)[0-9]+)*|[\\-" + spaceDelimitedChars + "])+",
+      "(?:[0-9]+(?:(?:,|\\.)[0-9]+)*|['\\-" + spaceDelimitedChars + "])+",
       nonSpaceDelimitedWords,
     ].join("|"),
     "g"
