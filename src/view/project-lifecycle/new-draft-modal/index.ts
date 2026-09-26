@@ -55,6 +55,12 @@ export default class NewDraftModalContainer extends Modal {
             const newSceneParent = normalizePath(
               `${parentPath}/${draft.sceneFolder}/`
             );
+              					
+  					// Ensure path exists
+  					if (!(yield this.app.vault.adapter.exists(newSceneParent))) {
+  						yield this.app.vault.createFolder(newSceneParent);
+  					}
+  					
             await Promise.all(
               draft.scenes.map((scene) => {
                 const path = scenePath(scene.title, draft, this.app.vault);
