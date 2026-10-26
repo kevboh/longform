@@ -61,6 +61,12 @@ export const draftWordCounts = writable<DraftWordCounts>({});
  */
 export const waitingForSync = writable<boolean>(false);
 
+/**
+ * Writeable store that increments each time a scene's timeframe tag value
+ * changes. The timeline view subscribes to it to know when to re-render.
+ */
+export const timeframeRevision = writable<number>(0);
+
 // DERIVED STORES
 
 /**

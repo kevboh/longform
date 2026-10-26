@@ -37,6 +37,7 @@ import type { Workflow } from "./compile";
 import { DEFAULT_WORKFLOWS } from "./compile";
 import { UserScriptObserver } from "./model/user-script-observer";
 import { StoreVaultSync } from "./model/store-vault-sync";
+import { TimeframeObserver } from "./model/timeframe-observer";
 import {
   selectedDraft,
   selectedDraftVaultPath,
@@ -73,6 +74,7 @@ export default class LongformPlugin extends Plugin {
   public api: LongformAPI;
 
   private storeVaultSync: StoreVaultSync;
+  private timeframeObserver: TimeframeObserver;
 
   async onload(): Promise<void> {
     console.log(`[Longform] Starting Longform ${this.manifest.version}…`);
@@ -133,6 +135,7 @@ export default class LongformPlugin extends Plugin {
     this.addSettingTab(new LongformSettingsTab(this.app, this));
 
     this.storeVaultSync = new StoreVaultSync(this.app);
+    this.timeframeObserver = new TimeframeObserver(this.app);
 
     this.app.workspace.onLayoutReady(this.postLayoutInit.bind(this));
 
@@ -172,6 +175,7 @@ export default class LongformPlugin extends Plugin {
   onunload(): void {
     this.userScriptObserver.destroy();
     this.storeVaultSync.destroy();
+    this.timeframeObserver.destroy();
     this.unsubscribeSettings();
     this.unsubscribeWorkflows();
     this.unsubscribeSelectedDraft();
@@ -271,6 +275,8 @@ export default class LongformPlugin extends Plugin {
 
     // Initialize StoreVaultSync with sync awareness
     await this.storeVaultSync.initialize();
+
+    this.timeframeObserver.beginObserving();
 
     // Continue with the rest of initialization only after sync is complete
     this.watchProjects();
@@ -450,6 +456,14 @@ export default class LongformPlugin extends Plugin {
       this.app.metadataCache.on(
         "changed",
         this.storeVaultSync.fileMetadataChanged.bind(this.storeVaultSync)
+      )
+    );
+
+    // TIMEFRAME OBSERVER
+    this.registerEvent(
+      this.app.metadataCache.on(
+        "changed",
+        this.timeframeObserver.fileMetadataChanged.bind(this.timeframeObserver)
       )
     );
 
