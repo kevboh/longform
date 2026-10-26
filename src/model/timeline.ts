@@ -446,7 +446,7 @@ function renderTimeline(result: TimelineResult): string {
       problems.push(`- **${error.sceneTitle}** ${error.message}`);
     }
     problems.push("", "Fix these and the timeline will be rebuilt.");
-    return `# Full Story Timeline\n\n${problems.join("\n")}\n`;
+    return `# Story Timeline\n\n${problems.join("\n")}\n`;
   }
 
   const primary = result.primaryUnit;
@@ -496,7 +496,7 @@ function renderTimeline(result: TimelineResult): string {
     lastPeriodKey = periodKey;
   }
 
-  return `# Full Story Timeline\n\n${renderMermaid(result)}\n\n${table.join(
+  return `# Story Timeline\n\n${renderMermaid(result)}\n\n${table.join(
     "\n"
   )}\n`;
 }
