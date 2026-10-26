@@ -17,8 +17,27 @@ export const LONGFORM_EXTENDED_CURRENT_INDEX_VERSION = 1;
  */
 export const FORKED_VERSION = "2.1.0";
 
+export type TimeframeFormat =
+  | "date"
+  | "time"
+  | "datetime"
+  | "epoch"
+  | "number";
+
+export const TIMEFRAME_FORMATS: readonly string[] = [
+  "date",
+  "time",
+  "datetime",
+  "epoch",
+  "number",
+];
+
+export function isTimeframeFormat(value: unknown): value is TimeframeFormat {
+  return typeof value === "string" && TIMEFRAME_FORMATS.includes(value);
+}
+
 export const DEFAULT_TIMEFRAME_TAG_NAME = "timeframe";
-export const DEFAULT_TIME_FORMAT = "dd/mm/yyyy hh:mm:ss";
+export const DEFAULT_TIME_FORMAT: TimeframeFormat = "datetime";
 
 export type IndentedScene = {
   title: string;
@@ -38,7 +57,7 @@ export type MultipleSceneDraft = {
   unknownFiles: string[];
   sceneTemplate: string | null;
   timeframeTagName: string;
-  timeFormat: string;
+  timeFormat: TimeframeFormat;
 };
 
 export type SingleSceneDraft = {

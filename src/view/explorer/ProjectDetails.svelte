@@ -265,21 +265,26 @@
             />
             <p class="longform-extended-project-warning">
               The frontmatter property used to place each scene on the
-              timeline. Defaults to "when", which works whether you use dates,
-              times, or plain numbers.
+              timeline. Defaults to "timeframe", which works whether you use
+              dates, times, or plain numbers.
             </p>
             <label for="longform-extended-project-time-format">Time Format</label>
-            <input
+            <select
               id="longform-extended-project-time-format"
-              type="text"
               value={$selectedDraft.timeFormat}
-              on:blur={timeFormatChanged}
-            />
+              on:change={timeFormatChanged}
+            >
+              <option value="date">Just date</option>
+              <option value="time">Just time</option>
+              <option value="datetime">Date and time</option>
+              <option value="epoch">Epoch (number)</option>
+              <option value="number">Chronological order (number)</option>
+            </select>
             <p class="longform-extended-project-warning">
-              How your timeframe values are written. Defaults to "dd/mm/yyyy
-              hh:mm:ss", but you do not need the whole thing. Use just a date,
-              just hours, or even a plain number. The timeline works out the
-              granularity from what you write.
+              How your timeframe values are written. Pick a date, a time, or
+              both, or use a single number for ordering. A value only needs to
+              match part of this format, so a "Date and time" project can still
+              use a plain date for a scene.
             </p>
           {/if}
         </div>
