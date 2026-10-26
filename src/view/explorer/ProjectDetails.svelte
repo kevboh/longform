@@ -255,8 +255,7 @@
               (Templater or the core plugin) it will be used to process this
               template.
             </p>
-            <label for="longform-project-timeframe-tag"
-              >Timeframe Tag Name</label
+            <label for="longform-project-timeframe-tag">Timeframe Tag Name</label
             >
             <input
               id="longform-project-timeframe-tag"
