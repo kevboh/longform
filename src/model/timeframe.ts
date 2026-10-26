@@ -10,10 +10,7 @@ export type TimeframeUnit =
   | "second"
   | "number";
 
-/**
- * Units ordered from largest to smallest. Used to compare two timeframes and
- * to derive a format's primary and secondary units.
- */
+/** Units from largest to smallest, used for ordering and primary/secondary. */
 const MAGNITUDE_ORDER: TimeframeUnit[] = [
   "epoch",
   "year",
@@ -24,9 +21,7 @@ const MAGNITUDE_ORDER: TimeframeUnit[] = [
   "second",
 ];
 
-/**
- * The units each format uses, in the order they appear in a value.
- */
+/** The units each format uses, in the order they appear in a value. */
 const FORMAT_UNITS: Record<TimeframeFormat, TimeframeUnit[]> = {
   "epoch-datetime-dmy": [
     "epoch",
@@ -51,10 +46,7 @@ const FORMAT_UNITS: Record<TimeframeFormat, TimeframeUnit[]> = {
   number: ["number"],
 };
 
-/**
- * The fewest units a partial value may keep. A date format still needs a full
- * date, and a time format still needs hours and minutes.
- */
+/** The fewest units a partial value may keep. */
 const MIN_UNITS: Record<TimeframeFormat, number> = {
   "epoch-datetime-dmy": 4,
   "epoch-datetime-mdy": 4,
@@ -71,11 +63,11 @@ const UNIT_RANGES: Partial<Record<TimeframeUnit, [number, number]>> = {
   second: [0, 59],
 };
 
-export type ParsedTimeframe = {
-  format: TimeframeFormat;
-  units: TimeframeUnit[];
-  values: Partial<Record<TimeframeUnit, number>>;
-};
+/**
+ * A timeframe as a map from each unit it uses to its value, e.g.
+ * `{ day: 4, month: 3, year: 2026, hour: 9, minute: 30 }`.
+ */
+export type TimeframeValues = Partial<Record<TimeframeUnit, number>>;
 
 export type TimeframeParseError =
   | { kind: "empty" }
@@ -83,7 +75,7 @@ export type TimeframeParseError =
   | { kind: "range"; unit: TimeframeUnit; value: number };
 
 export type TimeframeParseResult =
-  | { ok: true; parsed: ParsedTimeframe }
+  | { ok: true; values: TimeframeValues }
   | { ok: false; error: TimeframeParseError };
 
 export function isTimeframeParseError(
@@ -103,15 +95,11 @@ function patternFor(format: TimeframeFormat, count: number): RegExp {
   }
 
   if (units[index] === "day" || units[index] === "month") {
-    if (format === "epoch-datetime-mdy") {
-      parts.push(
-        "(?<month>\\d{1,2})/(?<day>\\d{1,2})/(?<year>\\d{4})"
-      );
-    } else {
-      parts.push(
-        "(?<day>\\d{1,2})/(?<month>\\d{1,2})/(?<year>\\d{4})"
-      );
-    }
+    parts.push(
+      format === "epoch-datetime-mdy"
+        ? "(?<month>\\d{1,2})/(?<day>\\d{1,2})/(?<year>\\d{4})"
+        : "(?<day>\\d{1,2})/(?<month>\\d{1,2})/(?<year>\\d{4})"
+    );
     index += 3;
   }
 
@@ -134,12 +122,9 @@ function patternFor(format: TimeframeFormat, count: number): RegExp {
 }
 
 /**
- * Parses a timeframe value against a format.
- *
- * A value may leave off units from the right (the smallest units first), so
- * long as it keeps the format's minimum. For example, a `datetime` value may
- * be `04/03/2026 09:30:00`, `04/03/2026 09:30`, or `04/03/2026`. It may not
- * skip the date or start from the time.
+ * Parses a value against a format. A value may drop units from the right
+ * (smallest first), so `datetime` accepts `04/03/2026 09:30:00`,
+ * `04/03/2026 09:30`, or `04/03/2026`, but never starts from the time.
  */
 export function parseTimeframe(
   raw: unknown,
@@ -164,10 +149,8 @@ export function parseTimeframe(
       continue;
     }
 
-    const units = allUnits.slice(0, count);
-    const values: Partial<Record<TimeframeUnit, number>> = {};
-
-    for (const unit of units) {
+    const values: TimeframeValues = {};
+    for (const unit of allUnits.slice(0, count)) {
       const digits = match.groups?.[unit];
       if (digits === undefined) {
         continue;
@@ -180,15 +163,15 @@ export function parseTimeframe(
       values[unit] = value;
     }
 
-    return { ok: true, parsed: { format, units, values } };
+    return { ok: true, values };
   }
 
   return { ok: false, error: { kind: "format" } };
 }
 
 /**
- * The two largest units of a format, used as its primary and secondary units.
- * For a chronological-order format both are `number`.
+ * The two largest units of a format, used as its primary and secondary.
+ * For chronological order both are `number`.
  */
 export function primaryAndSecondaryUnits(
   format: TimeframeFormat
@@ -205,20 +188,18 @@ export function primaryAndSecondaryUnits(
   return [ordered[0], ordered[1]];
 }
 
-/**
- * Orders two parsed timeframes chronologically, largest unit first.
- */
+/** Orders two timeframes chronologically, largest unit first. */
 export function compareTimeframes(
-  a: ParsedTimeframe,
-  b: ParsedTimeframe
+  a: TimeframeValues,
+  b: TimeframeValues
 ): number {
-  if (a.format === "number" || b.format === "number") {
-    return (a.values.number ?? 0) - (b.values.number ?? 0);
+  if (a.number !== undefined || b.number !== undefined) {
+    return (a.number ?? 0) - (b.number ?? 0);
   }
 
   for (const unit of MAGNITUDE_ORDER) {
-    const av = a.values[unit];
-    const bv = b.values[unit];
+    const av = a[unit];
+    const bv = b[unit];
     if (av === undefined && bv === undefined) {
       continue;
     }

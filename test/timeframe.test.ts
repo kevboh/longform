@@ -11,7 +11,7 @@ describe("parseTimeframe", () => {
     const result = parseTimeframe("04/03/2026 09:30:15", "datetime");
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.parsed.units).toEqual([
+      expect(Object.keys(result.values)).toEqual([
         "day",
         "month",
         "year",
@@ -19,7 +19,7 @@ describe("parseTimeframe", () => {
         "minute",
         "second",
       ]);
-      expect(result.parsed.values).toEqual({
+      expect(result.values).toEqual({
         day: 4,
         month: 3,
         year: 2026,
@@ -34,7 +34,7 @@ describe("parseTimeframe", () => {
     const minutes = parseTimeframe("04/03/2026 09:30", "datetime");
     expect(minutes.ok).toBe(true);
     if (minutes.ok) {
-      expect(minutes.parsed.units).toEqual([
+      expect(Object.keys(minutes.values)).toEqual([
         "day",
         "month",
         "year",
@@ -46,23 +46,21 @@ describe("parseTimeframe", () => {
     const dateOnly = parseTimeframe("04/03/2026", "datetime");
     expect(dateOnly.ok).toBe(true);
     if (dateOnly.ok) {
-      expect(dateOnly.parsed.units).toEqual(["day", "month", "year"]);
+      expect(Object.keys(dateOnly.values)).toEqual(["day", "month", "year"]);
     }
   });
 
   it("rejects a value that drops the date and keeps the time", () => {
-    const result = parseTimeframe("09:30", "datetime");
-    expect(result.ok).toBe(false);
+    expect(parseTimeframe("09:30", "datetime").ok).toBe(false);
   });
 
   it("parses a month-first date", () => {
-    const result = parseTimeframe("03/04/2026", "epoch-datetime-mdy");
-    expect(result.ok).toBe(false);
+    expect(parseTimeframe("03/04/2026", "epoch-datetime-mdy").ok).toBe(false);
 
     const withEpoch = parseTimeframe("2 03/04/2026", "epoch-datetime-mdy");
     expect(withEpoch.ok).toBe(true);
     if (withEpoch.ok) {
-      expect(withEpoch.parsed.values).toEqual({
+      expect(withEpoch.values).toEqual({
         epoch: 2,
         month: 3,
         day: 4,
@@ -75,7 +73,7 @@ describe("parseTimeframe", () => {
     const result = parseTimeframe("2 04/03/2026", "epoch-datetime-dmy");
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.parsed.values).toEqual({
+      expect(result.values).toEqual({
         epoch: 2,
         day: 4,
         month: 3,
@@ -88,33 +86,29 @@ describe("parseTimeframe", () => {
     const full = parseTimeframe("09:30:15", "time");
     expect(full.ok).toBe(true);
     if (full.ok) {
-      expect(full.parsed.units).toEqual(["hour", "minute", "second"]);
+      expect(Object.keys(full.values)).toEqual(["hour", "minute", "second"]);
     }
 
-    const minutes = parseTimeframe("09:30", "time");
-    expect(minutes.ok).toBe(true);
+    expect(parseTimeframe("09:30", "time").ok).toBe(true);
   });
 
   it("parses chronological numbers, from strings and numbers", () => {
     const fromString = parseTimeframe("3", "number");
     expect(fromString.ok).toBe(true);
     if (fromString.ok) {
-      expect(fromString.parsed.values).toEqual({ number: 3 });
+      expect(fromString.values).toEqual({ number: 3 });
     }
 
     const fromNumber = parseTimeframe(3, "number");
     expect(fromNumber.ok).toBe(true);
     if (fromNumber.ok) {
-      expect(fromNumber.parsed.values).toEqual({ number: 3 });
+      expect(fromNumber.values).toEqual({ number: 3 });
     }
   });
 
   it("rejects out-of-range units", () => {
-    const badMonth = parseTimeframe("04/13/2026", "datetime");
-    expect(badMonth.ok).toBe(false);
-
-    const badHour = parseTimeframe("04/03/2026 25:00", "datetime");
-    expect(badHour.ok).toBe(false);
+    expect(parseTimeframe("04/13/2026", "datetime").ok).toBe(false);
+    expect(parseTimeframe("04/03/2026 25:00", "datetime").ok).toBe(false);
   });
 
   it("rejects empty values", () => {
@@ -140,8 +134,8 @@ describe("compareTimeframes", () => {
     const a = parseTimeframe("04/03/2026 09:30", "datetime");
     const b = parseTimeframe("20/12/2023 16:00", "datetime");
     if (a.ok && b.ok) {
-      expect(compareTimeframes(b.parsed, a.parsed)).toBeLessThan(0);
-      expect(compareTimeframes(a.parsed, b.parsed)).toBeGreaterThan(0);
+      expect(compareTimeframes(b.values, a.values)).toBeLessThan(0);
+      expect(compareTimeframes(a.values, b.values)).toBeGreaterThan(0);
     }
   });
 
@@ -149,7 +143,7 @@ describe("compareTimeframes", () => {
     const one = parseTimeframe("1", "number");
     const two = parseTimeframe("2", "number");
     if (one.ok && two.ok) {
-      expect(compareTimeframes(one.parsed, two.parsed)).toBeLessThan(0);
+      expect(compareTimeframes(one.values, two.values)).toBeLessThan(0);
     }
   });
 });

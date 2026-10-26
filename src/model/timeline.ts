@@ -9,9 +9,9 @@ import {
   isTimeframeParseError,
   parseTimeframe,
   primaryAndSecondaryUnits,
-  type ParsedTimeframe,
   type TimeframeParseError,
   type TimeframeUnit,
+  type TimeframeValues,
 } from "./timeframe";
 
 const DEFAULT_TARGET = "manuscript.md";
@@ -32,14 +32,15 @@ export type TimelineError = {
 
 export type TimelineEntry = {
   sceneTitle: string;
-  raw: string;
-  parsed: ParsedTimeframe;
+  values: TimeframeValues;
 };
 
 export type TimelineResult = {
   title: string;
   tagName: string;
   format: TimeframeFormat;
+  /** The units every entry uses, stored once. */
+  units: TimeframeUnit[];
   primaryUnit: TimeframeUnit;
   secondaryUnit: TimeframeUnit;
   entries: TimelineEntry[];
@@ -48,8 +49,8 @@ export type TimelineResult = {
 };
 
 /**
- * Gathers every scene's timeframe value, checks it against the project's
- * format, and keeps only the values that agree on granularity.
+ * Gathers every scene's timeframe, checks it against the project's format,
+ * and keeps only the values that agree on granularity.
  */
 export async function buildTimeline(
   app: App,
@@ -87,19 +88,23 @@ export async function buildTimeline(
 
     entries.push({
       sceneTitle: scene.title,
-      raw: `${raw}`.trim(),
-      parsed: parsed.parsed,
+      values: parsed.values,
     });
   }
 
   const consistent = keepConsistent(entries, errors);
-  consistent.sort((a, b) => compareTimeframes(a.parsed, b.parsed));
+  consistent.sort((a, b) => compareTimeframes(a.values, b.values));
   const [primaryUnit, secondaryUnit] = primaryAndSecondaryUnits(format);
+  const units =
+    consistent.length > 0
+      ? (Object.keys(consistent[0].values) as TimeframeUnit[])
+      : [];
 
   return {
     title: draft.title,
     tagName,
     format,
+    units,
     primaryUnit,
     secondaryUnit,
     entries: consistent,
@@ -132,7 +137,7 @@ function keepConsistent(
 ): TimelineEntry[] {
   const counts = new Map<number, number>();
   for (const entry of entries) {
-    const count = entry.parsed.units.length;
+    const count = Object.keys(entry.values).length;
     counts.set(count, (counts.get(count) ?? 0) + 1);
   }
   if (counts.size <= 1) {
@@ -143,13 +148,14 @@ function keepConsistent(
   const kept: TimelineEntry[] = [];
 
   for (const entry of entries) {
-    if (entry.parsed.units.length === reference) {
+    const count = Object.keys(entry.values).length;
+    if (count === reference) {
       kept.push(entry);
     } else {
       errors.push({
         sceneTitle: entry.sceneTitle,
         kind: "inconsistent",
-        message: `uses ${entry.parsed.units.length} time units, but the rest of the project uses ${reference}.`,
+        message: `uses ${count} time units, but the rest of the project uses ${reference}.`,
       });
     }
   }
@@ -222,6 +228,38 @@ function compiledTarget(draft: MultipleSceneDraft): string {
   return DEFAULT_TARGET;
 }
 
+/**
+ * Rebuilds a readable value from a unit map, using the shared unit order.
+ */
+function formatValues(values: TimeframeValues, units: TimeframeUnit[]): string {
+  if (values.number !== undefined) {
+    return `${values.number}`;
+  }
+
+  const parts: string[] = [];
+  if (values.epoch !== undefined) {
+    parts.push(`${values.epoch}`);
+  }
+
+  const date = units
+    .filter((unit) => unit === "day" || unit === "month" || unit === "year")
+    .map((unit) => values[unit])
+    .filter((value): value is number => value !== undefined);
+  if (date.length > 0) {
+    parts.push(date.join("/"));
+  }
+
+  const time = units
+    .filter((unit) => unit === "hour" || unit === "minute" || unit === "second")
+    .map((unit) => values[unit])
+    .filter((value): value is number => value !== undefined);
+  if (time.length > 0) {
+    parts.push(time.join(":"));
+  }
+
+  return parts.join(" ");
+}
+
 function renderTimeline(result: TimelineResult): string {
   const lines = [
     `# Timeline: ${result.title}`,
@@ -244,7 +282,9 @@ function renderTimeline(result: TimelineResult): string {
 
   lines.push("## Scenes", "", "| Scene | Timeframe |", "| --- | --- |");
   for (const entry of result.entries) {
-    lines.push(`| ${entry.sceneTitle} | ${entry.raw} |`);
+    lines.push(
+      `| ${entry.sceneTitle} | ${formatValues(entry.values, result.units)} |`
+    );
   }
   lines.push("");
 
@@ -261,12 +301,15 @@ function renderTimeline(result: TimelineResult): string {
     "",
     "```json",
     JSON.stringify(
-      result.entries.map((entry) => ({
-        scene: entry.sceneTitle,
-        raw: entry.raw,
-        units: entry.parsed.units,
-        values: entry.parsed.values,
-      })),
+      {
+        units: result.units,
+        primary: result.primaryUnit,
+        secondary: result.secondaryUnit,
+        scenes: result.entries.map((entry) => ({
+          scene: entry.sceneTitle,
+          values: entry.values,
+        })),
+      },
       null,
       2
     ),
