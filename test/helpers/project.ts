@@ -152,7 +152,12 @@ export function rows(contents: string): string[] {
   }
   const result: string[] = [];
   for (let i = header + 1; i < lines.length && lines[i].startsWith("| "); i++) {
-    result.push(lines[i]);
+    result.push(
+      lines[i].replace(/\[\[([^\]]+)\]\]/g, (_match, inner: string) => {
+        const name = inner.split("/").pop() ?? inner;
+        return name.replace(/\.md$/, "");
+      })
+    );
   }
   return result;
 }

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { rebuildTimeline } from "../src/commands/timeline";
 import { drafts, selectedDraftVaultPath } from "../src/model/stores";
 import type { SingleSceneDraft } from "../src/model/types";
-import { flush, makeProject } from "./helpers/project";
+import { flush, makeProject, rows } from "./helpers/project";
 
 const TIMELINE = "Novels/My Book/manuscript_timeline.md";
 
@@ -69,7 +69,9 @@ describe("Rebuild timeline command", () => {
     commandFor(project.app).checkCallback!(false);
     await flush();
 
-    expect(project.output.get(TIMELINE)).toContain("| A | 4/3/2026 9:30 |");
+    expect(rows(project.output.get(TIMELINE)!)).toContain(
+      "| A | 4/3/2026 9:30 |"
+    );
   });
 
   it("does not create a file when there is nothing to show", async () => {

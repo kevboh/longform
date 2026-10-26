@@ -6,6 +6,7 @@ import {
   flush,
   makeFile,
   makeProject,
+  rows,
   type ProjectOptions,
 } from "./helpers/project";
 
@@ -45,7 +46,9 @@ describe("startup", () => {
     const project = await start({
       scenes: [{ name: "A", value: "04/03/2026 09:30" }],
     });
-    expect(project.output.get(TIMELINE)).toContain("| A | 4/3/2026 9:30 |");
+    expect(rows(project.output.get(TIMELINE)!)).toContain(
+      "| A | 4/3/2026 9:30 |"
+    );
   });
 
   it("creates no file when nothing has a timeframe", async () => {
@@ -60,8 +63,12 @@ describe("startup", () => {
         { name: "A", value: "04/03/2026 09:30", indent: 1 },
       ],
     });
-    expect(project.output.get(TIMELINE)).toContain("| A |");
-    expect(project.output.get(TIMELINE)).not.toContain("| Act |");
+    expect(rows(project.output.get(TIMELINE)!)).toContain(
+      "| A | 4/3/2026 9:30 |"
+    );
+    expect(rows(project.output.get(TIMELINE)!).join("\n")).not.toContain(
+      "| Act |"
+    );
   });
 });
 
@@ -80,7 +87,7 @@ describe("scene value changes", () => {
     await flush();
 
     const contents = project.output.get(TIMELINE)!;
-    expect(contents).toContain("| B | 6/3/2026 9:30 |");
+    expect(rows(contents)).toContain("| B | 6/3/2026 9:30 |");
     expect(contents).not.toContain("## Not on the timeline");
   });
 
@@ -94,8 +101,8 @@ describe("scene value changes", () => {
     await flush();
 
     const contents = project.output.get(TIMELINE)!;
-    expect(contents).toContain("| A | 7/3/2026 9:30 |");
-    expect(contents).not.toContain("| A | 4/3/2026 9:30 |");
+    expect(rows(contents)).toContain("| A | 7/3/2026 9:30 |");
+    expect(rows(contents)).not.toContain("| A | 4/3/2026 9:30 |");
   });
 
   it("rebuilds when a value is removed", async () => {
@@ -113,7 +120,7 @@ describe("scene value changes", () => {
     const contents = project.output.get(TIMELINE)!;
     expect(contents).toContain("## Not on the timeline");
     expect(contents).toContain("- B");
-    expect(contents).not.toContain("| B | 5/3/2026 9:30 |");
+    expect(rows(contents)).not.toContain("| B | 5/3/2026 9:30 |");
   });
 
   it("ignores changes that are not the timeframe value", async () => {
@@ -175,7 +182,7 @@ describe("project signature changes", () => {
 
     const contents = project.output.get(TIMELINE)!;
     expect(contents).toContain("**Timeframe tag:** `when`");
-    expect(contents).toContain("| A | 5/3/2026 9:30 |");
+    expect(rows(contents)).toContain("| A | 5/3/2026 9:30 |");
   });
 
   it("does nothing when the tag changes and no values exist under it", async () => {
@@ -210,7 +217,9 @@ describe("project signature changes", () => {
     ]);
     await flush();
 
-    expect(project.output.get(TIMELINE)).toContain("| C | 6/3/2026 9:30 |");
+    expect(rows(project.output.get(TIMELINE)!)).toContain(
+      "| C | 6/3/2026 9:30 |"
+    );
   });
 
   it("rebuilds when a scene is removed", async () => {

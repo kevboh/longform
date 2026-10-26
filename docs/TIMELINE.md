@@ -29,6 +29,9 @@ hour, minute, and second.
 Months are written by name (`Mar`, `Dec`) in the diagram. The data block always
 uses numbers.
 
+Mermaid `timeline` events cannot be hyperlinks. The `## Scenes` table below the
+diagram links every scene to its note, so click a scene name there to open it.
+
 ## The Timeframe Tag
 
 The timeframe value lives in a frontmatter property that defaults to

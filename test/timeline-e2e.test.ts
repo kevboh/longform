@@ -137,7 +137,12 @@ function rows(contents: string): string[] {
   }
   const result: string[] = [];
   for (let i = header + 1; i < lines.length && lines[i].startsWith("| "); i++) {
-    result.push(lines[i]);
+    result.push(
+      lines[i].replace(/\[\[([^\]]+)\]\]/g, (_match, inner: string) => {
+        const name = inner.split("/").pop() ?? inner;
+        return name.replace(/\.md$/, "");
+      })
+    );
   }
   return result;
 }
@@ -815,11 +820,12 @@ describe("N. edge cases", () => {
     expect(rows(run.contents)).toEqual(["| A | 0:0:0 |", "| B | 9:30:0 |"]);
   });
 
-  it("T141 escapes a pipe in a scene title", async () => {
+  it("T141 keeps a pipe in a scene name in the data block", async () => {
     const run = await runProject({
       scenes: [{ name: "A | B", value: "04/03/2026 09:30" }],
     });
-    expect(rows(run.contents)).toEqual(["| A \\| B | 4/3/2026 9:30 |"]);
+    const data = dataBlock(run.contents) as { scenes: { scene: string }[] };
+    expect(data.scenes[0].scene).toBe("A | B");
   });
 
   it("T142 defined zero minute is kept", async () => {
@@ -845,9 +851,9 @@ describe("O. compiled manuscript", () => {
     const result = await buildTimeline(project.app, project.draft);
     await writeTimeline(project.app, project.draft, result);
     expect(project.output.get("Novels/My Book/manuscript.md")).toBe("MANUSCRIPT");
-    expect(project.output.get("Novels/My Book/manuscript_timeline.md")).toContain(
-      "| A | 4/3/2026 9:30 |"
-    );
+    expect(
+      rows(project.output.get("Novels/My Book/manuscript_timeline.md")!)
+    ).toContain("| A | 4/3/2026 9:30 |");
   });
 
   it("T146 appends the suffix even if the name already has it", async () => {

@@ -33,6 +33,7 @@ export type TimelineError = {
 
 export type TimelineEntry = {
   sceneTitle: string;
+  path: string;
   values: TimeframeValues;
 };
 
@@ -73,9 +74,8 @@ export async function buildTimeline(
       continue;
     }
 
-    const file = app.vault.getAbstractFileByPath(
-      scenePath(scene.title, draft, app.vault)
-    );
+    const path = scenePath(scene.title, draft, app.vault);
+    const file = app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) {
       continue;
     }
@@ -98,6 +98,7 @@ export async function buildTimeline(
 
     entries.push({
       sceneTitle: scene.title,
+      path,
       values: parsed.values,
     });
   }
@@ -452,10 +453,6 @@ function renderMermaid(result: TimelineResult): string {
   return lines.join("\n");
 }
 
-function escapeTableCell(text: string): string {
-  return text.replace(/\|/g, "\\|");
-}
-
 function renderTimeline(result: TimelineResult): string {
   const lines = [
     `# Timeline: ${result.title}`,
@@ -478,12 +475,8 @@ function renderTimeline(result: TimelineResult): string {
 
   lines.push("## Scenes", "", "| Scene | Timeframe |", "| --- | --- |");
   for (const entry of result.entries) {
-    lines.push(
-      `| ${escapeTableCell(entry.sceneTitle)} | ${formatValues(
-        entry.values,
-        result.units
-      )} |`
-    );
+    const link = `[[${entry.path.replace(/\.md$/, "")}]]`;
+    lines.push(`| ${link} | ${formatValues(entry.values, result.units)} |`);
   }
   lines.push("");
 

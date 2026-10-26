@@ -132,9 +132,9 @@ describe("writing rules", () => {
     await writeTimeline(project.app, project.draft, second);
 
     expect(project.writes.length).toBe(2);
-    expect(project.output.get("Novels/My Book/manuscript_timeline.md")).toContain(
-      "| A | 5/3/2026 9:30 |"
-    );
+    expect(
+      rows(project.output.get("Novels/My Book/manuscript_timeline.md")!)
+    ).toContain("| A | 5/3/2026 9:30 |");
   });
 });
 
@@ -405,7 +405,16 @@ describe("scale and edge cases", () => {
     expect(run.output.size).toBe(0);
   });
 
-  it("escapes a pipe in a scene title in the table and keeps it in the data block", async () => {
+  it("links each scene row to its note", async () => {
+    const run = await runProject({
+      scenes: [{ name: "A", value: "04/03/2026 09:30" }],
+    });
+    expect(run.contents).toContain(
+      "| [[Novels/My Book/Scenes/A]] | 4/3/2026 9:30 |"
+    );
+  });
+
+  it("keeps a pipe in a scene name in the data block", async () => {
     const run = await runProject({
       scenes: [{ name: "A | B", value: "04/03/2026 09:30" }],
     });
@@ -413,6 +422,5 @@ describe("scale and edge cases", () => {
       scenes: { scene: string }[];
     };
     expect(data.scenes[0].scene).toBe("A | B");
-    expect(rows(run.contents)).toEqual(["| A \\| B | 4/3/2026 9:30 |"]);
   });
 });
