@@ -1,33 +1,31 @@
-import { type App, type CachedMetadata, normalizePath, TFile } from "obsidian";
+import { type App, type CachedMetadata, TFile } from "obsidian";
 import { get, type Unsubscriber } from "svelte/store";
 
 import type { MultipleSceneDraft } from "./types";
-import { draftForPath, projectFolderPath, scenePath } from "./scene-navigation";
-import { drafts as draftsStore, timeframeRevision } from "./stores";
+import { draftForPath, scenePath } from "./scene-navigation";
+import { drafts as draftsStore } from "./stores";
+import { buildTimeline, writeTimeline } from "./timeline";
 
 /**
- * Watches scene files for changes to their timeframe tag value.
- *
- * Scope is limited to notes inside `scenes`-format Longform Extended projects. When a
- * file changes, the observer compares the previous value of that draft's
- * `timeframeTagName` property to the new one. If the tag was added, removed,
- * or had its value changed, it bumps `timeframeRevision` so the timeline view
- * knows to re-render. If the timeframe tag did not change, it does nothing.
+ * Keeps each project's timeline up to date. It rebuilds when a scene's
+ * timeframe value changes, when the project's format or tag changes, when
+ * the scene list changes, and when the plugin starts.
  */
 export class TimeframeObserver {
   private app: App;
-  private lastValueByPath: Map<string, unknown> = new Map();
+  private values = new Map<string, unknown>();
+  private signatures = new Map<string, string>();
   private unsubscribeDrafts: Unsubscriber | null = null;
+  private rebuilding = new Set<string>();
 
   constructor(app: App) {
     this.app = app;
   }
 
   beginObserving(): void {
-    this.baseline();
-    this.unsubscribeDrafts = draftsStore.subscribe(() => {
-      this.baseline();
-    });
+    this.sync(false);
+    this.unsubscribeDrafts = draftsStore.subscribe(() => this.sync(true));
+    this.rebuildAll();
   }
 
   destroy(): void {
@@ -38,77 +36,105 @@ export class TimeframeObserver {
 
   fileMetadataChanged(file: TFile, _data: string, cache: CachedMetadata): void {
     const draft = draftForPath(file.path, get(draftsStore));
-    if (!draft || draft.format !== "scenes") {
-      return;
-    }
-    if (file.path === draft.vaultPath) {
+    if (!draft || draft.format !== "scenes" || file.path === draft.vaultPath) {
       return;
     }
 
-    const newValue = cache?.frontmatter?.[draft.timeframeTagName];
-    const seen = this.lastValueByPath.has(file.path);
-    const oldValue = this.lastValueByPath.get(file.path);
-    this.lastValueByPath.set(file.path, newValue);
+    const value = cache?.frontmatter?.[draft.timeframeTagName];
+    const known = this.values.has(file.path);
+    const previous = this.values.get(file.path);
+    this.values.set(file.path, value);
 
-    if (seen && oldValue !== newValue) {
-      timeframeRevision.update((r) => r + 1);
-      // TODO: replace with real timeline rendering.
-      this.createEmptyTimelineFile(draft);
+    if (known && previous !== value) {
+      this.rebuildTimeline(draft);
     }
   }
 
-  /**
-   * Temporary placeholder: writes an empty timeline note next to the project
-   * index file. This will be replaced by the real timeline view later.
-   */
-  private async createEmptyTimelineFile(
-    draft: MultipleSceneDraft
-  ): Promise<void> {
+  private async rebuildTimeline(draft: MultipleSceneDraft): Promise<void> {
+    if (this.rebuilding.has(draft.vaultPath)) {
+      return;
+    }
+    this.rebuilding.add(draft.vaultPath);
+
     try {
-      const timelinePath = normalizePath(
-        `${projectFolderPath(draft, this.app.vault)}/timeline.md`
-      );
-      if (await this.app.vault.adapter.exists(timelinePath)) {
-        return;
-      }
-      await this.app.vault.create(timelinePath, "");
+      const result = await buildTimeline(this.app, draft);
+      await writeTimeline(this.app, draft, result);
     } catch (error) {
-      console.error("[Longform Extended] Failed to create empty timeline file:", error);
+      console.error("[Longform Extended] Failed to rebuild timeline:", error);
+    } finally {
+      this.rebuilding.delete(draft.vaultPath);
     }
   }
 
-  /**
-   * Seeds the observer with the current timeframe value of every scene so
-   * that only later changes are treated as changes. New scenes are seeded,
-   * and scenes that have left a project are pruned.
-   */
-  private baseline(): void {
-    const activePaths = new Set<string>();
-
+  private rebuildAll(): void {
     for (const draft of get(draftsStore)) {
+      if (draft.format === "scenes") {
+        this.rebuildTimeline(draft);
+      }
+    }
+  }
+
+  /** Records current values and signatures, rebuilding changed projects. */
+  private sync(rebuildChanged: boolean): void {
+    const drafts = get(draftsStore);
+    const scenePaths = new Set<string>();
+    const draftPaths = new Set<string>();
+
+    for (const draft of drafts) {
       if (draft.format !== "scenes") {
         continue;
       }
+      draftPaths.add(draft.vaultPath);
+
+      const signature = this.signatureFor(draft);
+      const previous = this.signatures.get(draft.vaultPath);
+      this.signatures.set(draft.vaultPath, signature);
+
+      if (rebuildChanged && previous !== undefined && previous !== signature) {
+        this.rebuildTimeline(draft);
+      }
+
       for (const scene of draft.scenes) {
-        const path = scenePath(scene.title, draft, this.app.vault);
-        const file = this.app.vault.getAbstractFileByPath(path);
-        if (file instanceof TFile) {
-          activePaths.add(file.path);
-          if (!this.lastValueByPath.has(file.path)) {
-            const cache = this.app.metadataCache.getFileCache(file);
-            this.lastValueByPath.set(
-              file.path,
-              cache?.frontmatter?.[draft.timeframeTagName]
-            );
-          }
+        const file = this.app.vault.getAbstractFileByPath(
+          scenePath(scene.title, draft, this.app.vault)
+        );
+        if (!(file instanceof TFile)) {
+          continue;
+        }
+        scenePaths.add(file.path);
+        if (!this.values.has(file.path)) {
+          this.values.set(
+            file.path,
+            this.valueFor(file, draft.timeframeTagName)
+          );
         }
       }
     }
 
-    for (const path of Array.from(this.lastValueByPath.keys())) {
-      if (!activePaths.has(path)) {
-        this.lastValueByPath.delete(path);
-      }
+    prune(this.values, scenePaths);
+    prune(this.signatures, draftPaths);
+  }
+
+  private signatureFor(draft: MultipleSceneDraft): string {
+    return [
+      draft.title,
+      draft.workflow ?? "",
+      draft.sceneFolder,
+      draft.timeFormat,
+      draft.timeframeTagName,
+      draft.scenes.map((scene) => scene.title).join("\u0000"),
+    ].join("\u0001");
+  }
+
+  private valueFor(file: TFile, tagName: string): unknown {
+    return this.app.metadataCache.getFileCache(file)?.frontmatter?.[tagName];
+  }
+}
+
+function prune<T>(map: Map<string, T>, keep: Set<string>): void {
+  for (const key of Array.from(map.keys())) {
+    if (!keep.has(key)) {
+      map.delete(key);
     }
   }
 }

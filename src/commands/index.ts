@@ -18,6 +18,7 @@ import {
   insertSingleSceneTemplate,
 } from "./templates";
 import { startNewSession } from "./word-counts";
+import { rebuildTimeline } from "./timeline";
 
 const commandBuilders = [
   compileCurrent,
@@ -37,6 +38,7 @@ const commandBuilders = [
   insertMultiSceneTemplate,
   insertSingleSceneTemplate,
   startNewSession,
+  rebuildTimeline,
 ];
 
 export function addCommands(plugin: LongformExtendedPlugin) {
