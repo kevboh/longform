@@ -359,6 +359,7 @@ function renderMermaid(result: TimelineResult): string {
   const secondary = result.secondaryUnit;
   const lines = [
     "```mermaid",
+    "%%{init: {'theme':'forest','themeVariables':{'primaryColor':'#ff2d55','primaryTextColor':'#ffffff','lineColor':'#ff2d55'}}}%%",
     "timeline",
     `    title ${sanitize(result.title)}`,
   ];

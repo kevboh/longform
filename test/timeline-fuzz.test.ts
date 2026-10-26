@@ -143,9 +143,10 @@ describe("timeline invariants (fuzz)", () => {
         expect(result.contents, `run ${run}`).not.toContain("## Scenes");
       } else if (result.result.entries.length > 0) {
         const lines = mermaidBlock(result.contents);
-        expect(lines[0], `run ${run}`).toBe("timeline");
-        expect(lines[1], `run ${run}`).toMatch(/^ {4}title /);
-        for (const line of lines.slice(2)) {
+        expect(lines[0], `run ${run}`).toMatch(/^%%\{init: /);
+        expect(lines[1], `run ${run}`).toBe("timeline");
+        expect(lines[2], `run ${run}`).toMatch(/^ {4}title /);
+        for (const line of lines.slice(3)) {
           if (line.trim() === "") {
             continue;
           }

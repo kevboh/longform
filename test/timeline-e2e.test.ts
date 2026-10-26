@@ -876,7 +876,7 @@ describe("Mermaid timeline", () => {
       ],
     });
 
-    expect(run.contents.startsWith("```mermaid\ntimeline")).toBe(true);
+    expect(run.contents.startsWith("```mermaid\n%%{init")).toBe(true);
     expect(run.contents).toContain("    section 2023");
     expect(run.contents).toContain("    section 2026");
     expect(run.contents).toContain("        Dec : 20 16:00<br>D");

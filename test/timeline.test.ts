@@ -18,6 +18,9 @@ const FORMAT_SAMPLES: Record<TimeframeFormat, string | number> = {
   number: 1,
 };
 
+const DIRECTIVE =
+  "%%{init: {'theme':'forest','themeVariables':{'primaryColor':'#ff2d55','primaryTextColor':'#ffffff','lineColor':'#ff2d55'}}}%%";
+
 describe("container scenes", () => {
   it("skips every scene that has children, at any depth", async () => {
     const run = await runProject({
@@ -278,8 +281,9 @@ describe("Mermaid timeline", () => {
       ],
     });
 
-    expect(run.contents.startsWith("```mermaid\ntimeline\n")).toBe(true);
+    expect(run.contents.startsWith("```mermaid\n%%{init")).toBe(true);
     expect(mermaidBlock(run.contents)).toEqual([
+      DIRECTIVE,
       "timeline",
       "    title My Book",
       "    section 2023",
@@ -332,6 +336,7 @@ describe("Mermaid timeline", () => {
       ],
     });
     expect(mermaidBlock(run.contents)).toEqual([
+      DIRECTIVE,
       "timeline",
       "    title My Book",
       "    section Timeline",
