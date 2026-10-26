@@ -16,6 +16,12 @@ const INDEX_MIGRATION_NOTICE =
 
 export const needsMigration = writable<boolean>(false);
 
+/**
+ * The version values compared below are data-format versions inherited from
+ * upstream Longform FORKED_VERSION. They are independent of Longform
+ * Extended's own release version (see manifest.json), so do not align them
+ * with the fork's semver.
+ */
 export function determineMigrationStatus(settings: LongformExtendedPluginSettings) {
   needsMigration.set(settings.version < LONGFORM_EXTENDED_CURRENT_PLUGIN_DATA_VERSION);
 }

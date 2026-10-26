@@ -1,6 +1,6 @@
 {
   "name": "longform-extended",
-  "version": "2.1.0",
+  "version": "1.0.0",
   "description": "Write novels, screenplays, and other long projects in Obsidian, with added timeline, plot grid, and corkboard views.",
   "main": "main.js",
   "scripts": {

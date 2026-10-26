@@ -1,5 +1,21 @@
+/**
+ * Data-format version for settings stored in data.json. Inherited from
+ * upstream Longform (see FORKED_VERSION); this is a different axis from the
+ * fork's own release version in manifest.json and must not be tied to it.
+ */
 export const LONGFORM_EXTENDED_CURRENT_PLUGIN_DATA_VERSION = 3;
+/**
+ * Data-format version for the project index stored on disk. Inherited from
+ * upstream Longform (see FORKED_VERSION) and independent of Longform
+ * Extended's own release version.
+ */
 export const LONGFORM_EXTENDED_CURRENT_INDEX_VERSION = 1;
+
+/**
+ * The upstream Longform release this fork was based on. Used as a reference
+ * anchor so the fork's own versioning (see manifest.json) stays independent.
+ */
+export const FORKED_VERSION = "2.1.0";
 
 export const DEFAULT_TIMEFRAME_TAG_NAME = "timeframe";
 export const DEFAULT_TIME_FORMAT = "dd/mm/yyyy hh:mm:ss";
