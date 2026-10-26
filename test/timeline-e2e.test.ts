@@ -879,12 +879,12 @@ describe("Mermaid timeline", () => {
     expect(run.contents.startsWith("```mermaid\ntimeline")).toBe(true);
     expect(run.contents).toContain("    section 2023");
     expect(run.contents).toContain("    section 2026");
-    expect(run.contents).toContain("        Dec : 20 16.00 - D");
-    expect(run.contents).toContain("        Mar : 04 09.30 - A");
+    expect(run.contents).toContain("        Dec : 20 16:00<br>D");
+    expect(run.contents).toContain("        Mar : 04 09:30<br>A");
 
-    const a = run.contents.indexOf("04 09.30 - A");
-    const b = run.contents.indexOf("04 10.00 - B");
-    const c = run.contents.indexOf("05 08.00 - C");
+    const a = run.contents.indexOf("04 09:30<br>A");
+    const b = run.contents.indexOf("04 10:00<br>B");
+    const c = run.contents.indexOf("05 08:00<br>C");
     expect(a).toBeGreaterThan(-1);
     expect(a).toBeLessThan(b);
     expect(b).toBeLessThan(c);

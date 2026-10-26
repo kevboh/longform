@@ -23,8 +23,11 @@ The file begins with a Mermaid `timeline` diagram.
 
 For example, if the year changes and the story advances hour by hour, the
 primary is the year and the secondary is the day. Each section is a year, each
-period is a month and day, and the events inside a period are the scenes by
-hour, minute, and second.
+period is a month and day, and each event shows the time on its first line
+(`09:30`, or `09:30:15` when seconds exist) and the scene file name on its
+second line.
+
+Mermaid centers event text; it does not expose per-line alignment.
 
 Months are written by name (`Mar`, `Dec`) in the diagram. The data block always
 uses numbers.

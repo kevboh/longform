@@ -283,24 +283,24 @@ describe("Mermaid timeline", () => {
       "timeline",
       "    title My Book",
       "    section 2023",
-      "        Dec : 20 16.00 - D",
+      "        Dec : 20 16:00<br>D",
       "    section 2026",
-      "        Mar : 04 09.30 - A",
-      "            : 04 10.00 - B",
-      "            : 05 08.00 - C",
+      "        Mar : 04 09:30<br>A",
+      "            : 04 10:00<br>B",
+      "            : 05 08:00<br>C",
     ]);
   });
 
   it("falls back to a flat period for a single scene", async () => {
     const expectations: Record<TimeframeFormat, [string, string]> = {
-      datetime: ["2026", "2026-Mar-04 09.30.00"],
-      "epoch-datetime-dmy": ["1", "1 2026-Mar-04 09.30.00"],
-      "epoch-datetime-mdy": ["1", "1 2026-Mar-04 09.30.00"],
-      time: ["09", "09.30.00"],
-      number: ["Timeline", "1"],
+      datetime: ["2026", "        2026 : Mar-04 09:30:00<br>A"],
+      "epoch-datetime-dmy": ["1", "        1 : 2026-Mar-04 09:30:00<br>A"],
+      "epoch-datetime-mdy": ["1", "        1 : 2026-Mar-04 09:30:00<br>A"],
+      time: ["09", "        09 : 30:00<br>A"],
+      number: ["Timeline", "        1 : A"],
     };
 
-    for (const [format, [section, period]] of Object.entries(expectations)) {
+    for (const [format, [section, line]] of Object.entries(expectations)) {
       const run = await runProject({
         format: format as TimeframeFormat,
         scenes: [
@@ -308,7 +308,7 @@ describe("Mermaid timeline", () => {
         ],
       });
       expect(run.contents, format).toContain(`    section ${section}`);
-      expect(run.contents, format).toContain(`        ${period} : A`);
+      expect(run.contents, format).toContain(line);
     }
   });
 
@@ -320,7 +320,7 @@ describe("Mermaid timeline", () => {
       ],
     });
     expect(run.contents).toContain("    title My - Book");
-    expect(run.contents).toContain(": A - B | C");
+    expect(run.contents).toContain("<br>A - B | C");
   });
 
   it("uses a Timeline section for the number format", async () => {

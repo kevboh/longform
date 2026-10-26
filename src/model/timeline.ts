@@ -317,7 +317,8 @@ function unitLabel(value: number, unit: TimeframeUnit): string {
  */
 function unitValues(
   values: TimeframeValues,
-  units: TimeframeUnit[]
+  units: TimeframeUnit[],
+  timeSeparator = "."
 ): string {
   if (values.number !== undefined) {
     return `${values.number}`;
@@ -345,7 +346,7 @@ function unitValues(
     .map((unit) => pad(values[unit], 2))
     .filter((value) => value.length > 0);
   if (time.length > 0) {
-    parts.push(time.join("."));
+    parts.push(time.join(timeSeparator));
   }
 
   return parts.join(" ");
@@ -403,10 +404,13 @@ function renderMermaid(result: TimelineResult): string {
 
     if (between.length === 0) {
       for (const entry of primaryEntries) {
+        const periodLabel = unitLabel(Number(entry.values[primary]), primary);
+        const time =
+          below.length > 0
+            ? unitValues(entry.values, below, ":")
+            : unitValues(entry.values, present, ":");
         lines.push(
-          `        ${unitValues(entry.values, present)} : ${sanitize(
-            entry.sceneTitle
-          )}`
+          `        ${periodLabel} : ${time}<br>${sanitize(entry.sceneTitle)}`
         );
       }
       continue;
@@ -436,12 +440,11 @@ function renderMermaid(result: TimelineResult): string {
       const continuation = " ".repeat(8 + label.length + 1);
 
       periodEntries.forEach((entry, index) => {
-        const event =
+        const time =
           below.length > 0
-            ? `${unitValues(entry.values, below)} - ${sanitize(
-                entry.sceneTitle
-              )}`
-            : sanitize(entry.sceneTitle);
+            ? unitValues(entry.values, below, ":")
+            : unitValues(entry.values, present, ":");
+        const event = `${time}<br>${sanitize(entry.sceneTitle)}`;
         const prefix =
           index === 0 ? `        ${label} : ` : `${continuation}: `;
         lines.push(`${prefix}${event}`);
