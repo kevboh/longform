@@ -815,11 +815,11 @@ describe("N. edge cases", () => {
     expect(rows(run.contents)).toEqual(["| A | 0:0:0 |", "| B | 9:30:0 |"]);
   });
 
-  it("T141 a pipe in a title breaks the table (known defect)", async () => {
+  it("T141 escapes a pipe in a scene title", async () => {
     const run = await runProject({
       scenes: [{ name: "A | B", value: "04/03/2026 09:30" }],
     });
-    expect(rows(run.contents)).toEqual(["| A | B | 4/3/2026 9:30 |"]);
+    expect(rows(run.contents)).toEqual(["| A \\| B | 4/3/2026 9:30 |"]);
   });
 
   it("T142 defined zero minute is kept", async () => {

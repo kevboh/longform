@@ -397,6 +397,10 @@ function renderMermaid(result: TimelineResult): string {
   return lines.join("\n");
 }
 
+function escapeTableCell(text: string): string {
+  return text.replace(/\|/g, "\\|");
+}
+
 function renderTimeline(result: TimelineResult): string {
   const lines = [
     `# Timeline: ${result.title}`,
@@ -420,7 +424,10 @@ function renderTimeline(result: TimelineResult): string {
   lines.push("## Scenes", "", "| Scene | Timeframe |", "| --- | --- |");
   for (const entry of result.entries) {
     lines.push(
-      `| ${entry.sceneTitle} | ${formatValues(entry.values, result.units)} |`
+      `| ${escapeTableCell(entry.sceneTitle)} | ${formatValues(
+        entry.values,
+        result.units
+      )} |`
     );
   }
   lines.push("");

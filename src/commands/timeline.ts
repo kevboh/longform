@@ -2,9 +2,9 @@ import { get } from "svelte/store";
 import { Notice, type App } from "obsidian";
 
 import type { CommandBuilder } from "./types";
-import { selectedDraft } from "src/model/stores";
-import { buildTimeline, writeTimeline } from "src/model/timeline";
-import type { MultipleSceneDraft } from "src/model/types";
+import { selectedDraft } from "../model/stores";
+import { buildTimeline, writeTimeline } from "../model/timeline";
+import type { MultipleSceneDraft } from "../model/types";
 
 export const rebuildTimeline: CommandBuilder = (plugin) => ({
   id: "longform-extended-rebuild-timeline",
