@@ -30,7 +30,7 @@ Longform Extended is not a full writing suite in the style of heavier plugins th
 The timeline lays your scenes out along a time axis, so you can see the order
 of your story at a glance. Each scene's position comes from a `timeframe`
 value in its frontmatter, which you configure in the Project tab's Project
-Metadata.
+Metadata. See [TIMELINE.md](./docs/TIMELINE.md) for the full documentation.
 
 ### Timeframe Tag Name
 
