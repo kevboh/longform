@@ -34,6 +34,8 @@ export type TimelineError = {
 export type TimelineEntry = {
   sceneTitle: string;
   values: TimeframeValues;
+  /** The vault-relative path to the scene's note. */
+  path: string;
 };
 
 export type TimelineResult = {
@@ -98,6 +100,7 @@ export async function buildTimeline(
     entries.push({
       sceneTitle: scene.title,
       values: parsed.values,
+      path,
     });
   }
 
@@ -241,35 +244,13 @@ function compiledTarget(draft: MultipleSceneDraft): string {
 }
 
 /**
- * Rebuilds a readable value from a unit map, using the shared unit order.
+ * The scene's note as an Obsidian wikilink. The alias is the file's base name,
+ * and the alias separator is escaped so it survives a Markdown table cell.
  */
-function formatValues(values: TimeframeValues, units: TimeframeUnit[]): string {
-  if (values.number !== undefined) {
-    return `${values.number}`;
-  }
-
-  const parts: string[] = [];
-  if (values.epoch !== undefined) {
-    parts.push(`${values.epoch}`);
-  }
-
-  const date = units
-    .filter((unit) => unit === "day" || unit === "month" || unit === "year")
-    .map((unit) => values[unit])
-    .filter((value): value is number => value !== undefined);
-  if (date.length > 0) {
-    parts.push(date.join("/"));
-  }
-
-  const time = units
-    .filter((unit) => unit === "hour" || unit === "minute" || unit === "second")
-    .map((unit) => values[unit])
-    .filter((value): value is number => value !== undefined);
-  if (time.length > 0) {
-    parts.push(time.join(":"));
-  }
-
-  return parts.join(" ");
+function sceneLink(entry: TimelineEntry): string {
+  const notePath = entry.path.replace(/\.md$/i, "");
+  const alias = notePath.split("/").pop() ?? entry.sceneTitle;
+  return `[[${notePath}\\|${escapeTableCell(alias)}]]`;
 }
 
 function sanitize(text: string): string {
@@ -359,7 +340,6 @@ function renderMermaid(result: TimelineResult): string {
   const secondary = result.secondaryUnit;
   const lines = [
     "```mermaid",
-    "%%{init: {'theme':'forest','themeVariables':{'primaryColor':'#ff2d55','primaryTextColor':'#ffffff','lineColor':'#ff2d55'}}}%%",
     "timeline",
     `    title ${sanitize(result.title)}`,
   ];
@@ -479,14 +459,56 @@ function renderTimeline(result: TimelineResult): string {
     return lines.join("\n");
   }
 
-  lines.push("## Scenes", "", "| Scene | Timeframe |", "| --- | --- |");
+  const primary = result.primaryUnit;
+  const secondary = result.secondaryUnit;
+  const present = presentUnits(result.format).filter((unit) =>
+    result.units.includes(unit)
+  );
+  const primaryIndex = present.indexOf(primary);
+  const secondaryIndex = present.indexOf(secondary);
+  const between: TimeframeUnit[] =
+    secondary === primary
+      ? []
+      : present.slice(primaryIndex + 1, secondaryIndex + 1);
+  const below = present.slice(secondaryIndex + 1);
+
+  lines.push(
+    "## Scenes",
+    "",
+    "| Primary | Period | Cadence | Scene |",
+    "| --- | --- | --- | --- |"
+  );
+
+  let lastPrimaryKey: string | null = null;
+  let lastPeriodKey: string | null = null;
   for (const entry of result.entries) {
+    const primaryValue = entry.values[primary];
+    const primaryKey = `${primaryValue ?? ""}`;
+    const periodKey = between
+      .map((unit) => `${entry.values[unit] ?? ""}`)
+      .join("|");
+    const firstOfPrimary = primaryKey !== lastPrimaryKey;
+    const firstOfPeriod = firstOfPrimary || periodKey !== lastPeriodKey;
+
+    const primaryCell =
+      firstOfPrimary && primaryValue !== undefined
+        ? unitLabel(primaryValue, primary)
+        : "";
+    const periodCell =
+      between.length > 0 ? unitValues(entry.values, between) : "";
+    const cadenceCell =
+      below.length > 0
+        ? unitValues(entry.values, below, ":")
+        : unitValues(entry.values, present, ":");
+
     lines.push(
-      `| ${escapeTableCell(entry.sceneTitle)} | ${formatValues(
-        entry.values,
-        result.units
-      )} |`
+      `| ${primaryCell} | ${
+        firstOfPeriod ? periodCell : ""
+      } | ${cadenceCell} | ${sceneLink(entry)} |`
     );
+
+    lastPrimaryKey = primaryKey;
+    lastPeriodKey = periodKey;
   }
   lines.push("");
 
