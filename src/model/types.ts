@@ -18,17 +18,17 @@ export const LONGFORM_EXTENDED_CURRENT_INDEX_VERSION = 1;
 export const FORKED_VERSION = "2.1.0";
 
 export type TimeframeFormat =
-  | "date"
-  | "time"
+  | "epoch-datetime-dmy"
+  | "epoch-datetime-mdy"
   | "datetime"
-  | "epoch"
+  | "time"
   | "number";
 
 export const TIMEFRAME_FORMATS: readonly string[] = [
-  "date",
-  "time",
+  "epoch-datetime-dmy",
+  "epoch-datetime-mdy",
   "datetime",
-  "epoch",
+  "time",
   "number",
 ];
 

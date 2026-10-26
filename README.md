@@ -16,13 +16,61 @@ Longform Extended is not a full writing suite in the style of heavier plugins th
 
 ### Implemented
 
-Nothing yet. Longform Extended is currently identical to upstream Longform. The features below are what is planned.
+- **Timeline view** — see your scenes laid out along a timeline, driven by a
+  per-scene `timeframe` value and a project-wide time format (see
+  [Timeline](#timeline)).
 
 ### Wishlist
 
-- **Timeline view** — see your scenes laid out along a timeline.
 - **Plot grid** — a table for tracking your plots and subplots across scenes.
 - **Corkboard** — a board of scene cards you can drag to rearrange.
+
+## Timeline
+
+The timeline lays your scenes out along a time axis, so you can see the order
+of your story at a glance. Each scene's position comes from a `timeframe`
+value in its frontmatter, which you configure in the Project tab's Project
+Metadata.
+
+### Timeframe Tag Name
+
+The frontmatter property that holds a scene's timeframe value. It defaults to
+`timeframe`, so a scene might have:
+
+```yaml
+timeframe: 04/03/2026 09:30
+```
+
+Rename it if `timeframe` clashes with something else in your vault.
+
+### Time Format
+
+Choose the format whose biggest unit matches your story's span — smaller units
+can be left off (see Partial values below). The options are:
+
+- **Epoch date time (num dd/mm/yyyy hh:mm:ss)** — an epoch number, then a
+  day-first date, then a time. The `num` is an epoch: a number for a span
+  larger than a year, handy when a story crosses ages.
+- **Epoch date time (num mm/dd/yyyy hh:mm:ss)** — the same, with a month-first
+  date.
+- **Date time (dd/mm/yyyy hh:mm:ss)** — a day-first date and a time.
+- **Time only (hh:mm:ss)** — just a time, for a story that stays within one
+  day.
+- **Chronological order (num)** — a single number that just orders scenes, like
+  `1`, `2`, `3`.
+
+### Partial values
+
+You don't have to fill in every unit. You can drop units from right to left —
+from the smallest up — as long as you stay consistent:
+
+- `num dd/mm/yyyy hh:mm` — seconds omitted.
+- `num dd/mm/yyyy hh` — seconds and minutes omitted.
+- `num dd/mm/yyyy` — the whole time omitted.
+
+You cannot drop units from left to right, so you can't drop the epoch or the
+date and keep the time. Pick the smallest unit you'll ever need and use it for
+every scene.
 
 ## Longform
 

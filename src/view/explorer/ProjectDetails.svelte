@@ -274,17 +274,16 @@
               value={$selectedDraft.timeFormat}
               on:change={timeFormatChanged}
             >
-              <option value="date">Just date</option>
-              <option value="time">Just time</option>
-              <option value="datetime">Date and time</option>
-              <option value="epoch">Epoch (number)</option>
-              <option value="number">Chronological order (number)</option>
+              <option value="epoch-datetime-dmy">Epoch date time (num dd/mm/yyyy hh:mm:ss)</option>
+              <option value="epoch-datetime-mdy">Epoch date time (num mm/dd/yyyy hh:mm:ss)</option>
+              <option value="datetime">Date time (dd/mm/yyyy hh:mm:ss)</option>
+              <option value="time">Time only (hh:mm:ss)</option>
+              <option value="number">Chronological order (num)</option>
             </select>
             <p class="longform-extended-project-warning">
-              How your timeframe values are written. Pick a date, a time, or
-              both, or use a single number for ordering. A value only needs to
-              match part of this format, so a "Date and time" project can still
-              use a plain date for a scene.
+              Pick the format with the biggest unit you'll ever need — smaller
+              units are optional. e.g. "num dd/mm/yyyy hh:mm" drops seconds,
+              "num dd/mm/yyyy" drops the time.
             </p>
           {/if}
         </div>
