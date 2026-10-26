@@ -170,22 +170,71 @@ export function parseTimeframe(
 }
 
 /**
- * The two largest units of a format, used as its primary and secondary.
- * For chronological order both are `number`.
+ * The format's units, coarsest first. The special `number` unit is excluded.
  */
-export function primaryAndSecondaryUnits(
+export function presentUnits(format: TimeframeFormat): TimeframeUnit[] {
+  const units = FORMAT_UNITS[format];
+  return MAGNITUDE_ORDER.filter((unit) => units.includes(unit));
+}
+
+/**
+ * Chooses the primary and secondary units from the values themselves.
+ *
+ * The primary is the coarsest unit that changes between scenes. The cadence
+ * is the unit that changes most often. The secondary is one level coarser
+ * than the cadence, never coarser than the primary.
+ */
+export function deriveUnits(
+  values: TimeframeValues[],
   format: TimeframeFormat
 ): [TimeframeUnit, TimeframeUnit] {
-  const present = new Set(FORMAT_UNITS[format]);
-  const ordered = MAGNITUDE_ORDER.filter((unit) => present.has(unit));
-
-  if (ordered.length === 0) {
+  if (format === "number") {
     return ["number", "number"];
   }
-  if (ordered.length === 1) {
-    return [ordered[0], ordered[0]];
+
+  const present = presentUnits(format);
+  if (present.length === 0) {
+    return ["number", "number"];
   }
-  return [ordered[0], ordered[1]];
+
+  const changes = new Map<TimeframeUnit, number>();
+  for (const unit of present) {
+    changes.set(unit, 0);
+  }
+  for (let index = 1; index < values.length; index++) {
+    for (const unit of present) {
+      if (values[index][unit] !== values[index - 1][unit]) {
+        changes.set(unit, (changes.get(unit) ?? 0) + 1);
+      }
+    }
+  }
+
+  let primary = present[0];
+  for (const unit of present) {
+    if ((changes.get(unit) ?? 0) > 0) {
+      primary = unit;
+      break;
+    }
+  }
+
+  let cadence = present[0];
+  let best = -1;
+  for (const unit of present) {
+    const count = changes.get(unit) ?? 0;
+    if (count > best) {
+      best = count;
+      cadence = unit;
+    }
+  }
+
+  const primaryIndex = present.indexOf(primary);
+  const cadenceIndex = present.indexOf(cadence);
+  const secondaryIndex = Math.max(
+    primaryIndex,
+    cadenceIndex === 0 ? primaryIndex : cadenceIndex - 1
+  );
+
+  return [primary, present[secondaryIndex]];
 }
 
 /** Orders two timeframes chronologically, largest unit first. */

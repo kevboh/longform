@@ -6,9 +6,10 @@ import { projectFolderPath, scenePath } from "./scene-navigation";
 import { workflows } from "./stores";
 import {
   compareTimeframes,
+  deriveUnits,
   isTimeframeParseError,
   parseTimeframe,
-  primaryAndSecondaryUnits,
+  presentUnits,
   type TimeframeParseError,
   type TimeframeUnit,
   type TimeframeValues,
@@ -103,7 +104,10 @@ export async function buildTimeline(
 
   const consistent = keepConsistent(entries, errors);
   consistent.sort((a, b) => compareTimeframes(a.values, b.values));
-  const [primaryUnit, secondaryUnit] = primaryAndSecondaryUnits(format);
+  const [primaryUnit, secondaryUnit] = deriveUnits(
+    consistent.map((entry) => entry.values),
+    format
+  );
   const units =
     consistent.length > 0
       ? (Object.keys(consistent[0].values) as TimeframeUnit[])
@@ -277,9 +281,27 @@ function pad(value: number | undefined, length: number): string {
   return value === undefined ? "" : `${value}`.padStart(length, "0");
 }
 
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 function unitLabel(value: number, unit: TimeframeUnit): string {
   if (unit === "year") {
     return pad(value, 4);
+  }
+  if (unit === "month") {
+    return MONTHS[value - 1] ?? pad(value, 2);
   }
   if (unit === "epoch" || unit === "number") {
     return `${value}`;
@@ -287,43 +309,45 @@ function unitLabel(value: number, unit: TimeframeUnit): string {
   return pad(value, 2);
 }
 
-function formatEventTimeframe(
-  entry: TimelineEntry,
+/**
+ * Formats the given units of a value for the Mermaid diagram. Months are
+ * rendered by name, dates with dashes, and times with dots, so the result is
+ * safe inside a Mermaid `timeline` line.
+ */
+function unitValues(
+  values: TimeframeValues,
   units: TimeframeUnit[]
 ): string {
-  if (entry.values.number !== undefined) {
-    return `${entry.values.number}`;
+  if (values.number !== undefined) {
+    return `${values.number}`;
   }
 
   const parts: string[] = [];
-  if (entry.values.epoch !== undefined) {
-    parts.push(`${entry.values.epoch}`);
+  if (units.includes("epoch") && values.epoch !== undefined) {
+    parts.push(`${values.epoch}`);
   }
 
   const date = units
-    .filter((unit) => unit === "day" || unit === "month" || unit === "year")
-    .map((unit) => pad(entry.values[unit], unit === "year" ? 4 : 2))
+    .filter((unit) => unit === "year" || unit === "month" || unit === "day")
+    .map((unit) =>
+      unit === "month"
+        ? MONTHS[(values[unit] ?? 1) - 1] ?? ""
+        : pad(values[unit], unit === "year" ? 4 : 2)
+    )
     .filter((value) => value.length > 0);
   if (date.length > 0) {
-    parts.push(date.join("/"));
+    parts.push(date.join("-"));
   }
 
   const time = units
     .filter((unit) => unit === "hour" || unit === "minute" || unit === "second")
-    .map((unit) => pad(entry.values[unit], 2))
+    .map((unit) => pad(values[unit], 2))
     .filter((value) => value.length > 0);
   if (time.length > 0) {
     parts.push(time.join("."));
   }
 
   return parts.join(" ");
-}
-
-function eventLabel(entry: TimelineEntry, result: TimelineResult): string {
-  return `${sanitize(entry.sceneTitle)} - ${formatEventTimeframe(
-    entry,
-    result.units
-  )}`;
 }
 
 /**
