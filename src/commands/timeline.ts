@@ -1,10 +1,9 @@
 import { get } from "svelte/store";
-import { Notice, type App } from "obsidian";
+import { Notice } from "obsidian";
 
 import type { CommandBuilder } from "./types";
 import { selectedDraft } from "../model/stores";
 import { buildTimeline, writeTimeline } from "../model/timeline";
-import type { MultipleSceneDraft } from "../model/types";
 
 export const rebuildTimeline: CommandBuilder = (plugin) => ({
   id: "longform-extended-rebuild-timeline",
@@ -18,17 +17,18 @@ export const rebuildTimeline: CommandBuilder = (plugin) => ({
       return;
     }
 
-    void rebuild(plugin.app, draft);
+    void (async () => {
+      try {
+        const result = await buildTimeline(plugin.app, draft);
+        await writeTimeline(plugin.app, draft, result);
+        new Notice("Timeline rebuilt.");
+      } catch (error) {
+        console.error(
+          "[Longform Extended] Failed to rebuild timeline:",
+          error
+        );
+        new Notice("Could not rebuild timeline. See the console.");
+      }
+    })();
   },
 });
-
-async function rebuild(app: App, draft: MultipleSceneDraft): Promise<void> {
-  try {
-    const result = await buildTimeline(app, draft);
-    await writeTimeline(app, draft, result);
-    new Notice("Timeline rebuilt.");
-  } catch (error) {
-    console.error("[Longform Extended] Failed to rebuild timeline:", error);
-    new Notice("Could not rebuild timeline. See the console.");
-  }
-}

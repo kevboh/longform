@@ -10,7 +10,7 @@ export type TimeframeUnit =
   | "second"
   | "number";
 
-/** Units from largest to smallest, used for ordering and primary/secondary. */
+/** Units from coarsest to finest. */
 const MAGNITUDE_ORDER: TimeframeUnit[] = [
   "epoch",
   "year",
@@ -21,7 +21,7 @@ const MAGNITUDE_ORDER: TimeframeUnit[] = [
   "second",
 ];
 
-/** The units each format uses, in the order they appear in a value. */
+/** Units in the order they appear in a value. */
 const FORMAT_UNITS: Record<TimeframeFormat, TimeframeUnit[]> = {
   "epoch-datetime-dmy": [
     "epoch",
@@ -46,7 +46,7 @@ const FORMAT_UNITS: Record<TimeframeFormat, TimeframeUnit[]> = {
   number: ["number"],
 };
 
-/** The fewest units a partial value may keep. */
+/** Fewest units a value may keep. */
 const MIN_UNITS: Record<TimeframeFormat, number> = {
   "epoch-datetime-dmy": 4,
   "epoch-datetime-mdy": 4,
@@ -121,11 +121,7 @@ function patternFor(format: TimeframeFormat, count: number): RegExp {
   return new RegExp(`^${parts.join("\\s+")}$`);
 }
 
-/**
- * Parses a value against a format. A value may drop units from the right
- * (smallest first), so `datetime` accepts `04/03/2026 09:30:00`,
- * `04/03/2026 09:30`, or `04/03/2026`, but never starts from the time.
- */
+/** Parses a value, allowing trailing units to be omitted. */
 export function parseTimeframe(
   raw: unknown,
   format: TimeframeFormat
@@ -169,21 +165,13 @@ export function parseTimeframe(
   return { ok: false, error: { kind: "format" } };
 }
 
-/**
- * The format's units, coarsest first. The special `number` unit is excluded.
- */
+/** The format's units, coarsest first (`number` excluded). */
 export function presentUnits(format: TimeframeFormat): TimeframeUnit[] {
   const units = FORMAT_UNITS[format];
   return MAGNITUDE_ORDER.filter((unit) => units.includes(unit));
 }
 
-/**
- * Chooses the primary and secondary units from the values themselves.
- *
- * The primary is the coarsest unit that changes between scenes. The cadence
- * is the unit that changes most often. The secondary is one level coarser
- * than the cadence, never coarser than the primary.
- */
+/** Picks the primary and secondary units from the values. */
 export function deriveUnits(
   values: TimeframeValues[],
   format: TimeframeFormat

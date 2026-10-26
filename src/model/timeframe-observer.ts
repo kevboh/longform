@@ -6,11 +6,7 @@ import { draftForPath, scenePath } from "./scene-navigation";
 import { drafts as draftsStore } from "./stores";
 import { buildTimeline, writeTimeline } from "./timeline";
 
-/**
- * Keeps each project's timeline up to date. It rebuilds when a scene's
- * timeframe value changes, when the project's format or tag changes, when
- * the scene list changes, and when the plugin starts.
- */
+/** Rebuilds timelines when scene values or project structure change. */
 export class TimeframeObserver {
   private app: App;
   private values = new Map<string, unknown>();
@@ -86,7 +82,14 @@ export class TimeframeObserver {
       }
       draftPaths.add(draft.vaultPath);
 
-      const signature = this.signatureFor(draft);
+      const signature = [
+        draft.title,
+        draft.workflow ?? "",
+        draft.sceneFolder,
+        draft.timeFormat,
+        draft.timeframeTagName,
+        draft.scenes.map((scene) => scene.title).join("\u0000"),
+      ].join("\u0001");
       const previous = this.signatures.get(draft.vaultPath);
       this.signatures.set(draft.vaultPath, signature);
 
@@ -105,7 +108,9 @@ export class TimeframeObserver {
         if (!this.values.has(file.path)) {
           this.values.set(
             file.path,
-            this.valueFor(file, draft.timeframeTagName)
+            this.app.metadataCache.getFileCache(file)?.frontmatter?.[
+              draft.timeframeTagName
+            ]
           );
         }
       }
@@ -113,21 +118,6 @@ export class TimeframeObserver {
 
     prune(this.values, scenePaths);
     prune(this.signatures, draftPaths);
-  }
-
-  private signatureFor(draft: MultipleSceneDraft): string {
-    return [
-      draft.title,
-      draft.workflow ?? "",
-      draft.sceneFolder,
-      draft.timeFormat,
-      draft.timeframeTagName,
-      draft.scenes.map((scene) => scene.title).join("\u0000"),
-    ].join("\u0001");
-  }
-
-  private valueFor(file: TFile, tagName: string): unknown {
-    return this.app.metadataCache.getFileCache(file)?.frontmatter?.[tagName];
   }
 }
 

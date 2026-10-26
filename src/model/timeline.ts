@@ -10,7 +10,6 @@ import {
   isTimeframeParseError,
   parseTimeframe,
   presentUnits,
-  type TimeframeParseError,
   type TimeframeUnit,
   type TimeframeValues,
 } from "./timeframe";
@@ -42,7 +41,7 @@ export type TimelineResult = {
   title: string;
   tagName: string;
   format: TimeframeFormat;
-  /** The units every entry uses, stored once. */
+  /** The units every entry uses, coarsest first. */
   units: TimeframeUnit[];
   primaryUnit: TimeframeUnit;
   secondaryUnit: TimeframeUnit;
@@ -51,10 +50,7 @@ export type TimelineResult = {
   errors: TimelineError[];
 };
 
-/**
- * Gathers every scene's timeframe, checks it against the project's format,
- * and keeps only the values that agree on granularity.
- */
+/** Collects scene timeframes and validates them against the project format. */
 export async function buildTimeline(
   app: App,
   draft: MultipleSceneDraft
@@ -69,8 +65,7 @@ export async function buildTimeline(
     const scene = draft.scenes[index];
     const next = draft.scenes[index + 1];
 
-    // A scene with children is a structural container (an act, chapter, or
-    // folder), not an event, so it is not placed on the timeline.
+    // Scenes with children are structural containers, not timeline events.
     if (next && next.indent > scene.indent) {
       continue;
     }
@@ -89,10 +84,16 @@ export async function buildTimeline(
 
     const parsed = parseTimeframe(raw, format);
     if (isTimeframeParseError(parsed)) {
+      const { error } = parsed;
       errors.push({
         sceneTitle: scene.title,
-        kind: parsed.error.kind,
-        message: messageForError(parsed.error, format),
+        kind: error.kind,
+        message:
+          error.kind === "empty"
+            ? "has an empty timeframe value."
+            : error.kind === "range"
+            ? `has an out-of-range ${error.unit} value (${error.value}).`
+            : `does not match the configured format (${FORMAT_LABELS[format]}).`,
       });
       continue;
     }
@@ -112,7 +113,9 @@ export async function buildTimeline(
   );
   const units =
     consistent.length > 0
-      ? (Object.keys(consistent[0].values) as TimeframeUnit[])
+      ? presentUnits(format).filter(
+          (unit) => consistent[0].values[unit] !== undefined
+        )
       : [];
 
   return {
@@ -128,24 +131,7 @@ export async function buildTimeline(
   };
 }
 
-function messageForError(
-  error: TimeframeParseError,
-  format: TimeframeFormat
-): string {
-  switch (error.kind) {
-    case "empty":
-      return "has an empty timeframe value.";
-    case "range":
-      return `has an out-of-range ${error.unit} value (${error.value}).`;
-    default:
-      return `does not match the configured format (${FORMAT_LABELS[format]}).`;
-  }
-}
-
-/**
- * Every value must use the same number of units. Values that differ from the
- * most common count are reported and dropped.
- */
+/** Drops entries whose unit count differs from the majority. */
 function keepConsistent(
   entries: TimelineEntry[],
   errors: TimelineError[]
@@ -178,10 +164,7 @@ function keepConsistent(
   return kept;
 }
 
-/**
- * Writes the timeline beside the compiled manuscript. Returns without
- * creating anything when no scene has a timeframe value.
- */
+/** Writes the timeline beside the compiled manuscript. */
 export async function writeTimeline(
   app: App,
   draft: MultipleSceneDraft,
@@ -194,7 +177,10 @@ export async function writeTimeline(
   const path = timelinePath(app, draft);
   const contents = renderTimeline(result);
 
-  if (await isUnchanged(app, path, contents)) {
+  if (
+    (await app.vault.adapter.exists(path)) &&
+    (await app.vault.adapter.read(path)) === contents
+  ) {
     return;
   }
 
@@ -206,51 +192,28 @@ export async function writeTimeline(
   await app.vault.adapter.write(path, contents);
 }
 
-async function isUnchanged(
-  app: App,
-  path: string,
-  contents: string
-): Promise<boolean> {
-  if (!(await app.vault.adapter.exists(path))) {
-    return false;
-  }
-  return (await app.vault.adapter.read(path)) === contents;
-}
-
-/**
- * The compiled manuscript's path with `_timeline` added before its extension.
- */
+/** Compiled manuscript path with `_timeline` before the extension. */
 function timelinePath(app: App, draft: MultipleSceneDraft): string {
-  const rawTarget = compiledTarget(draft).replace("$1", draft.title);
-  const target = /\.\w+$/.test(rawTarget) ? rawTarget : `${rawTarget}.md`;
-  const compiled = target.startsWith("/")
-    ? normalizePath(target.slice(1))
-    : normalizePath(`${projectFolderPath(draft, app.vault)}/${target}`);
-
-  return compiled.replace(/(\.[^./]+)$/, "_timeline$1");
-}
-
-function compiledTarget(draft: MultipleSceneDraft): string {
   const workflow = draft.workflow ? get(workflows)[draft.workflow] : undefined;
   const step = workflow?.steps.find(
     (candidate) => candidate.description.canonicalID === "write-to-note"
   );
-  const target = step?.optionValues?.["target"];
+  const configured = step?.optionValues?.["target"];
+  const target =
+    typeof configured === "string" && configured.trim().length > 0
+      ? configured.trim()
+      : DEFAULT_TARGET;
+  const rawTarget = target.replace("$1", draft.title);
+  const withExtension = /\.\w+$/.test(rawTarget)
+    ? rawTarget
+    : `${rawTarget}.md`;
+  const compiled = withExtension.startsWith("/")
+    ? normalizePath(withExtension.slice(1))
+    : normalizePath(
+        `${projectFolderPath(draft, app.vault)}/${withExtension}`
+      );
 
-  if (typeof target === "string" && target.trim().length > 0) {
-    return target.trim();
-  }
-  return DEFAULT_TARGET;
-}
-
-/**
- * The scene's note as an Obsidian wikilink. The alias is the file's base name,
- * and the alias separator is escaped so it survives a Markdown table cell.
- */
-function sceneLink(entry: TimelineEntry): string {
-  const notePath = entry.path.replace(/\.md$/i, "");
-  const alias = notePath.split("/").pop() ?? entry.sceneTitle;
-  return `[[${notePath}\\|${escapeTableCell(alias)}]]`;
+  return compiled.replace(/(\.[^./]+)$/, "_timeline$1");
 }
 
 function sanitize(text: string): string {
@@ -289,11 +252,7 @@ function unitLabel(value: number, unit: TimeframeUnit): string {
   return pad(value, 2);
 }
 
-/**
- * Formats the given units of a value for the Mermaid diagram. Months are
- * rendered by name, dates with dashes, and times with dots, so the result is
- * safe inside a Mermaid `timeline` line.
- */
+/** Formats selected units: months by name, dates with dashes, times with `timeSeparator`. */
 function unitValues(
   values: TimeframeValues,
   units: TimeframeUnit[],
@@ -331,10 +290,7 @@ function unitValues(
   return parts.join(" ");
 }
 
-/**
- * Builds a Mermaid timeline: one section per primary unit value, one period
- * per secondary unit value, and the scenes in chronological order as events.
- */
+/** Builds the Mermaid timeline. */
 function renderMermaid(result: TimelineResult): string {
   const primary = result.primaryUnit;
   const secondary = result.secondaryUnit;
@@ -355,9 +311,7 @@ function renderMermaid(result: TimelineResult): string {
     return lines.join("\n");
   }
 
-  const present = presentUnits(result.format).filter((unit) =>
-    result.units.includes(unit)
-  );
+  const present = result.units;
   const primaryIndex = present.indexOf(primary);
   const secondaryIndex = present.indexOf(secondary);
   const between =
@@ -435,10 +389,6 @@ function renderMermaid(result: TimelineResult): string {
   return lines.join("\n");
 }
 
-function escapeTableCell(text: string): string {
-  return text.replace(/\|/g, "\\|");
-}
-
 function renderTimeline(result: TimelineResult): string {
   if (result.errors.length > 0) {
     const problems = ["## Problems", ""];
@@ -451,9 +401,7 @@ function renderTimeline(result: TimelineResult): string {
 
   const primary = result.primaryUnit;
   const secondary = result.secondaryUnit;
-  const present = presentUnits(result.format).filter((unit) =>
-    result.units.includes(unit)
-  );
+  const present = result.units;
   const primaryIndex = present.indexOf(primary);
   const secondaryIndex = present.indexOf(secondary);
   const between: TimeframeUnit[] =
@@ -486,10 +434,16 @@ function renderTimeline(result: TimelineResult): string {
         ? unitValues(entry.values, below, ":")
         : unitValues(entry.values, present, ":");
 
+    const notePath = entry.path.replace(/\.md$/i, "");
+    const alias = (notePath.split("/").pop() ?? entry.sceneTitle).replace(
+      /\|/g,
+      "\\|"
+    );
+
     table.push(
       `| ${primaryCell} | ${
         firstOfPeriod ? periodCell : ""
-      } | ${cadenceCell} | ${sceneLink(entry)} |`
+      } | ${cadenceCell} | [[${notePath}\\|${alias}]] |`
     );
 
     lastPrimaryKey = primaryKey;

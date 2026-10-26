@@ -24,16 +24,14 @@ export type TimeframeFormat =
   | "time"
   | "number";
 
-export const TIMEFRAME_FORMATS: readonly string[] = [
-  "epoch-datetime-dmy",
-  "epoch-datetime-mdy",
-  "datetime",
-  "time",
-  "number",
-];
-
 export function isTimeframeFormat(value: unknown): value is TimeframeFormat {
-  return typeof value === "string" && TIMEFRAME_FORMATS.includes(value);
+  return (
+    value === "epoch-datetime-dmy" ||
+    value === "epoch-datetime-mdy" ||
+    value === "datetime" ||
+    value === "time" ||
+    value === "number"
+  );
 }
 
 export const DEFAULT_TIMEFRAME_TAG_NAME = "timeframe";
