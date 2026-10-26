@@ -217,13 +217,25 @@ export function deriveUnits(
     }
   }
 
+  const transitions = Math.max(values.length - 1, 0);
   let cadence = present[0];
-  let best = -1;
+  let found = false;
   for (const unit of present) {
     const count = changes.get(unit) ?? 0;
-    if (count > best) {
-      best = count;
+    if (count > 0 && count * 2 >= transitions) {
       cadence = unit;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    let best = -1;
+    for (const unit of present) {
+      const count = changes.get(unit) ?? 0;
+      if (count > best) {
+        best = count;
+        cadence = unit;
+      }
     }
   }
 

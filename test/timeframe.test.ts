@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   compareTimeframes,
+  deriveUnits,
   isTimeframeParseError,
   parseTimeframe,
-  primaryAndSecondaryUnits,
 } from "../src/model/timeframe";
 import type { TimeframeFormat } from "../src/model/types";
 
@@ -206,19 +206,64 @@ describe("empty and non-string values", () => {
   });
 });
 
-describe("primary and secondary units", () => {
-  it("uses the two largest units of each format", () => {
-    expect(primaryAndSecondaryUnits("epoch-datetime-dmy")).toEqual([
+describe("deriveUnits", () => {
+  it("uses the coarsest changing unit as primary and one level above the cadence as secondary", () => {
+    // Year changes; the story advances hour by hour.
+    const hourly = [
+      values("04/03/2026 09:30:00", "datetime"),
+      values("04/03/2026 10:30:00", "datetime"),
+      values("04/03/2026 11:30:00", "datetime"),
+      values("04/03/2025 09:30:00", "datetime"),
+    ];
+    expect(deriveUnits(hourly, "datetime")).toEqual(["year", "day"]);
+  });
+
+  it("uses the month when the story advances day by day", () => {
+    const daily = [
+      values("31/12/2025 09:30", "datetime"),
+      values("01/01/2026 09:30", "datetime"),
+      values("02/01/2026 09:30", "datetime"),
+      values("03/01/2026 09:30", "datetime"),
+      values("04/01/2026 09:30", "datetime"),
+    ];
+    expect(deriveUnits(daily, "datetime")).toEqual(["year", "month"]);
+  });
+
+  it("uses the hour when the story advances minute by minute", () => {
+    const minutely = [
+      values("31/12/2025 09:30", "datetime"),
+      values("01/01/2026 09:31", "datetime"),
+      values("01/01/2026 09:32", "datetime"),
+      values("01/01/2026 09:33", "datetime"),
+      values("01/01/2026 09:34", "datetime"),
+    ];
+    expect(deriveUnits(minutely, "datetime")).toEqual(["year", "hour"]);
+  });
+
+  it("falls back to the primary when there is nothing finer to group", () => {
+    const hourlyOnly = [
+      values("04/03/2026 09:30", "datetime"),
+      values("04/03/2026 10:30", "datetime"),
+    ];
+    expect(deriveUnits(hourlyOnly, "datetime")).toEqual(["hour", "hour"]);
+  });
+
+  it("uses the epoch as primary when it changes", () => {
+    const epochs = [
+      values("1 04/03/2026 09:30", "epoch-datetime-dmy"),
+      values("2 04/03/2026 10:30", "epoch-datetime-dmy"),
+    ];
+    expect(deriveUnits(epochs, "epoch-datetime-dmy")).toEqual([
       "epoch",
-      "year",
-    ]);
-    expect(primaryAndSecondaryUnits("epoch-datetime-mdy")).toEqual([
       "epoch",
-      "year",
     ]);
-    expect(primaryAndSecondaryUnits("datetime")).toEqual(["year", "month"]);
-    expect(primaryAndSecondaryUnits("time")).toEqual(["hour", "minute"]);
-    expect(primaryAndSecondaryUnits("number")).toEqual(["number", "number"]);
+  });
+
+  it("always uses number for chronological order", () => {
+    expect(deriveUnits([values(1, "number"), values(2, "number")], "number")).toEqual([
+      "number",
+      "number",
+    ]);
   });
 });
 

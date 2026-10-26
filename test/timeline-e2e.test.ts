@@ -692,8 +692,8 @@ describe("K. data block", () => {
     });
     expect(dataBlock(run.contents)).toEqual({
       units: ["day", "month", "year", "hour", "minute"],
-      primary: "year",
-      secondary: "month",
+      primary: "day",
+      secondary: "day",
       scenes: [
         { scene: "A", values: { day: 4, month: 3, year: 2026, hour: 9, minute: 30 } },
         { scene: "B", values: { day: 5, month: 3, year: 2026, hour: 10, minute: 15 } },
@@ -873,12 +873,12 @@ describe("Mermaid timeline", () => {
     expect(run.contents.startsWith("```mermaid\ntimeline")).toBe(true);
     expect(run.contents).toContain("    section 2023");
     expect(run.contents).toContain("    section 2026");
-    expect(run.contents).toContain("        12 : D - 20/12/2023 16.00");
-    expect(run.contents).toContain("        03 : A - 04/03/2026 09.30");
+    expect(run.contents).toContain("        Dec : 20 16.00 - D");
+    expect(run.contents).toContain("        Mar : 04 09.30 - A");
 
-    const a = run.contents.indexOf("A - 04/03/2026 09.30");
-    const b = run.contents.indexOf("B - 04/03/2026 10.00");
-    const c = run.contents.indexOf("C - 05/03/2026 08.00");
+    const a = run.contents.indexOf("04 09.30 - A");
+    const b = run.contents.indexOf("04 10.00 - B");
+    const c = run.contents.indexOf("05 08.00 - C");
     expect(a).toBeGreaterThan(-1);
     expect(a).toBeLessThan(b);
     expect(b).toBeLessThan(c);
@@ -932,7 +932,7 @@ describe("The Clearing (real values)", () => {
       "01-07 The Sound",
     ]);
     expect(run.result.primaryUnit).toBe("year");
-    expect(run.result.secondaryUnit).toBe("month");
+    expect(run.result.secondaryUnit).toBe("day");
     expect(run.path).toBe("Novels/My Book/Build/The Clearing_timeline.md");
     expect(run.contents).toContain("## Not on the timeline");
     expect(run.contents).toContain("- 00-00 Title Page");

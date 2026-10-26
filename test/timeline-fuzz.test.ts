@@ -150,7 +150,7 @@ describe("timeline invariants (fuzz)", () => {
             continue;
           }
           expect(line, `run ${run} mermaid line ${line}`).toMatch(
-            /^ {4}section .+|^ {8}\S+ : .+|^ +: .+$/
+            /^ {4}section .+|^ {8}.+ : .+|^ +: .+$/
           );
         }
         expect(result.contents, `run ${run}`).toContain("## Scenes");

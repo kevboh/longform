@@ -363,6 +363,28 @@ function renderMermaid(result: TimelineResult): string {
     `    title ${sanitize(result.title)}`,
   ];
 
+  if (primary === "number") {
+    lines.push("    section Timeline");
+    for (const entry of result.entries) {
+      lines.push(
+        `        ${entry.values.number} : ${sanitize(entry.sceneTitle)}`
+      );
+    }
+    lines.push("```");
+    return lines.join("\n");
+  }
+
+  const present = presentUnits(result.format).filter((unit) =>
+    result.units.includes(unit)
+  );
+  const primaryIndex = present.indexOf(primary);
+  const secondaryIndex = present.indexOf(secondary);
+  const between =
+    secondary === primary
+      ? []
+      : present.slice(primaryIndex + 1, secondaryIndex + 1);
+  const below = present.slice(secondaryIndex + 1);
+
   const primaryGroups = new Map<string, TimelineEntry[]>();
   for (const entry of result.entries) {
     const key = `${entry.values[primary] ?? ""}`;
@@ -375,45 +397,54 @@ function renderMermaid(result: TimelineResult): string {
     (a, b) => Number(a[0]) - Number(b[0])
   );
 
-  if (primary === secondary) {
-    lines.push("    section Timeline");
-    for (const [, entries] of sortedPrimary) {
-      for (const entry of entries) {
+  for (const [primaryValue, primaryEntries] of sortedPrimary) {
+    lines.push(`    section ${unitLabel(Number(primaryValue), primary)}`);
+
+    if (between.length === 0) {
+      for (const entry of primaryEntries) {
         lines.push(
-          `        ${sanitize(`${entry.values[primary]}`)} : ${eventLabel(
-            entry,
-            result
+          `        ${unitValues(entry.values, present)} : ${sanitize(
+            entry.sceneTitle
           )}`
         );
       }
+      continue;
     }
-  } else {
-    for (const [primaryValue, primaryEntries] of sortedPrimary) {
-      lines.push(
-        `    section ${unitLabel(Number(primaryValue), primary)}`
-      );
 
-      const secondaryGroups = new Map<string, TimelineEntry[]>();
-      for (const entry of primaryEntries) {
-        const key = `${entry.values[secondary] ?? ""}`;
-        const group = secondaryGroups.get(key) ?? [];
-        group.push(entry);
-        secondaryGroups.set(key, group);
+    const periods = new Map<string, TimelineEntry[]>();
+    for (const entry of primaryEntries) {
+      const key = between.map((unit) => entry.values[unit]).join("|");
+      const group = periods.get(key) ?? [];
+      group.push(entry);
+      periods.set(key, group);
+    }
+
+    const sortedPeriods = [...periods.entries()].sort((a, b) => {
+      const left = a[0].split("|").map(Number);
+      const right = b[0].split("|").map(Number);
+      for (let index = 0; index < left.length; index++) {
+        if (left[index] !== right[index]) {
+          return left[index] - right[index];
+        }
       }
+      return 0;
+    });
 
-      const sortedSecondary = [...secondaryGroups.entries()].sort(
-        (a, b) => Number(a[0]) - Number(b[0])
-      );
+    for (const [, periodEntries] of sortedPeriods) {
+      const label = unitValues(periodEntries[0].values, between);
+      const continuation = " ".repeat(8 + label.length + 1);
 
-      for (const [secondaryValue, secondaryEntries] of sortedSecondary) {
-        const label = unitLabel(Number(secondaryValue), secondary);
-        const continuation = " ".repeat(8 + label.length + 1);
-
-        secondaryEntries.forEach((entry, index) => {
-          const prefix = index === 0 ? `        ${label} : ` : `${continuation}: `;
-          lines.push(`${prefix}${eventLabel(entry, result)}`);
-        });
-      }
+      periodEntries.forEach((entry, index) => {
+        const event =
+          below.length > 0
+            ? `${unitValues(entry.values, below)} - ${sanitize(
+                entry.sceneTitle
+              )}`
+            : sanitize(entry.sceneTitle);
+        const prefix =
+          index === 0 ? `        ${label} : ` : `${continuation}: `;
+        lines.push(`${prefix}${event}`);
+      });
     }
   }
 

@@ -241,8 +241,8 @@ describe("data block", () => {
     });
     expect(dataBlock(run.contents)).toEqual({
       units: ["day", "month", "year", "hour", "minute"],
-      primary: "year",
-      secondary: "month",
+      primary: "day",
+      secondary: "day",
       scenes: [
         {
           scene: "A",
@@ -283,20 +283,20 @@ describe("Mermaid timeline", () => {
       "timeline",
       "    title My Book",
       "    section 2023",
-      "        12 : D - 20/12/2023 16.00",
+      "        Dec : 20 16.00 - D",
       "    section 2026",
-      "        03 : A - 04/03/2026 09.30",
-      "           : B - 04/03/2026 10.00",
-      "           : C - 05/03/2026 08.00",
+      "        Mar : 04 09.30 - A",
+      "            : 04 10.00 - B",
+      "            : 05 08.00 - C",
     ]);
   });
 
-  it("uses sane section and period labels for every format", async () => {
+  it("falls back to a flat period for a single scene", async () => {
     const expectations: Record<TimeframeFormat, [string, string]> = {
-      datetime: ["2026", "03"],
-      "epoch-datetime-dmy": ["1", "2026"],
-      "epoch-datetime-mdy": ["1", "2026"],
-      time: ["09", "30"],
+      datetime: ["2026", "2026-Mar-04 09.30.00"],
+      "epoch-datetime-dmy": ["1", "1 2026-Mar-04 09.30.00"],
+      "epoch-datetime-mdy": ["1", "1 2026-Mar-04 09.30.00"],
+      time: ["09", "09.30.00"],
       number: ["Timeline", "1"],
     };
 
@@ -308,7 +308,7 @@ describe("Mermaid timeline", () => {
         ],
       });
       expect(run.contents, format).toContain(`    section ${section}`);
-      expect(run.contents, format).toContain(`        ${period} : A - `);
+      expect(run.contents, format).toContain(`        ${period} : A`);
     }
   });
 
@@ -320,7 +320,7 @@ describe("Mermaid timeline", () => {
       ],
     });
     expect(run.contents).toContain("    title My - Book");
-    expect(run.contents).toContain("A - B | C - 04/03/2026 09.30");
+    expect(run.contents).toContain(": A - B | C");
   });
 
   it("uses a Timeline section for the number format", async () => {
@@ -335,8 +335,8 @@ describe("Mermaid timeline", () => {
       "timeline",
       "    title My Book",
       "    section Timeline",
-      "        1 : B - 1",
-      "        2 : A - 2",
+      "        1 : B",
+      "        2 : A",
     ]);
   });
 });

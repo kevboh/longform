@@ -12,14 +12,22 @@ produces `Build/The Clearing_timeline.md`.
 
 ## Mermaid Diagram
 
-The file begins with a Mermaid `timeline` diagram. Each primary unit value is a
-section. Inside a section, each secondary unit value is a period, and the scenes
-in that period appear as events in chronological order.
+The file begins with a Mermaid `timeline` diagram.
 
-The two largest units of the chosen format are the primary and secondary. For
-`datetime` they are the year and the month. For `epoch date time` they are the
-epoch and the year. For `time only` they are the hour and the minute. For
-`chronological order` both are the number.
+- The **primary** unit is the coarsest unit that changes between scenes. Its
+  value labels each `section`.
+- The **cadence** is the coarsest unit that changes on at least half of the
+  steps between consecutive scenes.
+- The **secondary** unit is one level coarser than the cadence. Its values
+  group the events inside a section.
+
+For example, if the year changes and the story advances hour by hour, the
+primary is the year and the secondary is the day. Each section is a year, each
+period is a month and day, and the events inside a period are the scenes by
+hour, minute, and second.
+
+Months are written by name (`Mar`, `Dec`) in the diagram. The data block always
+uses numbers.
 
 ## The Timeframe Tag
 
