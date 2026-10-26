@@ -100,6 +100,8 @@ export function setDraftOnFrontmatterObject(
 
   if (draft.format === "scenes") {
     obj["longform"]["sceneFolder"] = draft.sceneFolder;
+    obj["longform"]["timeframeTagName"] = draft.timeframeTagName;
+    obj["longform"]["timeFormat"] = draft.timeFormat;
     obj["longform"]["scenes"] = indentedScenesToArrays(draft.scenes);
     if (draft.sceneTemplate) {
       obj["longform"]["sceneTemplate"] = draft.sceneTemplate;

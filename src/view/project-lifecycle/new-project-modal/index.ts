@@ -1,10 +1,12 @@
 import { App, Modal, TFolder } from "obsidian";
 import { insertDraftIntoFrontmatter } from "src/model/draft-utils";
 import { selectedDraftVaultPath } from "src/model/stores";
-import type {
-  Draft,
-  MultipleSceneDraft,
-  SingleSceneDraft,
+import {
+  DEFAULT_TIMEFRAME_TAG_NAME,
+  DEFAULT_TIME_FORMAT,
+  type Draft,
+  type MultipleSceneDraft,
+  type SingleSceneDraft,
 } from "src/model/types";
 import { selectedTab } from "src/view/stores";
 import NewProjectModal from "./NewProjectModal.svelte";
@@ -58,6 +60,8 @@ export default class NewProjectModalContainer extends Modal {
               ignoredFiles: [],
               unknownFiles: [],
               sceneTemplate: null,
+              timeframeTagName: DEFAULT_TIMEFRAME_TAG_NAME,
+              timeFormat: DEFAULT_TIME_FORMAT,
             };
             return multi;
           } else {

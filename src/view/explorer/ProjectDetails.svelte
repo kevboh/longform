@@ -122,6 +122,36 @@
     }
   }
 
+  function timeframeTagNameChanged(event: Event) {
+    const value = (event.target as any).value;
+    if (value.length <= 0 || !$selectedDraft) {
+      return;
+    }
+    drafts.update((allDrafts) =>
+      allDrafts.map((d) => {
+        if (d.vaultPath === $selectedDraftVaultPath && d.format === "scenes") {
+          d.timeframeTagName = value;
+        }
+        return d;
+      })
+    );
+  }
+
+  function timeFormatChanged(event: Event) {
+    const value = (event.target as any).value;
+    if (value.length <= 0 || !$selectedDraft) {
+      return;
+    }
+    drafts.update((allDrafts) =>
+      allDrafts.map((d) => {
+        if (d.vaultPath === $selectedDraftVaultPath && d.format === "scenes") {
+          d.timeFormat = value;
+        }
+        return d;
+      })
+    );
+  }
+
   let projectCount: number;
   let draftCount: number | null;
   let sceneCount: number | null;
@@ -224,6 +254,33 @@
               via the New Scene… field. If you use a templating plugin
               (Templater or the core plugin) it will be used to process this
               template.
+            </p>
+            <label for="longform-project-timeframe-tag"
+              >Timeframe Tag Name</label
+            >
+            <input
+              id="longform-project-timeframe-tag"
+              type="text"
+              value={$selectedDraft.timeframeTagName}
+              on:blur={timeframeTagNameChanged}
+            />
+            <p class="longform-project-warning">
+              The frontmatter property used to place each scene on the
+              timeline. Defaults to "when", which works whether you use dates,
+              times, or plain numbers.
+            </p>
+            <label for="longform-project-time-format">Time Format</label>
+            <input
+              id="longform-project-time-format"
+              type="text"
+              value={$selectedDraft.timeFormat}
+              on:blur={timeFormatChanged}
+            />
+            <p class="longform-project-warning">
+              How your timeframe values are written. Defaults to "dd/mm/yyyy
+              hh:mm:ss", but you do not need the whole thing. Use just a date,
+              just hours, or even a plain number. The timeline works out the
+              granularity from what you write.
             </p>
           {/if}
         </div>

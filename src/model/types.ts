@@ -1,6 +1,9 @@
 export const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 3;
 export const LONGFORM_CURRENT_INDEX_VERSION = 1;
 
+export const DEFAULT_TIMEFRAME_TAG_NAME = "when";
+export const DEFAULT_TIME_FORMAT = "dd/mm/yyyy hh:mm:ss";
+
 export type IndentedScene = {
   title: string;
   indent: number;
@@ -18,6 +21,8 @@ export type MultipleSceneDraft = {
   ignoredFiles: string[] | null;
   unknownFiles: string[];
   sceneTemplate: string | null;
+  timeframeTagName: string;
+  timeFormat: string;
 };
 
 export type SingleSceneDraft = {

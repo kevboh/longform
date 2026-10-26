@@ -4,6 +4,8 @@ import { writable } from "svelte/store";
 import { insertDraftIntoFrontmatter } from "./draft-utils";
 import { pluginSettings } from "./stores";
 import {
+  DEFAULT_TIMEFRAME_TAG_NAME,
+  DEFAULT_TIME_FORMAT,
   LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
   type LongformPluginSettings,
   type MultipleSceneDraft,
@@ -91,6 +93,8 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
             ignoredFiles: [project.indexFile],
             unknownFiles: [],
             sceneTemplate: null,
+            timeframeTagName: DEFAULT_TIMEFRAME_TAG_NAME,
+            timeFormat: DEFAULT_TIME_FORMAT,
           };
 
           await insertDraftIntoFrontmatter(app, vaultPath, draft);
@@ -132,6 +136,8 @@ export async function migrate(settings: LongformPluginSettings, app: App) {
               ignoredFiles: [],
               unknownFiles: [],
               sceneTemplate: null,
+              timeframeTagName: DEFAULT_TIMEFRAME_TAG_NAME,
+              timeFormat: DEFAULT_TIME_FORMAT,
             };
 
             await insertDraftIntoFrontmatter(app, vaultPath, draft);

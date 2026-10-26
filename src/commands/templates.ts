@@ -6,10 +6,12 @@ import { get } from "svelte/store";
 import type { CommandBuilder } from "./types";
 import { insertDraftIntoFrontmatter } from "src/model/draft-utils";
 import { fileNameFromPath } from "src/model/note-utils";
-import type {
-  Draft,
-  MultipleSceneDraft,
-  SingleSceneDraft,
+import {
+  DEFAULT_TIMEFRAME_TAG_NAME,
+  DEFAULT_TIME_FORMAT,
+  type Draft,
+  type MultipleSceneDraft,
+  type SingleSceneDraft,
 } from "src/model/types";
 
 const callbackForFormat = (
@@ -48,6 +50,8 @@ const callbackForFormat = (
         ignoredFiles: [],
         unknownFiles: [],
         sceneTemplate: null,
+        timeframeTagName: DEFAULT_TIMEFRAME_TAG_NAME,
+        timeFormat: DEFAULT_TIME_FORMAT,
       };
       return multi;
     } else {

@@ -9,6 +9,10 @@ import {
 import { cloneDeep, isEqual } from "lodash";
 import { get, type Unsubscriber } from "svelte/store";
 
+import {
+  DEFAULT_TIMEFRAME_TAG_NAME,
+  DEFAULT_TIME_FORMAT,
+} from "./types";
 import type { Draft } from "./types";
 import {
   drafts as draftsStore,
@@ -493,6 +497,9 @@ export class StoreVaultSync {
       const scenes = arraysToIndentedScenes(rawScenes);
       const sceneFolder = longformEntry["sceneFolder"] ?? "/";
       const sceneTemplate = longformEntry["sceneTemplate"] ?? null;
+      const timeframeTagName =
+        longformEntry["timeframeTagName"] || DEFAULT_TIMEFRAME_TAG_NAME;
+      const timeFormat = longformEntry["timeFormat"] || DEFAULT_TIME_FORMAT;
       const ignoredFiles: string[] = longformEntry["ignoredFiles"] ?? [];
       const normalizedSceneFolder = normalizePath(
         `${fileWithMetadata.file.parent.path}/${sceneFolder}`
@@ -540,6 +547,8 @@ export class StoreVaultSync {
           ignoredFiles,
           unknownFiles,
           sceneTemplate,
+          timeframeTagName,
+          timeFormat,
           workflow,
         },
         dirty,
