@@ -440,23 +440,13 @@ function escapeTableCell(text: string): string {
 }
 
 function renderTimeline(result: TimelineResult): string {
-  const lines = [
-    `# Timeline: ${result.title}`,
-    "",
-    `- **Time format:** ${FORMAT_LABELS[result.format]}`,
-    `- **Timeframe tag:** \`${result.tagName}\``,
-    `- **Primary unit:** ${result.primaryUnit}`,
-    `- **Secondary unit:** ${result.secondaryUnit}`,
-    "",
-  ];
-
   if (result.errors.length > 0) {
-    lines.push("## Problems", "");
+    const problems = ["## Problems", ""];
     for (const error of result.errors) {
-      lines.push(`- **${error.sceneTitle}** ${error.message}`);
+      problems.push(`- **${error.sceneTitle}** ${error.message}`);
     }
-    lines.push("", "Fix these and the timeline will be rebuilt.");
-    return lines.join("\n");
+    problems.push("", "Fix these and the timeline will be rebuilt.");
+    return `# Full Story Timeline\n\n${problems.join("\n")}\n`;
   }
 
   const primary = result.primaryUnit;
@@ -472,12 +462,7 @@ function renderTimeline(result: TimelineResult): string {
       : present.slice(primaryIndex + 1, secondaryIndex + 1);
   const below = present.slice(secondaryIndex + 1);
 
-  lines.push(
-    "## Scenes",
-    "",
-    "| Primary | Period | Cadence | Scene |",
-    "| --- | --- | --- | --- |"
-  );
+  const table = ["| | | | |", "| --- | --- | --- | --- |"];
 
   let lastPrimaryKey: string | null = null;
   let lastPeriodKey: string | null = null;
@@ -501,7 +486,7 @@ function renderTimeline(result: TimelineResult): string {
         ? unitValues(entry.values, below, ":")
         : unitValues(entry.values, present, ":");
 
-    lines.push(
+    table.push(
       `| ${primaryCell} | ${
         firstOfPeriod ? periodCell : ""
       } | ${cadenceCell} | ${sceneLink(entry)} |`
@@ -510,35 +495,8 @@ function renderTimeline(result: TimelineResult): string {
     lastPrimaryKey = primaryKey;
     lastPeriodKey = periodKey;
   }
-  lines.push("");
 
-  if (result.missing.length > 0) {
-    lines.push("## Not on the timeline", "");
-    for (const title of result.missing) {
-      lines.push(`- ${title}`);
-    }
-    lines.push("");
-  }
-
-  lines.push(
-    "## Data",
-    "",
-    "```json",
-    JSON.stringify(
-      {
-        units: result.units,
-        primary: result.primaryUnit,
-        secondary: result.secondaryUnit,
-        scenes: result.entries.map((entry) => ({
-          scene: entry.sceneTitle,
-          values: entry.values,
-        })),
-      },
-      null,
-      2
-    ),
-    "```"
-  );
-
-  return `${renderMermaid(result)}\n\n${lines.join("\n")}`;
+  return `# Full Story Timeline\n\n${renderMermaid(result)}\n\n${table.join(
+    "\n"
+  )}\n`;
 }
