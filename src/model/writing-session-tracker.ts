@@ -110,7 +110,7 @@ export class WritingSessionTracker {
     statusBarContainer.addEventListener("click", onStatusClick);
 
     this.statusBarItem = statusBarContainer.createSpan({
-      cls: ["longform-word-count-status"],
+      cls: ["longform-extended-word-count-status"],
     });
 
     this.unsubscribeActiveWordCount = activeFileWordCountStatus.subscribe(

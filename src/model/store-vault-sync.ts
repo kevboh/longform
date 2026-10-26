@@ -34,7 +34,7 @@ type FileWithMetadata = {
   metadata: CachedMetadata;
 };
 
-export function resolveIfLongformFile(
+export function resolveIfLongformExtendedFile(
   metadataCache: MetadataCache,
   file: TFile
 ): FileWithMetadata | null {
@@ -113,24 +113,24 @@ export class StoreVaultSync {
           return;
         }
 
-        console.log("[Longform] Waiting for active sync to complete...");
+        console.log("[Longform Extended] Waiting for active sync to complete...");
 
         // Poll sync status every second
         const interval = setInterval(() => {
           if (!sync.syncing) {
             clearInterval(interval);
             clearTimeout(timeout);  // Clear the timeout when sync completes
-            console.log("[Longform] Sync complete.");
+            console.log("[Longform Extended] Sync complete.");
             waitingForSync.set(false);
             resolve();
           }
-          console.log("[Longform] Sync status:", sync.syncStatus);
+          console.log("[Longform Extended] Sync status:", sync.syncStatus);
         }, 1000);
 
         // Add a timeout just in case sync never completes
         const timeout = setTimeout(() => {
           clearInterval(interval);
-          console.log("[Longform] Sync wait timed out");
+          console.log("[Longform Extended] Sync wait timed out");
           waitingForSync.set(false);
           resolve();
         }, this.settlingTime);
@@ -168,7 +168,7 @@ export class StoreVaultSync {
 
     const files = this.vault.getMarkdownFiles();
     const resolvedFiles = files.map((f) =>
-      resolveIfLongformFile(this.metadataCache, f)
+      resolveIfLongformExtendedFile(this.metadataCache, f)
     );
     const draftFiles = resolvedFiles.filter((f) => f !== null);
 
@@ -194,7 +194,7 @@ export class StoreVaultSync {
     );
     draftsStore.set(draftsToWrite);
 
-    const message = `[Longform] Loaded and watching projects. Found ${draftFiles.length
+    const message = `[Longform Extended] Loaded and watching projects. Found ${draftFiles.length
       } drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
 
     console.log(message);
@@ -483,7 +483,7 @@ export class StoreVaultSync {
           );
         } catch (error) {
           console.error(
-            "[Longform] error manually loading frontmatter:",
+            "[Longform Extended] error manually loading frontmatter:",
             error
           );
         }
@@ -567,7 +567,7 @@ export class StoreVaultSync {
       };
     } else {
       console.log(
-        `[Longform] Error loading draft at ${fileWithMetadata.file.path}: invalid longform.format. Ignoring.`
+        `[Longform Extended] Error loading draft at ${fileWithMetadata.file.path}: invalid longform.format. Ignoring.`
       );
       return null;
     }

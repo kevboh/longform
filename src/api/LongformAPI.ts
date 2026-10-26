@@ -7,12 +7,12 @@ import {
 } from "src/model/draft-utils";
 import type { IndentedScene } from "src/model/types";
 
-/** Provides API access to useful Longform-specific functions. */
-export class LongformAPI {
+/** Provides API access to useful Longform Extended-specific functions. */
+export class LongformExtendedAPI {
   /**
    * Converts an array of scenes w/ indentation information into a YAML-compatible array of potentially-nested arrays.
    *
-   * Longform uses the way YAML formats nested arrays to encode indentation information into frontmatter: you can use this function
+   * Longform Extended uses the way YAML formats nested arrays to encode indentation information into frontmatter: you can use this function
    * to produce those arrays as needed. For example, the input:
    *
    * ```js
@@ -47,7 +47,7 @@ export class LongformAPI {
   /**
    * Converts a YAML-compatible potentially-nested array of strings into a single-dimension array of `{title: string; indent: number}` objects.
    *
-   * Longform uses the YAML format to store scenes with indentation information; this function is useful if you want to read that YAML yourself and convert it into data you can reason about. For example, the YAML:
+   * Longform Extended uses the YAML format to store scenes with indentation information; this function is useful if you want to read that YAML yourself and convert it into data you can reason about. For example, the YAML:
    *
    * ```yaml
    * - My First Scene

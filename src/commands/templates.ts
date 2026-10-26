@@ -28,7 +28,7 @@ const callbackForFormat = (
     return false;
   } else if (draft) {
     console.log(
-      `[Longform] Attempted to insert frontmatter into existing draft at ${file.path}; ignoring.`
+      `[Longform Extended] Attempted to insert frontmatter into existing draft at ${file.path}; ignoring.`
     );
   } else if (checking) {
     return true;
@@ -73,7 +73,7 @@ const callbackForFormat = (
 };
 
 export const insertMultiSceneTemplate: CommandBuilder = (_plugin) => ({
-  id: "longform-insert-multi-scene",
+  id: "longform-extended-insert-multi-scene",
   name: "Insert multi-scene frontmatter",
   editorCheckCallback(checking, editor, view) {
     const result = callbackForFormat("scenes", checking, editor, view);
@@ -82,7 +82,7 @@ export const insertMultiSceneTemplate: CommandBuilder = (_plugin) => ({
 });
 
 export const insertSingleSceneTemplate: CommandBuilder = (_plugin) => ({
-  id: "longform-insert-single-scene",
+  id: "longform-extended-insert-single-scene",
   name: "Insert single-scene frontmatter",
   editorCheckCallback(checking, editor, view) {
     return callbackForFormat("single", checking, editor, view);

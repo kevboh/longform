@@ -135,7 +135,7 @@ export type CompileContext = {
 };
 
 /**
- * A step in a workflow that turns a Longform project into a compiled document (or some other result).
+ * A step in a workflow that turns a Longform Extended project into a compiled document (or some other result).
  */
 export interface CompileStep {
   /** A unique identifier for the step. */
@@ -147,11 +147,11 @@ export interface CompileStep {
   /**
     Function that is executed during compilation. It may be `async`.
     Errors encountered during execution should be thrown and will
-    be handled by Longform.
+    be handled by Longform Extended.
     @param input See `CompileInput`
     @param context See `CompileContext`
     @note For an example of using `context` to determine the shape of `input`, see
-    https://github.com/kevboh/longform/blob/main/src/compile/steps/strip-frontmatter.ts
+    https://github.com/wandrade/longformExtended/blob/main/src/compile/steps/strip-frontmatter.ts
     @returns If of kind "Scene" or "Manuscript", the same shape as `input`
     with the appropriate changes made to `contents`. If of kind "Join",
     the same shape as a "Manuscript" step input.
@@ -162,7 +162,7 @@ export interface CompileStep {
   ): CompileInput | Promise<CompileInput>;
 }
 
-/** A named series of steps to compile a Longform project into a finished product. */
+/** A named series of steps to compile a Longform Extended project into a finished product. */
 export type Workflow = {
   /** The name of the workflow via user input. */
   name: string;
@@ -205,7 +205,7 @@ export function typeMismatchError(
   context: CompileContext
 ): Error {
   return new Error(
-    `[Longform] A compile step received a type it did not expect. It expected "${expected}", but got "${got}" with step kind "${context.kind}"`
+    `[Longform Extended] A compile step received a type it did not expect. It expected "${expected}", but got "${got}" with step kind "${context.kind}"`
   );
 }
 

@@ -8,7 +8,7 @@ import { drafts as draftsStore, timeframeRevision } from "./stores";
 /**
  * Watches scene files for changes to their timeframe tag value.
  *
- * Scope is limited to notes inside `scenes`-format Longform projects. When a
+ * Scope is limited to notes inside `scenes`-format Longform Extended projects. When a
  * file changes, the observer compares the previous value of that draft's
  * `timeframeTagName` property to the new one. If the tag was added, removed,
  * or had its value changed, it bumps `timeframeRevision` so the timeline view
@@ -73,7 +73,7 @@ export class TimeframeObserver {
       }
       await this.app.vault.create(timelinePath, "");
     } catch (error) {
-      console.error("[Longform] Failed to create empty timeline file:", error);
+      console.error("[Longform Extended] Failed to create empty timeline file:", error);
     }
   }
 

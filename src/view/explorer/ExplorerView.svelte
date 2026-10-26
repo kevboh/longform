@@ -30,31 +30,31 @@
 </script>
 
 {#if $needsMigration}
-  <div class="longform-explorer">
+  <div class="longform-extended-explorer">
     <p>
-      Longform has been upgraded and requires a migration to a new format.
+      Longform Extended has been upgraded and requires a migration to a new format.
       Deprecated index files will be deleted, and some scene files may move.
       It’s recommended to back up your vault before migrating.
     </p>
     <p>
       You can view the docs and an explanation of what this migration does <a
-        href="https://github.com/kevboh/longform/blob/main/docs/MIGRATING_FROM_VERSION_1_TO_2.md"
+        href="https://github.com/wandrade/longformExtended/blob/main/docs/MIGRATING_FROM_VERSION_1_TO_2.md"
         >here</a
       >.
     </p>
-    <button class="longform-migrate-button" type="button" on:click={doMigration}
+    <button class="longform-extended-migrate-button" type="button" on:click={doMigration}
       >Migrate</button
     >
   </div>
 {:else if $waitingForSync}
-  <div class="longform-sync-wait">
-    <div class="longform-spinner"></div>
-    <div class="longform-sync-message">
+  <div class="longform-extended-sync-wait">
+    <div class="longform-extended-spinner"></div>
+    <div class="longform-extended-sync-message">
       Waiting for Obsidian Sync to complete...
     </div>
   </div>
 {:else}
-  <div class="longform-explorer">
+  <div class="longform-extended-explorer">
     <ProjectPicker />
     {#if $selectedDraft && $selectedDraft.format === "scenes"}
       <div>
@@ -103,16 +103,16 @@
 {/if}
 
 <style>
-  .longform-explorer {
-    font-size: var(--longform-explorer-font-size);
+  .longform-extended-explorer {
+    font-size: var(--longform-extended-explorer-font-size);
   }
 
-  .longform-migrate-button {
+  .longform-extended-migrate-button {
     background-color: var(--interactive-accent);
     color: var(--text-on-accent);
   }
 
-  .longform-migrate-button:hover {
+  .longform-extended-migrate-button:hover {
     background-color: var(--interactive-accent-hover);
   }
 
@@ -131,7 +131,7 @@
     padding: 0;
   }
 
-  .longform-sync-wait {
+  .longform-extended-sync-wait {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -141,7 +141,7 @@
     gap: 1rem;
   }
 
-  .longform-spinner {
+  .longform-extended-spinner {
     border: 3px solid var(--background-modifier-border);
     border-top: 3px solid var(--text-accent);
     border-radius: 50%;
@@ -150,7 +150,7 @@
     animation: spin 1s linear infinite;
   }
 
-  .longform-sync-message {
+  .longform-extended-sync-message {
     color: var(--text-muted);
     font-size: 0.8em;
     text-align: center;

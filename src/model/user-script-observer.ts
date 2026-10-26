@@ -27,7 +27,7 @@ export class UserScriptObserver {
     this.userScriptFolder = userScriptFolder;
     this.onScriptModify = debounce(() => {
       console.log(
-        `[Longform] File in user script folder modified, reloading scripts…`
+        `[Longform Extended] File in user script folder modified, reloading scripts…`
       );
       this.loadUserSteps();
     }, DEBOUNCE_SCRIPT_LOAD_DELAY_MS);
@@ -63,7 +63,7 @@ export class UserScriptObserver {
         await this.loadUserSteps();
       } else {
         userScriptSteps.set(null);
-        console.log("[Longform] Cleared user script steps.");
+        console.log("[Longform Extended] Cleared user script steps.");
       }
     });
   }
@@ -89,13 +89,13 @@ export class UserScriptObserver {
         userSteps.push(step);
       } catch (e) {
         console.error(
-          `[Longform] skipping user script ${file} due to error:`,
+          `[Longform Extended] skipping user script ${file} due to error:`,
           e
         );
       }
     }
 
-    console.log(`[Longform] Loaded ${userSteps.length} user script steps.`);
+    console.log(`[Longform Extended] Loaded ${userSteps.length} user script steps.`);
     userScriptSteps.set(userSteps);
 
     this.initializedSteps = true;
@@ -165,7 +165,7 @@ export class UserScriptObserver {
 
     if (!loadedStep) {
       console.error(
-        `[Longform] Failed to load user script ${path}. No exports detected.`
+        `[Longform Extended] Failed to load user script ${path}. No exports detected.`
       );
       throw new Error(
         `Failed to load user script ${path}. No exports detected.`

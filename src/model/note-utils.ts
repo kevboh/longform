@@ -34,7 +34,7 @@ export async function createNoteWithPotentialTemplate(
         contents = await createWithTemplates(app, template);
       }
     } catch (error) {
-      console.error(`[Longform] Error using plugin [${pluginUsed}]:`, error);
+      console.error(`[Longform Extended] Error using plugin [${pluginUsed}]:`, error);
     }
     if (contents !== "") {
       await app.vault.adapter.write(path, contents);
@@ -61,7 +61,7 @@ export async function createNote(
     try {
       await app.vault.createFolder(pathComponents.join("/"));
     } catch (e) {
-      console.error(`[Longform] Failed to create new note at "${path}"`, e);
+      console.error(`[Longform Extended] Failed to create new note at "${path}"`, e);
       return null;
     }
   }
@@ -73,7 +73,7 @@ export async function createNote(
     // that situation.  This may change in later versions of obsidian.
     return await app.vault.create(path, initialContent);
   } catch (e: unknown) {
-    console.error(`[Longform] Failed to create new note at "${path}"`, e);
+    console.error(`[Longform Extended] Failed to create new note at "${path}"`, e);
     return null;
   }
 }
@@ -94,7 +94,7 @@ async function createWithTemplater(
   const templaterPlugin = (app as any).plugins.getPlugin("templater-obsidian");
   if (!templaterPlugin) {
     console.error(
-      "[Longform] Attempted to use Templater plugin while disabled."
+      "[Longform Extended] Attempted to use Templater plugin while disabled."
     );
     return;
   }
@@ -117,7 +117,7 @@ async function createWithTemplates(
   );
   if (!corePlugin) {
     console.error(
-      "[Longform] Attempted to use core template plugin while disabled."
+      "[Longform Extended] Attempted to use core template plugin while disabled."
     );
     return;
   }

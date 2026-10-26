@@ -26,7 +26,7 @@ export default class NewProjectModalContainer extends Modal {
     contentEl.createEl("h1", { text: "Create Project" }, (el) => {
       el.style.margin = "0 0 var(--size-4-4) 0";
     });
-    const entrypoint = contentEl.createDiv("longform-add-create-project-root");
+    const entrypoint = contentEl.createDiv("longform-extended-add-create-project-root");
 
     const context = appContext(this);
     context.set("close", () => this.close());
@@ -36,7 +36,7 @@ export default class NewProjectModalContainer extends Modal {
         const exists = await this.app.vault.adapter.exists(path);
         if (exists) {
           console.log(
-            `[Longform] Cannot create project at ${path}, already exists.`
+            `[Longform Extended] Cannot create project at ${path}, already exists.`
           );
           return;
         }

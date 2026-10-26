@@ -22,48 +22,48 @@
   }
 </script>
 
-<div class="longform-compile-step">
+<div class="longform-extended-compile-step">
   {#if step.description.canonicalID === PLACEHOLDER_MISSING_STEP.description.canonicalID}
-    <div class="longform-compile-step-title-outer">
-      <div class="longform-compile-step-title-container">
+    <div class="longform-extended-compile-step-title-outer">
+      <div class="longform-extended-compile-step-title-container">
         <h4>Invalid Step</h4>
       </div>
-      <button class="longform-remove-step-button" on:click={removeStep}
+      <button class="longform-extended-remove-step-button" on:click={removeStep}
         >X</button
       >
     </div>
-    <div class="longform-compile-step-error-container">
-      <p class="longform-compile-step-error">
+    <div class="longform-extended-compile-step-error-container">
+      <p class="longform-extended-compile-step-error">
         This workflow contains a step that could not be loaded. Please delete
         the step to be able to run this workflow. If you’re on mobile, this may
         be a user script step that did not load.
       </p>
     </div>
   {:else}
-    <div class="longform-compile-step-title-outer">
-      <div class="longform-compile-step-title-container">
-        <h4><span class="longform-compile-step-number">{ordinal}</span>{step.description.name}</h4>
+    <div class="longform-extended-compile-step-title-outer">
+      <div class="longform-extended-compile-step-title-container">
+        <h4><span class="longform-extended-compile-step-number">{ordinal}</span>{step.description.name}</h4>
         {#if calculatedKind !== null}
           <div
-            class="longform-step-kind-pill"
+            class="longform-extended-step-kind-pill"
             title={explainStepKind(calculatedKind)}
           >
             {formatStepKind(calculatedKind)}
           </div>
         {/if}
       </div>
-      <button class="longform-remove-step-button" on:click={removeStep}
+      <button class="longform-extended-remove-step-button" on:click={removeStep}
         >X</button
       >
     </div>
-    <p class="longform-compile-step-description">
+    <p class="longform-extended-compile-step-description">
       {step.description.description}
     </p>
     {#if step.description.options.length > 0}
-      <div class="longform-compile-step-options">
+      <div class="longform-extended-compile-step-options">
         <div>
           {#each step.description.options as option}
-            <div class="longform-compile-step-option">
+            <div class="longform-extended-compile-step-option">
               {#if option.type === CompileStepOptionType.Text}
                 <label for={step.id + "-" + option.id}>{option.name}</label>
                 <input
@@ -80,7 +80,7 @@
                   bind:value={step.optionValues[option.id]}
                 />
               {:else}
-                <div class="longform-compile-step-checkbox-container">
+                <div class="longform-extended-compile-step-checkbox-container">
                   <input
                     id={step.id + "-" + option.id}
                     type="checkbox"
@@ -89,7 +89,7 @@
                   <label for={step.id + "-" + option.id}>{option.name}</label>
                 </div>
               {/if}
-              <p class="longform-compile-step-option-description">
+              <p class="longform-extended-compile-step-option-description">
                 {option.description}
               </p>
             </div>
@@ -98,15 +98,15 @@
       </div>
     {/if}
     {#if error}
-      <div class="longform-compile-step-error-container">
-        <p class="longform-compile-step-error">{error}</p>
+      <div class="longform-extended-compile-step-error-container">
+        <p class="longform-extended-compile-step-error">{error}</p>
       </div>
     {/if}
   {/if}
 </div>
 
 <style>
-  .longform-compile-step {
+  .longform-extended-compile-step {
     background-color: var(--background-modifier-border);
     border: 1px solid var(--background-modifier-border);
     border-radius: var(--radius-s);
@@ -114,14 +114,14 @@
     margin: var(--size-4-4) 0;
   }
 
-  .longform-compile-step-title-outer {
+  .longform-extended-compile-step-title-outer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
   }
 
-  .longform-compile-step-title-container {
+  .longform-extended-compile-step-title-container {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -129,13 +129,13 @@
     font-size: var(--font-ui-smaller);
   }
 
-  .longform-compile-step-title-container h4 {
+  .longform-extended-compile-step-title-container h4 {
     display: inline-block;
     margin: var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;
     padding: 0;
   }
 
-  .longform-compile-step-title-container .longform-step-kind-pill {
+  .longform-extended-compile-step-title-container .longform-extended-step-kind-pill {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -149,14 +149,14 @@
     height: var(--h1-line-height);
   }
 
-  .longform-compile-step-number {
+  .longform-extended-compile-step-number {
     color: var(--text-faint);
     display: inline-block;
     width: var(--size-4-6);
     padding-left: var(--size-4-1);
   }
 
-  .longform-remove-step-button {
+  .longform-extended-remove-step-button {
     display: flex;
     width: var(--size-4-5);
     height: 100%;
@@ -167,78 +167,78 @@
     background: var(--background-modifier-error);
   }
 
-  .longform-compile-step p {
+  .longform-extended-compile-step p {
     margin: 0;
     background: var(--background-primary);
   }
 
-  .longform-compile-step-description {
+  .longform-extended-compile-step-description {
     font-size: var(--font-smallest);
     color: var(--text-muted);
     padding: var(--size-4-2) var(--size-4-1) var(--size-4-2) var(--size-4-6);
   }
 
-    .longform-compile-step-description .solo {
+    .longform-extended-compile-step-description .solo {
       padding-right: var(--size-4-6);
     }
 
-  .longform-compile-step-options {
+  .longform-extended-compile-step-options {
     padding: var(--size-4-2) 0;
     background: var(--background-primary);
   }
 
-  .longform-compile-step-options > div {
+  .longform-extended-compile-step-options > div {
     margin: 0 var(--size-4-2) 0 var(--size-4-6)
   }
 
-  .longform-compile-step-option {
+  .longform-extended-compile-step-option {
     margin: 0 var(--size-4-4) var(--size-4-4) 0;
   }
 
-  .longform-compile-step-option label {
+  .longform-extended-compile-step-option label {
     display: block;
     font-weight: 600;
     font-size: var(--font-smallest);
   }
 
-  .longform-compile-step-checkbox-container {
+  .longform-extended-compile-step-checkbox-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
   }
 
-  .longform-compile-step-option input[type="text"] {
+  .longform-extended-compile-step-option input[type="text"] {
     margin: 0 0 var(--size-4-1) 0;
     width: 100%;
   }
 
-  .longform-compile-step-option textarea {
+  .longform-extended-compile-step-option textarea {
     color: var(--text-accent);
     margin: 0 0 var(--size-4-1) 0;
     width: 100%;
     resize: vertical;
   }
 
-  .longform-compile-step-option input[type="checkbox"] {
+  .longform-extended-compile-step-option input[type="checkbox"] {
     margin: 0 var(--size-4-2) var(--size-2-1) 0;
   }
 
-  .longform-compile-step-option input:focus {
+  .longform-extended-compile-step-option input:focus {
     color: var(--text-accent-hover);
   }
 
-  .longform-compile-step-option-description {
+  .longform-extended-compile-step-option-description {
     font-size: var(--font-smallest);
     line-height: 1em;
     color: var(--text-faint);
   }
 
-  .longform-compile-step-error-container {
+  .longform-extended-compile-step-error-container {
     margin-top: var(--size-4-2);
   }
 
-  .longform-compile-step-error {
+  .longform-extended-compile-step-error {
     color: var(--text-error);
     font-size: var(--font-smallest);
     line-height: 1em;

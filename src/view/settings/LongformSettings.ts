@@ -8,21 +8,21 @@ import {
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
-import type LongformPlugin from "../../main";
+import type LongformExtendedPlugin from "../../main";
 import { pluginSettings, userScriptSteps } from "src/model/stores";
 import { FolderSuggest } from "./folder-suggest";
 import { DEFAULT_SESSION_FILE } from "src/model/types";
 import { FileSuggest } from "./file-suggest";
 import { syncSceneIndices } from "src/model/store-vault-sync";
 
-export class LongformSettingsTab extends PluginSettingTab {
-  plugin: LongformPlugin;
+export class LongformExtendedSettingsTab extends PluginSettingTab {
+  plugin: LongformExtendedPlugin;
   private unsubscribeUserScripts: Unsubscriber;
   private unsubscribeSettings: Unsubscriber;
   private stepsSummary: HTMLElement;
   private stepsList: HTMLUListElement;
 
-  constructor(app: App, plugin: LongformPlugin) {
+  constructor(app: App, plugin: LongformExtendedPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -48,7 +48,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
     containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
       el.innerHTML =
-        "This file will be used as a template when creating new scenes via the New Scene… field. If you use a templating plugin (Templater or the core plugin) it will be used to process this template. This setting applies to all projects and can be overridden per-project in the Project > Project Metadata settings in the Longform pane.";
+        "This file will be used as a template when creating new scenes via the New Scene… field. If you use a templating plugin (Templater or the core plugin) it will be used to process this template. This setting applies to all projects and can be overridden per-project in the Project > Project Metadata settings in the Longform Extended pane.";
     });
 
     new Setting(containerEl)
@@ -105,7 +105,7 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     this.stepsSummary = containerEl.createSpan();
     this.stepsList = containerEl.createEl("ul", {
-      cls: "longform-settings-user-steps",
+      cls: "longform-extended-settings-user-steps",
     });
     this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
       if (steps && steps.length > 0) {
@@ -121,11 +121,11 @@ export class LongformSettingsTab extends PluginSettingTab {
             const stepEl = this.stepsList.createEl("li");
             stepEl.createSpan({
               text: s.description.name,
-              cls: "longform-settings-user-step-name",
+              cls: "longform-extended-settings-user-step-name",
             });
             stepEl.createSpan({
               text: `(${s.description.canonicalID})`,
-              cls: "longform-settings-user-step-id",
+              cls: "longform-extended-settings-user-step-id",
             });
           });
         }
@@ -133,7 +133,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     });
     containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
       el.innerHTML =
-        "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with Longform after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script—check the dev console for it.";
+        "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with Longform Extended after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script—check the dev console for it.";
     });
 
     new Setting(containerEl).setName("Word Counts & Sessions").setHeading();
@@ -152,7 +152,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Start new writing sessions each day")
       .setDesc(
-        "You can always manually start a new session by running the Longform: Start New Writing Session command. Turning this off will cause writing sessions to carry over across multiple days until you manually start a new one."
+        "You can always manually start a new session by running the Longform Extended: Start New Writing Session command. Turning this off will cause writing sessions to carry over across multiple days until you manually start a new one."
       )
       .addToggle((cb) => {
         cb.setValue(settings.startNewSessionEachDay);
@@ -178,7 +178,7 @@ export class LongformSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Goal applies to")
       .setDesc(
-        "You can set your word count goal to target all Longform writing, or you can make each project or scene have its own discrete goal."
+        "You can set your word count goal to target all Longform Extended writing, or you can make each project or scene have its own discrete goal."
       )
       .addDropdown((cb) => {
         cb.addOption("all", "words written across all projects");
@@ -229,13 +229,13 @@ export class LongformSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Store session data")
       .setDesc(
-        "Where your writing session data is stored. By default, data is stored alongside other Longform settings in the plugin’s data.json file. You may instead store it in a separate .json file in the plugin folder, or in a file in your vault. You may want to do this for selective sync or git reasons."
+        "Where your writing session data is stored. By default, data is stored alongside other Longform Extended settings in the plugin’s data.json file. You may instead store it in a separate .json file in the plugin folder, or in a file in your vault. You may want to do this for selective sync or git reasons."
       )
       .addDropdown((cb) => {
-        cb.addOption("data", "with Longform settings");
+        cb.addOption("data", "with Longform Extended settings");
         cb.addOption(
           "plugin-folder",
-          "as a .json file in the longform/ plugin folder"
+          "as a .json file in the longform-extended/ plugin folder"
         );
         cb.addOption("file", "as a file in your vault");
         cb.setValue(settings.sessionStorage);
@@ -278,7 +278,7 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Wait for Obsidian Sync")
-      .setDesc("Prevent Longform from running until Obsidian Sync completes its first sync. If you are using Sync, you may want to enable this if you experience issues with scenes disappearing or falsely being shown as new.")
+      .setDesc("Prevent Longform Extended from running until Obsidian Sync completes its first sync. If you are using Sync, you may want to enable this if you experience issues with scenes disappearing or falsely being shown as new.")
       .addToggle((cb) => {
         cb.setValue(settings.waitForSync);
         cb.onChange((value) => {
@@ -322,11 +322,15 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     containerEl.createEl("p", {}, (el) => {
       el.innerHTML =
-        'Longform written and maintained by <a href="https://kevinbarrett.org">Kevin Barrett</a>.';
+        'Longform was created by <a href="https://github.com/kevboh/longform">Kevin Barrett</a>.';
     });
     containerEl.createEl("p", {}, (el) => {
       el.innerHTML =
-        'Read the source code and report issues at <a href="https://github.com/kevboh/longform">https://github.com/kevboh/longform</a>.';
+        'Longform Extended is maintained by <a href="https://github.com/wandrade/longformExtended">Werner Thomassen Andrade</a>.';
+    });
+    containerEl.createEl("p", {}, (el) => {
+      el.innerHTML =
+        'Read the source code and report issues at <a href="https://github.com/wandrade/longformExtended">https://github.com/wandrade/longformExtended</a>.';
     });
     containerEl.createEl("p", {}, (el) => {
       el.innerHTML =

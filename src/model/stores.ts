@@ -4,7 +4,7 @@ import { groupBy, sortBy } from "lodash";
 import type {
   WordCountSession,
   Draft,
-  LongformPluginSettings,
+  LongformExtendedPluginSettings,
   DraftWordCounts,
 } from "./types";
 import type {
@@ -23,7 +23,7 @@ export const initialized = writable<boolean>(false);
 /**
  * Writeable store of plugin settings, serialized as json to the plugin's data.json file.
  */
-export const pluginSettings = writable<LongformPluginSettings>(null);
+export const pluginSettings = writable<LongformExtendedPluginSettings>(null);
 
 /**
  * Writeable store of all discovered drafts. Not coalesced into projects.

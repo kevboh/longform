@@ -15,20 +15,20 @@ import { derived, type Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 
 import {
-  VIEW_TYPE_LONGFORM_EXPLORER,
+  VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER,
   ExplorerPane,
 } from "./view/explorer/ExplorerPane";
 import {
   PASSTHROUGH_SAVE_SETTINGS_PATHS,
   type Draft,
-  type LongformPluginSettings,
+  type LongformExtendedPluginSettings,
   type SerializedWorkflow,
   type WordCountSession,
 } from "./model/types";
 import { DEFAULT_SETTINGS, TRACKED_SETTINGS_PATHS } from "./model/types";
 import { activeFile, goalProgress, selectedTab } from "./view/stores";
 import { ICON_NAME, ICON_SVG } from "./view/icon";
-import { LongformSettingsTab } from "./view/settings/LongformSettings";
+import { LongformExtendedSettingsTab } from "./view/settings/LongformSettings";
 import {
   deserializeWorkflow,
   serializeWorkflow,
@@ -52,17 +52,17 @@ import { determineMigrationStatus } from "./model/migration";
 import { draftForPath } from "./model/scene-navigation";
 import { WritingSessionTracker } from "./model/writing-session-tracker";
 import NewProjectModal from "./view/project-lifecycle/new-project-modal";
-import { LongformAPI } from "./api/LongformAPI";
+import { LongformExtendedAPI } from "./api/LongformAPI";
 
-const LONGFORM_LEAF_CLASS = "longform-leaf";
+const LONGFORM_EXTENDED_LEAF_CLASS = "longform-extended-leaf";
 
 // TODO: Try and abstract away more logic from actual plugin hooks here
 
-export default class LongformPlugin extends Plugin {
+export default class LongformExtendedPlugin extends Plugin {
   // Local mirror of the pluginSettings store
   // since this class does a lot of ad-hoc settings fetching.
   // More efficient than a lot of get() calls.
-  cachedSettings: LongformPluginSettings | null = null;
+  cachedSettings: LongformExtendedPluginSettings | null = null;
   private unsubscribeSettings: Unsubscriber;
   private unsubscribeWorkflows: Unsubscriber;
   private unsubscribeDrafts: Unsubscriber;
@@ -71,17 +71,17 @@ export default class LongformPlugin extends Plugin {
   private unsubscribeGoalNotification: Unsubscriber;
   private userScriptObserver: UserScriptObserver;
   writingSessionTracker: WritingSessionTracker;
-  public api: LongformAPI;
+  public api: LongformExtendedAPI;
 
   private storeVaultSync: StoreVaultSync;
   private timeframeObserver: TimeframeObserver;
 
   async onload(): Promise<void> {
-    console.log(`[Longform] Starting Longform ${this.manifest.version}…`);
+    console.log(`[Longform Extended] Starting Longform Extended ${this.manifest.version}…`);
     addIcon(ICON_NAME, ICON_SVG);
 
     this.registerView(
-      VIEW_TYPE_LONGFORM_EXPLORER,
+      VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER,
       (leaf: WorkspaceLeaf) => new ExplorerPane(leaf)
     );
 
@@ -92,7 +92,7 @@ export default class LongformPlugin extends Plugin {
         }
         menu.addItem((item) => {
           item
-            .setTitle("Create Longform Project")
+            .setTitle("Create Longform Extended Project")
             .setIcon(ICON_NAME)
             .onClick(() => {
               new NewProjectModal(this.app, file).open();
@@ -132,7 +132,7 @@ export default class LongformPlugin extends Plugin {
     });
 
     await this.loadSettings();
-    this.addSettingTab(new LongformSettingsTab(this.app, this));
+    this.addSettingTab(new LongformExtendedSettingsTab(this.app, this));
 
     this.storeVaultSync = new StoreVaultSync(this.app);
     this.timeframeObserver = new TimeframeObserver(this.app);
@@ -159,17 +159,17 @@ export default class LongformPlugin extends Plugin {
 
     addCommands(this);
 
-    // Dynamically style longform scenes
+    // Dynamically style longform-extended scenes
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        this.styleLongformLeaves();
+        this.styleLongformExtendedLeaves();
       })
     );
     this.unsubscribeDrafts = drafts.subscribe((allDrafts) => {
-      this.styleLongformLeaves(allDrafts);
+      this.styleLongformExtendedLeaves(allDrafts);
     });
 
-    this.api = new LongformAPI();
+    this.api = new LongformExtendedAPI();
   }
 
   onunload(): void {
@@ -184,7 +184,7 @@ export default class LongformPlugin extends Plugin {
     this.unsubscribeGoalNotification();
     this.writingSessionTracker.destroy();
     this.app.workspace
-      .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
+      .getLeavesOfType(VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER)
       .forEach((leaf) => leaf.detach());
   }
 
@@ -193,10 +193,10 @@ export default class LongformPlugin extends Plugin {
 
     // deserialize iso8601 strings as dates
 
-    const _pluginSettings: LongformPluginSettings = pick(
+    const _pluginSettings: LongformExtendedPluginSettings = pick(
       settings,
       TRACKED_SETTINGS_PATHS
-    ) as LongformPluginSettings;
+    ) as LongformExtendedPluginSettings;
     pluginSettings.set(_pluginSettings);
     selectedDraftVaultPath.set(_pluginSettings.selectedDraftVaultPath);
     determineMigrationStatus(_pluginSettings);
@@ -213,7 +213,7 @@ export default class LongformPlugin extends Plugin {
     let _workflows = settings["workflows"];
 
     if (!_workflows) {
-      console.log("[Longform] No workflows found; adding default workflow.");
+      console.log("[Longform Extended] No workflows found; adding default workflow.");
       _workflows = DEFAULT_WORKFLOWS;
     }
 
@@ -235,7 +235,7 @@ export default class LongformPlugin extends Plugin {
         selectedDraftVaultPath.set(draft.vaultPath);
         this.initLeaf();
         const leaf = this.app.workspace
-          .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
+          .getLeavesOfType(VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER)
           .first();
         if (leaf) {
           this.app.workspace.revealLeaf(leaf);
@@ -332,7 +332,7 @@ export default class LongformPlugin extends Plugin {
         let file: string | null = null;
         if (this.cachedSettings.sessionStorage === "plugin-folder") {
           if (!this.manifest.dir) {
-            console.error(`[Longform] No manifest.dir for saving sessions.`);
+            console.error(`[Longform Extended] No manifest.dir for saving sessions.`);
             return;
           }
           file = normalizePath(`${this.manifest.dir}/sessions.json`);
@@ -407,12 +407,12 @@ export default class LongformPlugin extends Plugin {
 
   initLeaf(): void {
     if (
-      this.app.workspace.getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER).length
+      this.app.workspace.getLeavesOfType(VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER).length
     ) {
       return;
     }
     this.app.workspace.getLeftLeaf(false).setViewState({
-      type: VIEW_TYPE_LONGFORM_EXPLORER,
+      type: VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER,
     });
   }
 
@@ -521,14 +521,14 @@ export default class LongformPlugin extends Plugin {
     );
   }
 
-  private styleLongformLeaves(allDrafts: Draft[] = get(drafts)) {
+  private styleLongformExtendedLeaves(allDrafts: Draft[] = get(drafts)) {
     this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
       if (leaf.view instanceof FileView) {
         const draft = draftForPath(leaf.view.file.path, allDrafts);
         if (draft) {
-          leaf.view.containerEl.classList.add(LONGFORM_LEAF_CLASS);
+          leaf.view.containerEl.classList.add(LONGFORM_EXTENDED_LEAF_CLASS);
         } else {
-          leaf.view.containerEl.classList.remove(LONGFORM_LEAF_CLASS);
+          leaf.view.containerEl.classList.remove(LONGFORM_EXTENDED_LEAF_CLASS);
         }
       }
 

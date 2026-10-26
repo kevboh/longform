@@ -19,7 +19,7 @@ import { draftTitle } from "src/model/draft-utils";
 import type { Draft } from "src/model/types";
 
 export const compileCurrent: CommandBuilder = (plugin) => ({
-  id: "longform-compile-current",
+  id: "longform-extended-compile-current",
   name: "Compile current project with current workflow",
   checkCallback: (checking: boolean) => {
     const draft = get(selectedDraft);
@@ -57,7 +57,7 @@ export const compileCurrent: CommandBuilder = (plugin) => ({
 });
 
 export const compileSelection: CommandBuilder = (plugin) => ({
-  id: "longform-compile-selection",
+  id: "longform-extended-compile-selection",
   name: "Compile project…",
   checkCallback: (checking: boolean) => {
     const allProjects = get(projects);

@@ -17,8 +17,8 @@ import {
   scenePathForLocation,
   type SceneNavigationLocation,
 } from "src/model/scene-navigation";
-import { VIEW_TYPE_LONGFORM_EXPLORER } from "src/view/explorer/ExplorerPane";
-import type LongformPlugin from "src/main";
+import { VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER } from "src/view/explorer/ExplorerPane";
+import type LongformExtendedPlugin from "src/main";
 import type { Draft } from "src/model/types";
 import { draftTitle } from "src/model/draft-utils";
 import { JumpModal } from "./helpers";
@@ -38,7 +38,7 @@ const checkForLocation = (
 };
 
 export const previousScene: CommandBuilder = (plugin) => ({
-  id: "longform-previous-scene",
+  id: "longform-extended-previous-scene",
   name: "Previous scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
@@ -52,7 +52,7 @@ export const previousScene: CommandBuilder = (plugin) => ({
 });
 
 export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
-  id: "longform-previous-scene-at-level",
+  id: "longform-extended-previous-scene-at-level",
   name: "Previous scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
@@ -66,7 +66,7 @@ export const previousSceneAtIndent: CommandBuilder = (plugin) => ({
 });
 
 export const nextScene: CommandBuilder = (plugin) => ({
-  id: "longform-next-scene",
+  id: "longform-extended-next-scene",
   name: "Next scene",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
@@ -80,7 +80,7 @@ export const nextScene: CommandBuilder = (plugin) => ({
 });
 
 export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
-  id: "longform-next-scene-at-level",
+  id: "longform-extended-next-scene-at-level",
   name: "Next scene at indent level",
   editorCheckCallback: (checking: boolean) =>
     checkForLocation(
@@ -94,7 +94,7 @@ export const nextSceneAtIndent: CommandBuilder = (plugin) => ({
 });
 
 export const focusCurrentDraft: CommandBuilder = () => ({
-  id: "longform-focus-current-draft",
+  id: "longform-extended-focus-current-draft",
   name: "Open current note’s project",
   editorCheckCallback(checking) {
     const path = get(activeFile).path;
@@ -122,26 +122,26 @@ export const focusCurrentDraft: CommandBuilder = () => ({
   },
 });
 
-const showLeaf = (plugin: LongformPlugin) => {
+const showLeaf = (plugin: LongformExtendedPlugin) => {
   plugin.initLeaf();
   const leaf = plugin.app.workspace
-    .getLeavesOfType(VIEW_TYPE_LONGFORM_EXPLORER)
+    .getLeavesOfType(VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER)
     .first();
   if (leaf) {
     plugin.app.workspace.revealLeaf(leaf);
   }
 };
 
-export const showLongform: CommandBuilder = (plugin) => ({
-  id: "longform-show-view",
-  name: "Open Longform pane",
+export const showLongformExtended: CommandBuilder = (plugin) => ({
+  id: "longform-extended-show-view",
+  name: "Open Longform Extended pane",
   callback: () => {
     showLeaf(plugin);
   },
 });
 
 export const jumpToProject: CommandBuilder = (plugin) => ({
-  id: "longform-jump-to-project",
+  id: "longform-extended-jump-to-project",
   name: "Jump to project",
   callback: () => {
     const projectCallback = (project: Draft[]) => {
@@ -167,7 +167,7 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
               },
               {
                 command: "↵",
-                purpose: "to open in Longform",
+                purpose: "to open in Longform Extended",
               },
               {
                 command: "esc",
@@ -200,7 +200,7 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
         },
         {
           command: "↵",
-          purpose: "to open in Longform",
+          purpose: "to open in Longform Extended",
         },
         {
           command: "esc",
@@ -213,7 +213,7 @@ export const jumpToProject: CommandBuilder = (plugin) => ({
 });
 
 export const jumpToScene: CommandBuilder = (plugin) => ({
-  id: "longform-jump-to-scene",
+  id: "longform-extended-jump-to-scene",
   name: "Jump to scene in current project",
   checkCallback(checking) {
     const currentDraft = get(selectedDraft);
@@ -265,7 +265,7 @@ export const jumpToScene: CommandBuilder = (plugin) => ({
 });
 
 export const revealProjectFolder: CommandBuilder = (plugin) => ({
-  id: "longform-reveal-project-folder",
+  id: "longform-extended-reveal-project-folder",
   name: "Reveal current project in navigation",
   checkCallback(checking) {
     const path = get(selectedDraftVaultPath);
@@ -285,7 +285,7 @@ export const revealProjectFolder: CommandBuilder = (plugin) => ({
       ].instance.revealInFolder(parent);
     } catch (error) {
       console.error(
-        "[Longform] Error calling file-explorer.revealInFolder:",
+        "[Longform Extended] Error calling file-explorer.revealInFolder:",
         error
       );
     }
@@ -293,7 +293,7 @@ export const revealProjectFolder: CommandBuilder = (plugin) => ({
 });
 
 export const focusNewSceneField: CommandBuilder = (plugin) => ({
-  id: "longform-focus-new-scene-field",
+  id: "longform-extended-focus-new-scene-field",
   name: "Focus new scene field",
   checkCallback(checking) {
     const draft = get(selectedDraft);

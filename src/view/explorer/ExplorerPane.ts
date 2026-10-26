@@ -24,7 +24,7 @@ import { UndoManager } from "../undo/undo-manager";
 import { ignoreScene } from "./scene-menu-items";
 import { appContext } from "../utils";
 
-export const VIEW_TYPE_LONGFORM_EXPLORER = "VIEW_TYPE_LONGFORM_EXPLORER";
+export const VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER = "VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER";
 
 export class ExplorerPane extends ItemView {
   private explorerView: ExplorerView;
@@ -36,11 +36,11 @@ export class ExplorerPane extends ItemView {
   }
 
   getViewType(): string {
-    return VIEW_TYPE_LONGFORM_EXPLORER;
+    return VIEW_TYPE_LONGFORM_EXTENDED_EXPLORER;
   }
 
   getDisplayText(): string {
-    return "Longform";
+    return "Longform Extended";
   }
 
   getIcon(): string {
@@ -216,7 +216,7 @@ export class ExplorerPane extends ItemView {
           item.onClick(() => addRelativeScene("after", file));
         });
         menu.addItem((item) => {
-          item.setTitle("Ignore note in Longform");
+          item.setTitle("Ignore note in Longform Extended");
           item.setIcon("minus-circle");
           item.onClick(() =>
             ignoreScene(
@@ -226,7 +226,7 @@ export class ExplorerPane extends ItemView {
         });
         // Triggering this event lets other apps insert menu items
         // including Obsidian, giving us lots of stuff for free.
-        this.app.workspace.trigger("file-menu", menu, file, "longform");
+        this.app.workspace.trigger("file-menu", menu, file, "longform-extended");
         menu.showAtPosition({ x, y });
       }
     );

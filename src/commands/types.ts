@@ -1,5 +1,5 @@
 import type { Command } from "obsidian";
 
-import type LongformPlugin from "src/main";
+import type LongformExtendedPlugin from "src/main";
 
-export type CommandBuilder = (plugin: LongformPlugin) => Command;
+export type CommandBuilder = (plugin: LongformExtendedPlugin) => Command;

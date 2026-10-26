@@ -49,10 +49,10 @@ export const WriteToNoteStep = makeBuiltinStep({
       await writeToFile(context.app, filePath, input.contents);
 
       if (openAfter) {
-        console.log("[Longform] Attempting to open:", filePath);
+        console.log("[Longform Extended] Attempting to open:", filePath);
 
         context.app.workspace.openLinkText(filePath, "/", true).catch((err) => {
-          console.error("[Longform] Could not open", filePath, err);
+          console.error("[Longform Extended] Could not open", filePath, err);
         });
       }
 
@@ -68,7 +68,7 @@ async function writeToFile(
 ): Promise<void> {
   await ensureContainingFolderExists(app, filePath);
 
-  console.log("[Longform] Writing to:", filePath);
+  console.log("[Longform Extended] Writing to:", filePath);
 
   await app.vault.adapter.write(filePath, contents);
 }
@@ -141,7 +141,7 @@ function resolveRelativeFilePath(
       // move up one folder
       if (projectPathComponents.length === 0) {
         // we moved up too many folders and ran out.
-        throw new Error("[Longform] Invalid path for Save as Note.");
+        throw new Error("[Longform Extended] Invalid path for Save as Note.");
       }
       // remove the lowest-level folder from the project path to move up,
       // and take this first component off the top of the filePathComponents
@@ -155,7 +155,7 @@ function resolveRelativeFilePath(
       // relative to current folder
       if (!atStartOfFilePath) {
         // illegal path like: ././filename.md
-        throw new Error("[Longform] Invalid path for Save as Note.");
+        throw new Error("[Longform Extended] Invalid path for Save as Note.");
       }
       // stay here, but remove the first filepath component
       return resolveRelativeFilePath(

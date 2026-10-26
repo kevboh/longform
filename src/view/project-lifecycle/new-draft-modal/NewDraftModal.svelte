@@ -69,9 +69,9 @@
     project.
   </p>
   <div class="draft-title-container">
-    <label for="longform-new-draft-title">Draft Name/Version</label>
+    <label for="longform-extended-new-draft-title">Draft Name/Version</label>
     <input
-      id="longform-new-draft-title"
+      id="longform-extended-new-draft-title"
       type="text"
       placeholder="Version 5_final"
       bind:value={title}

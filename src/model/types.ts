@@ -1,5 +1,5 @@
-export const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 3;
-export const LONGFORM_CURRENT_INDEX_VERSION = 1;
+export const LONGFORM_EXTENDED_CURRENT_PLUGIN_DATA_VERSION = 3;
+export const LONGFORM_EXTENDED_CURRENT_INDEX_VERSION = 1;
 
 export const DEFAULT_TIMEFRAME_TAG_NAME = "when";
 export const DEFAULT_TIME_FORMAT = "dd/mm/yyyy hh:mm:ss";
@@ -83,7 +83,7 @@ export type WordCountSession = {
   >;
 };
 
-export interface LongformPluginSettings {
+export interface LongformExtendedPluginSettings {
   version: number;
   selectedDraftVaultPath: string | null;
   workflows: Record<string, SerializedWorkflow> | null;
@@ -115,8 +115,8 @@ export interface LongformPluginSettings {
 
 export const DEFAULT_SESSION_FILE = "longform-sessions.json";
 
-export const DEFAULT_SETTINGS: LongformPluginSettings = {
-  version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
+export const DEFAULT_SETTINGS: LongformExtendedPluginSettings = {
+  version: LONGFORM_EXTENDED_CURRENT_PLUGIN_DATA_VERSION,
   selectedDraftVaultPath: null,
   workflows: null,
   userScriptFolder: null,
@@ -139,7 +139,7 @@ export const DEFAULT_SETTINGS: LongformPluginSettings = {
   fallbackWaitTime: 5,
 };
 
-export const TRACKED_SETTINGS_PATHS: (keyof LongformPluginSettings)[] = [
+export const TRACKED_SETTINGS_PATHS: (keyof LongformExtendedPluginSettings)[] = [
   "version",
   "projects",
   "selectedDraftVaultPath",
@@ -162,7 +162,7 @@ export const TRACKED_SETTINGS_PATHS: (keyof LongformPluginSettings)[] = [
   "writeProperty",
 ];
 
-export const PASSTHROUGH_SAVE_SETTINGS_PATHS: (keyof LongformPluginSettings)[] =
+export const PASSTHROUGH_SAVE_SETTINGS_PATHS: (keyof LongformExtendedPluginSettings)[] =
   [
     "sessionStorage",
     "userScriptFolder",

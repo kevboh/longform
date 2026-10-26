@@ -20,7 +20,7 @@ export default class NewDraftModalContainer extends Modal {
     contentEl.createEl("h1", { text: `New Draft of ${title}` }, (el) => {
       el.style.margin = "0 0 var(--size-4-4) 0";
     });
-    const entrypoint = contentEl.createDiv("longform-add-create-draft-root");
+    const entrypoint = contentEl.createDiv("longform-extended-add-create-draft-root");
 
     const context = appContext(this);
     context.set("close", () => this.close());

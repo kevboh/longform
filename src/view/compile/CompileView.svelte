@@ -254,9 +254,9 @@
 </script>
 
 {#if $selectedDraft}
-  <div class="longform-compile-container">
-    <div class="longform-workflow-picker-container">
-      <div class="longform-workflow-picker">
+  <div class="longform-extended-compile-container">
+    <div class="longform-extended-workflow-picker-container">
+      <div class="longform-extended-workflow-picker">
         {#if workflowInputState !== "hidden"}
           <input
             type="text"
@@ -278,11 +278,11 @@
           />
         {:else}
           {#if allWorkflowNames.length == 0}
-            <span class="longform-hint">Create a new workflow to begin →</span>
+            <span class="longform-extended-hint">Create a new workflow to begin →</span>
           {:else}
             <div class="select">
               <select
-                id="longform-workflows"
+                id="longform-extended-workflows"
                 value={$selectedDraft.workflow}
                 on:change={selectedWorkflow}
               >
@@ -323,7 +323,7 @@
         let:item
         {sortableOptions}
         on:orderChanged={itemOrderChanged}
-        class="longform-sortable-step-list"
+        class="longform-extended-sortable-step-list"
       >
         <CompileStepView
           ordinal={item.index + 1}
@@ -348,7 +348,7 @@
       </div>
     {/if}
 
-    <ul class="longform-compile-instructions">
+    <ul class="longform-extended-compile-instructions">
       <li>
         Compile workflows run their steps in order.
       </li>
@@ -362,12 +362,12 @@
         <strong>Manuscript</strong> steps run once on the joined manuscript.
       </li>
       <li>
-        Drag to rearrange. <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md">Documentation here.</a
+        Drag to rearrange. <a href="https://github.com/wandrade/longformExtended/blob/main/docs/COMPILE.md">Documentation here.</a
       >
       </li>
     </ul>
 
-    <div class="longform-compile-run-container">
+    <div class="longform-extended-compile-run-container">
       {#if $currentWorkflow && $currentWorkflow.steps.length > 0}
         <button
           class="compile-button"
@@ -386,18 +386,18 @@
 {/if}
 
 <style>
-  .longform-workflow-picker-container {
+  .longform-extended-workflow-picker-container {
     padding: var(--size-4-2);
     background: var(--background-primary);
     display: flex;
     flex-direction: column;
   }
 
-  #longform-workflows {
+  #longform-extended-workflows {
     color: var(--color-accent-2);
   }
 
-  .longform-workflow-picker {
+  .longform-extended-workflow-picker {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -406,7 +406,7 @@
     margin-bottom: var(--size-4-2);
   }
 
-  .longform-workflow-picker .longform-hint {
+  .longform-extended-workflow-picker .longform-extended-hint {
     font-size: 1em;
   }
 
@@ -436,7 +436,7 @@
     color: var(--text-accent-hover);
   }
 
-  .longform-compile-container :global(.longform-sortable-step-list) {
+  .longform-extended-compile-container :global(.longform-extended-sortable-step-list) {
     list-style-type: none;
     padding: 0;
     margin: 0;
@@ -469,17 +469,17 @@
     color: var(--text-accent-hover);
   }
 
-  .longform-compile-instructions {
+  .longform-extended-compile-instructions {
     font-size: var(--font-smallest);
     padding: var(--size-4-4) var(--size-4-4) var(--size-4-1) var(--size-4-8);
     color: var(--text-muted);
   }
   
-    .longform-compile-instructions li {
+    .longform-extended-compile-instructions li {
       margin-bottom: var(--size-4-1)
     }
 
-    .longform-compile-instructions strong {
+    .longform-extended-compile-instructions strong {
       color: var(--color-accent-2);
     }
 
@@ -499,7 +499,7 @@
     color: var(--text-faint);
   }
 
-  .longform-compile-run-container {
+  .longform-extended-compile-run-container {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -507,7 +507,7 @@
     margin-top: var(--size-4-8);
   }
 
-  .longform-compile-run-container .compile-status {
+  .longform-extended-compile-run-container .compile-status {
     color: var(--text-muted);
   }
 

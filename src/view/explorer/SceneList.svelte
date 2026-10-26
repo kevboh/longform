@@ -206,7 +206,7 @@
     const { x, y } = event;
     let element = document.elementFromPoint(x, y);
     // If the scene name has been right-clicked grab the parent instead.
-    if (element.id.startsWith("longform-scene-")) {
+    if (element.id.startsWith("longform-extended-scene-")) {
       element = element.parentElement;
     }
     const scenePath =
@@ -357,7 +357,7 @@
     >
       <div
         class="scene-container{item.hidden ? ' hidden' : ''}{item.collapsible ? ' collapsible' : ''}"
-        style="padding-left: calc(({item.indent} * var(--longform-explorer-indent-size)) + 6px {item.collapsible ? '' : '+ var(--size-4-4)'});"
+        style="padding-left: calc(({item.indent} * var(--longform-extended-explorer-indent-size)) + 6px {item.collapsible ? '' : '+ var(--size-4-4)'});"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
@@ -381,10 +381,10 @@
             typeof item.path === "string" ? onItemClick(item, e) : {}}
         >
           {#if $pluginSettings.numberScenes}
-            <span class="longform-scene-number">{numberLabel(item)}</span>
+            <span class="longform-extended-scene-number">{numberLabel(item)}</span>
           {/if}
           <div
-            id={`longform-scene-${item.name}`}
+            id={`longform-extended-scene-${item.name}`}
             data-item-path={item.path}
             data-item-name={item.name}
             style="display: inline;"
@@ -399,35 +399,35 @@
     </SortableList>
   </div>
   {#if $selectedDraft && $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
-    <div id="longform-unknown-files-wizard">
-      <div class="longform-unknown-inner">
-        <p class="longform-unknown-explanation">
-          Longform has found {$selectedDraft.unknownFiles.length} new file{$selectedDraft
+    <div id="longform-extended-unknown-files-wizard">
+      <div class="longform-extended-unknown-inner">
+        <p class="longform-extended-unknown-explanation">
+          Longform Extended has found {$selectedDraft.unknownFiles.length} new file{$selectedDraft
             .unknownFiles.length === 1
             ? ""
             : "s"} in your scenes folder.
         </p>
         <div>
-          <button class="longform-unknown-add" on:click={() => doWithAll("add")}
+          <button class="longform-extended-unknown-add" on:click={() => doWithAll("add")}
             >Add all</button
           >
           <button
-            class="longform-unknown-ignore"
+            class="longform-extended-unknown-ignore"
             on:click={() => doWithAll("ignore")}>Ignore all</button
           >
         </div>
         <ul>
           {#each $selectedDraft.unknownFiles as fileName}
             <li>
-              <div class="longform-unknown-file">
+              <div class="longform-extended-unknown-file">
                 <span>{fileName}</span>
                 <div>
                   <button
-                    class="longform-unknown-add"
+                    class="longform-extended-unknown-add"
                     on:click={() => doWithUnknown(fileName, "add")}>Add</button
                   >
                   <button
-                    class="longform-unknown-ignore"
+                    class="longform-extended-unknown-ignore"
                     on:click={() => doWithUnknown(fileName, "ignore")}
                     >Ignore</button
                   >
@@ -505,48 +505,48 @@
     color: var(--text-muted);
   }
 
-  .longform-scene-number {
+  .longform-extended-scene-number {
     color: var(--text-muted);
     margin-right: var(--size-4-1);
     font-weight: bold;
   }
 
-  .longform-scene-number::after {
+  .longform-extended-scene-number::after {
     content: ".";
   }
 
-  #longform-unknown-files-wizard {
+  #longform-extended-unknown-files-wizard {
     border-top: var(--border-width) solid var(--text-muted);
     padding: var(--size-4-2) 0;
   }
 
-  .longform-unknown-inner {
+  .longform-extended-unknown-inner {
     border-left: var(--size-2-1) solid var(--text-accent);
     padding: 0 0 0 var(--size-4-1);
   }
 
-  .longform-unknown-explanation {
+  .longform-extended-unknown-explanation {
     color: var(--text-muted);
     font-size: 1em;
   }
 
-  #longform-unknown-files-wizard ul {
+  #longform-extended-unknown-files-wizard ul {
     list-style-type: none;
     padding: 0 0 0 var(--size-4-2);
   }
 
-  .longform-unknown-file {
+  .longform-extended-unknown-file {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
   }
 
-  .longform-unknown-add {
+  .longform-extended-unknown-add {
     color: var(--text-accent);
     font-weight: bold;
   }
 
-  .longform-unknown-ignore {
+  .longform-extended-unknown-ignore {
     color: var(--text-muted);
     font-weight: bold;
   }

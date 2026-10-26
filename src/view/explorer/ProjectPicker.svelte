@@ -93,7 +93,7 @@
     <p>
       To begin, find or create a folder somewhere in your vault in which you
       would like to create your novel. Right-click it and select
-      <code>Create Longform Project.</code>
+      <code>Create Longform Extended Project.</code>
     </p>
   {/if}
 </div>

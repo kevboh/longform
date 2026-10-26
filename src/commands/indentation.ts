@@ -33,13 +33,13 @@ const checkIndent = (
 };
 
 export const indentScene: CommandBuilder = (_plugin) => ({
-  id: "longform-indent-scene",
+  id: "longform-extended-indent-scene",
   name: "Indent scene",
   editorCheckCallback: (checking: boolean) => checkIndent(checking, "indent"),
 });
 
 export const unindentScene: CommandBuilder = (_plugin) => ({
-  id: "longform-unindent-scene",
+  id: "longform-extended-unindent-scene",
   name: "Unindent scene",
   editorCheckCallback: (checking: boolean) => checkIndent(checking, "unindent"),
 });

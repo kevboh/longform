@@ -34,20 +34,20 @@
   }
 </script>
 
-<div class="longform-add-step-modal-contents">
+<div class="longform-extended-add-step-modal-contents">
   <p>
     Choose a step from the following options to add to your current compile
     workflow.
   </p>
 
   <h2>Built-in Steps</h2>
-  <div class="longform-steps-grid">
+  <div class="longform-extended-steps-grid">
     {#each BUILTIN_STEPS as step}
-      <div class="longform-compile-step" on:click={() => onStepClick(step)}>
+      <div class="longform-extended-compile-step" on:click={() => onStepClick(step)}>
         <h3>{step.description.name}</h3>
-        <div class="longform-step-pill-container">
+        <div class="longform-extended-step-pill-container">
           {#each step.description.availableKinds as kind}
-            <span class="longform-step-kind-pill" title={explainStepKind(kind)}
+            <span class="longform-extended-step-kind-pill" title={explainStepKind(kind)}
               >{formatStepKind(kind)}</span
             >
           {/each}
@@ -58,14 +58,14 @@
   </div>
   {#if $userScriptSteps}
     <h2>User Script Steps</h2>
-    <div class="longform-steps-grid">
+    <div class="longform-extended-steps-grid">
       {#each $userScriptSteps as step}
-        <div class="longform-compile-step" on:click={() => onStepClick(step)}>
+        <div class="longform-extended-compile-step" on:click={() => onStepClick(step)}>
           <h3>{step.description.name}</h3>
-          <div class="longform-step-pill-container">
+          <div class="longform-extended-step-pill-container">
             {#each step.description.availableKinds as kind}
               <span
-                class="longform-step-kind-pill"
+                class="longform-extended-step-kind-pill"
                 title={explainStepKind(kind)}>{formatStepKind(kind)}</span
               >
             {/each}
@@ -78,14 +78,14 @@
 </div>
 
 <style>
-  .longform-steps-grid {
+  .longform-extended-steps-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--size-4-4);
     grid-auto-rows: auto;
   }
 
-  .longform-compile-step {
+  .longform-extended-compile-step {
     cursor: pointer;
     grid-column: auto;
     grid-row: auto;
@@ -95,17 +95,17 @@
     padding: var(--size-4-2);
   }
 
-  .longform-compile-step:hover {
+  .longform-extended-compile-step:hover {
     border: var(--size-2-1) solid var(--text-accent);
     background-color: var(--background-modifier-form-field);
   }
 
-  .longform-compile-step h3 {
+  .longform-extended-compile-step h3 {
     padding: var(--size-4-2) 0;
     margin: 0;
   }
 
-  .longform-compile-step .longform-step-kind-pill {
+  .longform-extended-compile-step .longform-extended-step-kind-pill {
     background-color: var(--text-accent);
     color: var(--text-on-accent);
     border-radius: var(--radius-l);

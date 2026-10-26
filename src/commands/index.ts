@@ -6,13 +6,13 @@ import {
   nextScene,
   nextSceneAtIndent,
   jumpToProject,
-  showLongform,
+  showLongformExtended,
   jumpToScene,
   revealProjectFolder,
   focusNewSceneField,
 } from "./navigation";
 import { indentScene, unindentScene } from "./indentation";
-import type LongformPlugin from "src/main";
+import type LongformExtendedPlugin from "src/main";
 import {
   insertMultiSceneTemplate,
   insertSingleSceneTemplate,
@@ -31,7 +31,7 @@ const commandBuilders = [
   unindentScene,
   jumpToProject,
   jumpToScene,
-  showLongform,
+  showLongformExtended,
   revealProjectFolder,
   focusNewSceneField,
   insertMultiSceneTemplate,
@@ -39,7 +39,7 @@ const commandBuilders = [
   startNewSession,
 ];
 
-export function addCommands(plugin: LongformPlugin) {
+export function addCommands(plugin: LongformExtendedPlugin) {
   commandBuilders.forEach((c) => {
     plugin.addCommand(c(plugin));
   });
