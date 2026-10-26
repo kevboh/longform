@@ -1,8 +1,25 @@
 # Timeline
 
-The Timeline is a view that lays your scenes out along a time axis, so you can
+The Timeline is a note that lays your scenes out along a time axis, so you can
 see the order of your story at a glance. Each scene is placed at the point
 described by a `timeframe` value in its frontmatter.
+
+## Output
+
+The timeline is written beside the compiled manuscript, with `_timeline` added
+before the extension. A project that compiles to `Build/The Clearing.md`
+produces `Build/The Clearing_timeline.md`.
+
+## Mermaid Diagram
+
+The file begins with a Mermaid `timeline` diagram. Each primary unit value is a
+section. Inside a section, each secondary unit value is a period, and the scenes
+in that period appear as events in chronological order.
+
+The two largest units of the chosen format are the primary and secondary. For
+`datetime` they are the year and the month. For `epoch date time` they are the
+epoch and the year. For `time only` they are the hour and the minute. For
+`chronological order` both are the number.
 
 ## The Timeframe Tag
 

@@ -62,7 +62,16 @@ export async function buildTimeline(
   const missing: string[] = [];
   const errors: TimelineError[] = [];
 
-  for (const scene of draft.scenes) {
+  for (let index = 0; index < draft.scenes.length; index++) {
+    const scene = draft.scenes[index];
+    const next = draft.scenes[index + 1];
+
+    // A scene with children is a structural container (an act, chapter, or
+    // folder), not an event, so it is not placed on the timeline.
+    if (next && next.indent > scene.indent) {
+      continue;
+    }
+
     const file = app.vault.getAbstractFileByPath(
       scenePath(scene.title, draft, app.vault)
     );
@@ -260,6 +269,134 @@ function formatValues(values: TimeframeValues, units: TimeframeUnit[]): string {
   return parts.join(" ");
 }
 
+function sanitize(text: string): string {
+  return text.replace(/:/g, " -").replace(/\n/g, " ").trim();
+}
+
+function pad(value: number | undefined, length: number): string {
+  return value === undefined ? "" : `${value}`.padStart(length, "0");
+}
+
+function unitLabel(value: number, unit: TimeframeUnit): string {
+  if (unit === "year") {
+    return pad(value, 4);
+  }
+  if (unit === "epoch" || unit === "number") {
+    return `${value}`;
+  }
+  return pad(value, 2);
+}
+
+function formatEventTimeframe(
+  entry: TimelineEntry,
+  units: TimeframeUnit[]
+): string {
+  if (entry.values.number !== undefined) {
+    return `${entry.values.number}`;
+  }
+
+  const parts: string[] = [];
+  if (entry.values.epoch !== undefined) {
+    parts.push(`${entry.values.epoch}`);
+  }
+
+  const date = units
+    .filter((unit) => unit === "day" || unit === "month" || unit === "year")
+    .map((unit) => pad(entry.values[unit], unit === "year" ? 4 : 2))
+    .filter((value) => value.length > 0);
+  if (date.length > 0) {
+    parts.push(date.join("/"));
+  }
+
+  const time = units
+    .filter((unit) => unit === "hour" || unit === "minute" || unit === "second")
+    .map((unit) => pad(entry.values[unit], 2))
+    .filter((value) => value.length > 0);
+  if (time.length > 0) {
+    parts.push(time.join("."));
+  }
+
+  return parts.join(" ");
+}
+
+function eventLabel(entry: TimelineEntry, result: TimelineResult): string {
+  return `${sanitize(entry.sceneTitle)} - ${formatEventTimeframe(
+    entry,
+    result.units
+  )}`;
+}
+
+/**
+ * Builds a Mermaid timeline: one section per primary unit value, one period
+ * per secondary unit value, and the scenes in chronological order as events.
+ */
+function renderMermaid(result: TimelineResult): string {
+  const primary = result.primaryUnit;
+  const secondary = result.secondaryUnit;
+  const lines = [
+    "```mermaid",
+    "timeline",
+    `    title ${sanitize(result.title)}`,
+  ];
+
+  const primaryGroups = new Map<string, TimelineEntry[]>();
+  for (const entry of result.entries) {
+    const key = `${entry.values[primary] ?? ""}`;
+    const group = primaryGroups.get(key) ?? [];
+    group.push(entry);
+    primaryGroups.set(key, group);
+  }
+
+  const sortedPrimary = [...primaryGroups.entries()].sort(
+    (a, b) => Number(a[0]) - Number(b[0])
+  );
+
+  if (primary === secondary) {
+    lines.push("    section Timeline");
+    for (const [, entries] of sortedPrimary) {
+      for (const entry of entries) {
+        lines.push(
+          `        ${sanitize(`${entry.values[primary]}`)} : ${eventLabel(
+            entry,
+            result
+          )}`
+        );
+      }
+    }
+  } else {
+    for (const [primaryValue, primaryEntries] of sortedPrimary) {
+      lines.push(
+        `    section ${unitLabel(Number(primaryValue), primary)}`
+      );
+
+      const secondaryGroups = new Map<string, TimelineEntry[]>();
+      for (const entry of primaryEntries) {
+        const key = `${entry.values[secondary] ?? ""}`;
+        const group = secondaryGroups.get(key) ?? [];
+        group.push(entry);
+        secondaryGroups.set(key, group);
+      }
+
+      const sortedSecondary = [...secondaryGroups.entries()].sort(
+        (a, b) => Number(a[0]) - Number(b[0])
+      );
+
+      for (const [secondaryValue, secondaryEntries] of sortedSecondary) {
+        const label = unitLabel(Number(secondaryValue), secondary);
+        const continuation = " ".repeat(8 + label.length + 1);
+
+        secondaryEntries.forEach((entry, index) => {
+          const prefix = index === 0 ? `        ${label} : ` : `${continuation}: `;
+          lines.push(`${prefix}${eventLabel(entry, result)}`);
+        });
+      }
+    }
+  }
+
+  lines.push("```");
+  return lines.join("\n");
+}
+
 function renderTimeline(result: TimelineResult): string {
   const lines = [
     `# Timeline: ${result.title}`,
@@ -316,5 +453,5 @@ function renderTimeline(result: TimelineResult): string {
     "```"
   );
 
-  return lines.join("\n");
+  return `${renderMermaid(result)}\n\n${lines.join("\n")}`;
 }
